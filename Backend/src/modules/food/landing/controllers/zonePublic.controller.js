@@ -5,15 +5,28 @@ const toFinite = (v) => {
     return Number.isFinite(n) ? n : null;
 };
 
-// Ray-casting point-in-polygon for lat/lng polygons.
+const getPointLng = (pt) => {
+    if (!pt) return null;
+    if (Array.isArray(pt)) return toFinite(pt[0]);
+    return toFinite(pt.longitude ?? pt.lng);
+};
+const getPointLat = (pt) => {
+    if (!pt) return null;
+    if (Array.isArray(pt)) return toFinite(pt[1]);
+    return toFinite(pt.latitude ?? pt.lat);
+};
+
+// Ray-casting point-in-polygon for lat/lng polygons (supports both [lng, lat] and {latitude, longitude}).
 const isPointInPolygon = (lat, lng, polygon) => {
     if (!Array.isArray(polygon) || polygon.length < 3) return false;
     let inside = false;
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-        const xi = polygon[i].longitude;
-        const yi = polygon[i].latitude;
-        const xj = polygon[j].longitude;
-        const yj = polygon[j].latitude;
+        const xi = getPointLng(polygon[i]);
+        const yi = getPointLat(polygon[i]);
+        const xj = getPointLng(polygon[j]);
+        const yj = getPointLat(polygon[j]);
+        if (xi === null || yi === null || xj === null || yj === null) continue;
+        if (xi === 0 && yi === 0 && xj === 0 && yj === 0) continue;
         const intersect =
             yi > lat !== yj > lat &&
             lng < ((xj - xi) * (lat - yi)) / (yj - yi + 0.0) + xi;
@@ -44,16 +57,17 @@ const getZoneRadiusKm = (zone) => {
 };
 
 const isPointWithinZoneRadius = (lat, lng, zone) => {
-    const centerLat = toFinite(zone?.centerPoint?.latitude);
-    const centerLng = toFinite(zone?.centerPoint?.longitude);
+    const centerLat = toFinite(zone?.centerPoint?.latitude ?? zone?.centerPoint?.lat);
+    const centerLng = toFinite(zone?.centerPoint?.longitude ?? zone?.centerPoint?.lng);
     const radiusKm = getZoneRadiusKm(zone);
-    if (centerLat === null || centerLng === null || radiusKm === null) return false;
+    if (centerLat === null || centerLng === null || (centerLat === 0 && centerLng === 0) || radiusKm === null || radiusKm <= 0) return false;
     return getDistanceKm(lat, lng, centerLat, centerLng) <= radiusKm;
 };
 
 const doesZoneServePoint = (lat, lng, zone) => {
     if (zone?.isRadiusEnabled) {
-        return isPointWithinZoneRadius(lat, lng, zone);
+        const inRadius = isPointWithinZoneRadius(lat, lng, zone);
+        if (inRadius) return true;
     }
 
     const coords = Array.isArray(zone?.coordinates) ? zone.coordinates : [];
