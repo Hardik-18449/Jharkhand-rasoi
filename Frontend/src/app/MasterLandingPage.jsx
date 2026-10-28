@@ -106,7 +106,7 @@ const SLIDES = [
   {
     id: 1,
     image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop",
-    title: "City Food",
+    title: "Jharkhand Rasoi",
     subtitle: "Giving you the best service and all"
   },
   {

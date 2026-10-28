@@ -2,7 +2,7 @@ const fs = require('fs');
 
 // 1. Patch order.model.js
 {
-  const filePath = 'c:/Users/info/OneDrive/Desktop/CityFood/Backend/src/modules/food/orders/models/order.model.js';
+  const filePath = 'c:/Users/info/OneDrive/Desktop/JharkhandRasoi/Backend/src/modules/food/orders/models/order.model.js';
   let code = fs.readFileSync(filePath, 'utf8');
 
   code = code.replace(/street:\s*\{\s*type:\s*String,\s*required:\s*true,\s*trim:\s*true\s*\}/, "street: { type: String, default: 'Selected Location', trim: true }");
@@ -22,7 +22,7 @@ const fs = require('fs');
 
 // 2. Patch order.service.js
 {
-  const filePath = 'c:/Users/info/OneDrive/Desktop/CityFood/Backend/src/modules/food/orders/services/order.service.js';
+  const filePath = 'c:/Users/info/OneDrive/Desktop/JharkhandRasoi/Backend/src/modules/food/orders/services/order.service.js';
   let code = fs.readFileSync(filePath, 'utf8');
 
   // Fix NO_RIDERS_AVAILABLE bypass in non-production
@@ -65,7 +65,7 @@ const fs = require('fs');
 
 // 3. Patch admin.service.js getSidebarBadges
 {
-  const filePath = 'c:/Users/info/OneDrive/Desktop/CityFood/Backend/src/modules/food/admin/services/admin.service.js';
+  const filePath = 'c:/Users/info/OneDrive/Desktop/JharkhandRasoi/Backend/src/modules/food/admin/services/admin.service.js';
   let code = fs.readFileSync(filePath, 'utf8');
 
   code = code.replace(
@@ -83,7 +83,7 @@ const fs = require('fs');
 
 // 4. Patch geocoding.service.js
 {
-  const filePath = 'c:/Users/info/OneDrive/Desktop/CityFood/Backend/src/services/geocoding.service.js';
+  const filePath = 'c:/Users/info/OneDrive/Desktop/JharkhandRasoi/Backend/src/services/geocoding.service.js';
   let code = fs.readFileSync(filePath, 'utf8');
 
   const oldGeocodeRegex = /if\s*\(data\.status !== 'OK' \|\| !data\.results\?\.length\)\s*\{\s*throw new Error\(data\.error_message \|\| data\.status \|\| 'Reverse geocoding failed'\);\s*\}/;
@@ -112,7 +112,7 @@ const fs = require('fs');
 
 // 5. Patch Frontend useLocation.jsx
 {
-  const filePath = 'c:/Users/info/OneDrive/Desktop/CityFood/Frontend/src/modules/Food/hooks/useLocation.jsx';
+  const filePath = 'c:/Users/info/OneDrive/Desktop/JharkhandRasoi/Frontend/src/modules/Food/hooks/useLocation.jsx';
   let code = fs.readFileSync(filePath, 'utf8');
 
   // Replace Strategy 2 broken reference

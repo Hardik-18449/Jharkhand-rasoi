@@ -71,12 +71,12 @@ async function seedDeliveryShowcase() {
     }
 
     // 3. Setup Rider 1 (8000000000)
-    console.log('Upserting Rider 1 (8000000000 - CityFood Rider Indore)...');
+    console.log('Upserting Rider 1 (8000000000 - Jharkhand Rasoi Rider Indore)...');
     const rider1Data = {
-      name: 'CityFood Rider Indore',
+      name: 'Jharkhand Rasoi Rider Indore',
       phone: '8000000000',
       countryCode: '+91',
-      email: 'rider.indore@cityfood.com',
+      email: 'rider.indore@jharkhandrasoi.in',
       city: 'Indore',
       state: 'Madhya Pradesh',
       address: 'Plot 102, New Palasia, Indore, Madhya Pradesh 452001',
@@ -94,7 +94,7 @@ async function seedDeliveryShowcase() {
       drivingLicenseFrontPhoto: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=400&q=80',
       drivingLicenseBackPhoto: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=400&q=80',
       rcPhoto: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=400&q=80',
-      bankAccountHolderName: 'CityFood Rider Indore',
+      bankAccountHolderName: 'Jharkhand Rasoi Rider Indore',
       bankAccountNumber: '98765432101234',
       bankIfscCode: 'HDFC0001234',
       bankName: 'HDFC Bank',
@@ -134,7 +134,7 @@ async function seedDeliveryShowcase() {
       name: 'Corporate Delivery Express',
       phone: '9755633147',
       countryCode: '+91',
-      email: 'corporate.rider@cityfood.com',
+      email: 'corporate.rider@jharkhandrasoi.in',
       city: 'Indore',
       state: 'Madhya Pradesh',
       address: 'Corporate House, 169, RNT Marg, Indore, Madhya Pradesh 452001',
@@ -583,7 +583,7 @@ async function seedDeliveryShowcase() {
         accountNumber: '98765432101234',
         ifscCode: 'HDFC0001234',
         bankName: 'HDFC Bank',
-        accountHolderName: 'CityFood Rider Indore'
+        accountHolderName: 'Jharkhand Rasoi Rider Indore'
       },
       upiId: 'indorerider@okaxis',
       transactionId: `TXN-BANK-${now}-801`,
@@ -874,7 +874,7 @@ async function seedDeliveryShowcase() {
     console.log('========================================================');
     console.log('Rider 1:');
     console.log('  Phone: 8000000000');
-    console.log('  Name: CityFood Rider Indore');
+    console.log('  Name: Jharkhand Rasoi Rider Indore');
     console.log('  Active Order: FOD-LIVE-801 (picked_up, COD)');
     console.log('  Offer Available: FOD-OFFER-802 (The Royal Maratha)');
     console.log('  Completed Trips: 6 trips in history');
