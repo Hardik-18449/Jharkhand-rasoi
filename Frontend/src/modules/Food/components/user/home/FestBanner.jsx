@@ -60,7 +60,7 @@ export default function FestBanner({ isVegMode, images = [], hideFoodImages = fa
     <motion.div
       initial={false}
       id="fest-banner-root"
-      className={`relative px-4 pt-8 pb-4 overflow-hidden min-h-[140px] sm:min-h-[180px] transition-all duration-700 bg-transparent rounded-b-[2rem]`}
+      className={`relative w-full px-4 pt-6 pb-8 sm:pb-10 overflow-hidden min-h-[160px] sm:min-h-[200px] transition-all duration-700 bg-gradient-to-r from-[#2a0e20] via-[#1a0a14] to-[#2a0e20] rounded-t-none rounded-b-[28px] sm:rounded-b-[36px] shadow-lg border-b border-white/10`}
     >
       {hasBgImages && (
         <div className="absolute inset-0 z-0 bg-slate-900">
@@ -110,7 +110,7 @@ export default function FestBanner({ isVegMode, images = [], hideFoodImages = fa
           className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm font-bold"
         >
           <Sparkles className="h-2.5 w-2.5 text-[#fff200] animate-pulse" />
-          <span className="text-[9px] font-black text-white uppercase tracking-[0.2em]">CityFood Missions</span>
+          <span className="text-[9px] font-black text-white uppercase tracking-[0.2em]">Jharkhand Rasoi Missions</span>
           <Sparkles className="h-2.5 w-2.5 text-[#fff200] animate-pulse" />
         </motion.div>
 

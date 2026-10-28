@@ -1,8 +1,8 @@
 {
   "id": "/admin/",
-  "name": "CityFood Admin",
-  "short_name": "CityFood Admin",
-  "description": "CityFood administration panel",
+  "name": "Jharkhand Rasoi Admin",
+  "short_name": "Jharkhand Rasoi Admin",
+  "description": "Jharkhand Rasoi administration panel",
   "start_url": "/admin/food",
   "scope": "/admin/",
   "display": "standalone",

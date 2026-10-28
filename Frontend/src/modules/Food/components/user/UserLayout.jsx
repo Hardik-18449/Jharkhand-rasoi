@@ -123,7 +123,7 @@ function UserLayoutShell() {
         {showBottomNav && <DesktopNavbar showLogo={!isUnder250} />}
       </div>
       <LocationGuard>
-        <main className={`${showBottomNav ? "md:pt-40 pb-[calc(76px+max(env(safe-area-inset-bottom,0px),10px))] md:pb-0" : ""}`}>
+        <main className={`${showBottomNav ? "md:pt-[116px] pb-[calc(76px+max(env(safe-area-inset-bottom,0px),10px))] md:pb-6" : ""}`}>
           <Outlet />
         </main>
       </LocationGuard>
@@ -142,7 +142,7 @@ export default function UserLayout() {
   })
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[#f5f5f5] dark:bg-[#0a0a0a] transition-colors duration-200 box-border">
+    <div className="min-h-screen min-h-[100dvh] bg-[#f5f5f5] dark:bg-[#0a0a0a] transition-colors duration-200 box-border overflow-x-clip">
       {!introFinished && (
         <AppIntroSplash onComplete={() => setIntroFinished(true)} />
       )}

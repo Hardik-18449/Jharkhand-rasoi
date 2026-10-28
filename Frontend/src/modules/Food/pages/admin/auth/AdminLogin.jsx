@@ -85,7 +85,7 @@ export default function AdminLogin() {
             >
               <img
                 src={logoNew}
-                alt="CityFood Logo"
+                alt="Jharkhand Rasoi Logo"
                 className="w-full h-full object-cover scale-[1.15]"
                 style={{ borderRadius: '50%' }}
               />
@@ -128,7 +128,7 @@ export default function AdminLogin() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="block w-full pl-12 pr-6 py-4 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white border-2 border-transparent focus:border-primary/50 rounded-2xl outline-none transition-all placeholder:text-gray-300 font-bold"
-                      placeholder="admin@tuggo.com"
+                      placeholder="admin@jr.com"
                     />
                   </div>
                 </div>
@@ -162,21 +162,17 @@ export default function AdminLogin() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4.5 bg-primary hover:bg-[#6a2f56] disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 text-white rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 group overflow-hidden relative"
+                className="w-full py-4.5 bg-[#FACC15] hover:bg-[#EAB308] disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 text-gray-950 rounded-2xl font-bold text-lg shadow-xl shadow-[#FACC15]/25 hover:shadow-[#FACC15]/40 transition-all active:scale-[0.98] flex items-center justify-center gap-2 group overflow-hidden relative cursor-pointer"
               >
                 {loading ? (
-                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-950" />
                 ) : (
                   <>
                     <span>Enter Dashboard</span>
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-200" />
                   </>
                 )}
-                <motion.div
-                  className="absolute inset-0 bg-white/20 translate-x-[-100%]"
-                  whileHover={{ translateX: "100%" }}
-                  transition={{ duration: 0.6 }}
-                />
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
               </button>
             </form>
           </div>

@@ -131,8 +131,7 @@
   }
 
   .content-auto {
-    content-visibility: auto;
-    contain-intrinsic-size: 1px 720px;
+    /* content-visibility disabled to eliminate scroll sticking */
   }
   
   @keyframes scroll {
@@ -200,4 +199,10 @@ html.admin-compact {
 /* Text that has no size class (plain paragraphs, table cells, inputs) follows the same scale */
 html.admin-compact body {
   font-size: calc(1rem * var(--admin-text-scale));
+}
+
+
+html, body {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }

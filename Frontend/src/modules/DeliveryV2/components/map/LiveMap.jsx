@@ -369,7 +369,12 @@ const LiveMapWithApiKey = ({ googleMapsApiKey, onMapClick, onMapLoad, onPathRece
     travelMode: 'DRIVING',
   } : null;
 
-  const mapCenter = parsedRiderLocation || targetLocation;
+  const isLocalDev = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1' || 
+    Boolean(import.meta.env.DEV)
+  );
+  const mapCenter = parsedRiderLocation || targetLocation || (isLocalDev ? { lat: 22.7169, lng: 75.8732 } : null);
 
   if (!mapCenter) {
     return (

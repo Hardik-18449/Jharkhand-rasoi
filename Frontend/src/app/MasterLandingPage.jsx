@@ -56,9 +56,9 @@ const FeatureBadge = ({ icon, text, className, delay = 0, yOffset = 15 }) => (
       ease: "easeInOut",
       delay: delay
     }}
-    className={`absolute bg-white/90 backdrop-blur-xl rounded-[28px] p-4 shadow-[0_20px_40px_rgba(226,55,68,0.12)] flex flex-col items-center justify-center gap-3 border border-white z-20 hover:scale-110 transition-transform ${className}`}
+    className={`absolute bg-white/90 backdrop-blur-xl rounded-[28px] p-4 shadow-[0_20px_40px_rgba(250,204,21,0.15)] flex flex-col items-center justify-center gap-3 border border-white z-20 hover:scale-110 transition-transform ${className}`}
   >
-    <div className="w-14 h-14 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl flex items-center justify-center shadow-inner border border-red-100/50">
+    <div className="w-14 h-14 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl flex items-center justify-center shadow-inner border border-yellow-200/50">
       <img src={icon} alt={text} className="w-8 h-8 object-contain drop-shadow-sm" onError={(e) => e.target.style.display = 'none'} />
     </div>
     <span className="text-sm font-bold text-gray-800 text-center leading-tight tracking-tight">{text}</span>
@@ -71,9 +71,9 @@ const FeatureRow = ({ title, desc, Icon, delay = 0 }) => (
     whileInView={{ opacity: 1, x: 0 }}
     viewport={{ once: false, amount: 0.2 }}
     transition={{ delay, duration: 0.5 }}
-    className="flex gap-5 items-start bg-white/50 backdrop-blur-sm p-4 rounded-3xl hover:bg-white transition-colors cursor-pointer border border-transparent hover:border-red-50 hover:shadow-xl"
+    className="flex gap-5 items-start bg-white/50 backdrop-blur-sm p-4 rounded-3xl hover:bg-white transition-colors cursor-pointer border border-transparent hover:border-yellow-100 hover:shadow-xl"
   >
-    <div className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-red-100">
+    <div className="w-14 h-14 bg-yellow-50 text-[#ca8a04] rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-yellow-200">
       <Icon className="w-7 h-7" />
     </div>
     <div>
@@ -89,9 +89,9 @@ const FeatureRowRight = ({ title, desc, Icon, delay = 0 }) => (
     whileInView={{ opacity: 1, x: 0 }}
     viewport={{ once: false, amount: 0.2 }}
     transition={{ delay, duration: 0.5 }}
-    className="flex gap-5 items-start md:flex-row-reverse md:text-right bg-white/50 backdrop-blur-sm p-4 rounded-3xl hover:bg-white transition-colors cursor-pointer border border-transparent hover:border-red-50 hover:shadow-xl"
+    className="flex gap-5 items-start md:flex-row-reverse md:text-right bg-white/50 backdrop-blur-sm p-4 rounded-3xl hover:bg-white transition-colors cursor-pointer border border-transparent hover:border-yellow-100 hover:shadow-xl"
   >
-    <div className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-red-100">
+    <div className="w-14 h-14 bg-yellow-50 text-[#ca8a04] rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-yellow-200">
       <Icon className="w-7 h-7" />
     </div>
     <div>
@@ -106,7 +106,7 @@ const SLIDES = [
   {
     id: 1,
     image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop",
-    title: "CityFood",
+    title: "City Food",
     subtitle: "Giving you the best service and all"
   },
   {
@@ -148,11 +148,11 @@ export default function MasterLandingPage() {
   }, [])
 
   // Colors
-  const zRed = "#E23744"
+  const zRed = "#FACC15"
   const zBlack = "#1C1C1C"
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-red-500/30 overflow-x-hidden relative">
+    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-[#FACC15]/30 overflow-x-hidden relative">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
         .font-cursive {
@@ -230,7 +230,7 @@ export default function MasterLandingPage() {
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full border border-white transition-all duration-300 ${index === currentSlide ? 'bg-orange-400 border-orange-400' : 'bg-transparent hover:bg-white/50'
+              className={`w-3 h-3 rounded-full border border-white transition-all duration-300 ${index === currentSlide ? 'bg-[#FACC15] border-[#FACC15]' : 'bg-transparent hover:bg-white/50'
                 }`}
             />
           ))}
@@ -241,7 +241,7 @@ export default function MasterLandingPage() {
       <section className="relative py-32 bg-white overflow-hidden flex flex-col items-center">
         {/* Thin swirly background lines */}
         <div className="absolute inset-0 pointer-events-none opacity-20">
-          <svg viewBox="0 0 1000 1000" className="w-full h-full text-red-500 fill-transparent stroke-current" strokeWidth="1">
+          <svg viewBox="0 0 1000 1000" className="w-full h-full text-yellow-500/30 fill-transparent stroke-current" strokeWidth="1">
             <path d="M-100,500 C200,800 300,100 600,400 C900,700 1000,200 1200,500" />
             <path d="M-100,200 C300,-100 400,900 800,600 C1100,300 1200,800 1200,500" />
           </svg>
@@ -262,9 +262,9 @@ export default function MasterLandingPage() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            className="text-5xl md:text-[64px] font-bold text-[#E23744] leading-[1.1] mb-6"
+            className="text-5xl md:text-[64px] font-bold text-[#FACC15] leading-[1.1] mb-6"
           >
-            Better food for<br />better people
+            Better food for<br /> <span className="text-[#000000]" > better people </span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 30 }}
@@ -290,7 +290,7 @@ export default function MasterLandingPage() {
               <h3 className="text-3xl md:text-[40px] font-black text-gray-700 whitespace-nowrap">{landingSettings?.stats?.restaurants || "3,00,000+"}</h3>
               <p className="text-gray-500 text-lg font-medium whitespace-nowrap">restaurants</p>
             </div>
-            <div className="w-12 h-12 md:w-14 md:h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 md:w-14 md:h-14 bg-yellow-50 text-[#ca8a04] rounded-full flex items-center justify-center shrink-0 border border-yellow-200">
               <UtensilsCrossed className="w-6 h-6 md:w-7 md:h-7" />
             </div>
           </div>
@@ -302,7 +302,7 @@ export default function MasterLandingPage() {
               <h3 className="text-3xl md:text-[40px] font-black text-gray-700 whitespace-nowrap">{landingSettings?.stats?.cities || "800+"}</h3>
               <p className="text-gray-500 text-lg font-medium whitespace-nowrap">cities</p>
             </div>
-            <div className="w-12 h-12 md:w-14 md:h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 md:w-14 md:h-14 bg-yellow-50 text-[#ca8a04] rounded-full flex items-center justify-center shrink-0 border border-yellow-200">
               <MapPin className="w-6 h-6 md:w-7 md:h-7" />
             </div>
           </div>
@@ -314,7 +314,7 @@ export default function MasterLandingPage() {
               <h3 className="text-3xl md:text-[40px] font-black text-gray-700 whitespace-nowrap">{landingSettings?.stats?.orders || "3 billion+"}</h3>
               <p className="text-gray-500 text-lg font-medium whitespace-nowrap">orders delivered</p>
             </div>
-            <div className="w-12 h-12 md:w-14 md:h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 md:w-14 md:h-14 bg-yellow-50 text-[#ca8a04] rounded-full flex items-center justify-center shrink-0 border border-yellow-200">
               <ShoppingBag className="w-6 h-6 md:w-7 md:h-7" />
             </div>
           </div>
@@ -322,9 +322,9 @@ export default function MasterLandingPage() {
       </section>
 
       {/* 3. WHAT'S WAITING FOR YOU */}
-      <section className="relative py-32 bg-gradient-to-b from-white via-rose-50/30 to-[#FDFBF7] overflow-hidden flex flex-col items-center">
+      <section className="relative py-32 bg-gradient-to-b from-white via-amber-50/20 to-[#FDFBF7] overflow-hidden flex flex-col items-center">
         {/* Decorative Background Elements */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-red-400/5 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-yellow-400/5 rounded-full blur-[80px] pointer-events-none" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-orange-400/5 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="text-center max-w-3xl mx-auto px-6 mb-20 relative z-20">
@@ -332,7 +332,7 @@ export default function MasterLandingPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: false, amount: 0.2 }}
-            className="inline-block mb-4 px-4 py-1.5 rounded-full bg-red-50 border border-red-100 text-red-500 font-bold text-sm tracking-wide uppercase"
+            className="inline-block mb-4 px-4 py-1.5 rounded-full bg-yellow-50 border border-yellow-200 text-amber-700 font-bold text-sm tracking-wide uppercase"
           >
             Features
           </motion.div>
@@ -340,9 +340,9 @@ export default function MasterLandingPage() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.2 }}
-            className="text-4xl md:text-[56px] font-black text-[#E23744] leading-[1.1] mb-6 drop-shadow-sm"
+            className="text-4xl md:text-[56px] font-black text-[#FACC15] leading-[1.1] mb-6 drop-shadow-sm"
           >
-            What's waiting for you<br />on the app?
+            What's waiting for you<br /> <span className="text-[#000000]" > on the app? </span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 30 }}
@@ -367,13 +367,13 @@ export default function MasterLandingPage() {
           {/* Center Phone Mockup */}
           <div className="flex justify-center shrink-0 order-1 lg:order-2 relative">
             {/* Glowing Aura behind phone */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[550px] bg-gradient-to-br from-red-400/20 to-orange-400/20 blur-[80px] rounded-full z-0" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[550px] bg-gradient-to-br from-[#FACC15]/20 to-amber-400/20 blur-[80px] rounded-full z-0" />
 
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.2 }}
-              className="relative z-10 w-[300px] h-[600px] rounded-[50px] shadow-[0_30px_60px_rgba(226,55,68,0.15)] border-[12px] border-[#1C1C1C] overflow-hidden bg-white"
+              className="relative z-10 w-[300px] h-[600px] rounded-[50px] shadow-[0_30px_60px_rgba(250,204,21,0.15)] border-[12px] border-[#1C1C1C] overflow-hidden bg-white"
             >
               <div className="absolute top-0 inset-x-0 h-6 bg-[#1C1C1C] rounded-b-3xl w-1/2 mx-auto z-20" />
 
@@ -385,7 +385,7 @@ export default function MasterLandingPage() {
                 </div>
 
                 <div className="flex gap-3 px-5 mb-6 overflow-hidden">
-                  <div className="w-16 h-16 bg-red-100 rounded-2xl flex-shrink-0" />
+                  <div className="w-16 h-16 bg-yellow-100 rounded-2xl flex-shrink-0" />
                   <div className="w-16 h-16 bg-orange-100 rounded-2xl flex-shrink-0" />
                   <div className="w-16 h-16 bg-yellow-100 rounded-2xl flex-shrink-0" />
                   <div className="w-16 h-16 bg-green-100 rounded-2xl flex-shrink-0" />
@@ -409,10 +409,10 @@ export default function MasterLandingPage() {
                   <motion.div
                     animate={{ scale: [1, 1.03, 1], y: [0, -5, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="bg-white p-6 rounded-3xl shadow-[0_20px_40px_rgba(226,55,68,0.2)] flex flex-col items-center border border-red-50"
+                    className="bg-white p-6 rounded-3xl shadow-[0_20px_40px_rgba(250,204,21,0.2)] flex flex-col items-center border border-yellow-100"
                   >
-                    <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-3">
-                      <Clock className="w-8 h-8 text-[#E23744]" />
+                    <div className="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mb-3 border border-yellow-100">
+                      <Clock className="w-8 h-8 text-[#ca8a04]" />
                     </div>
                     <span className="font-black text-gray-900 text-center leading-tight text-lg">Schedule<br />your order</span>
                   </motion.div>
@@ -420,7 +420,7 @@ export default function MasterLandingPage() {
 
                 <div className="mt-auto px-5 relative z-20">
                   <div className="h-16 w-full bg-white rounded-[24px] shadow-md border border-gray-100 flex items-center justify-around px-2">
-                    <div className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center"><User className="w-5 h-5" /></div>
+                    <div className="w-10 h-10 bg-yellow-50 text-[#ca8a04] rounded-xl flex items-center justify-center border border-yellow-100"><User className="w-5 h-5" /></div>
                     <div className="w-6 h-6 bg-gray-200 rounded-full" />
                     <div className="w-6 h-6 bg-gray-200 rounded-full" />
                   </div>
@@ -432,7 +432,7 @@ export default function MasterLandingPage() {
           {/* Right Feature Column */}
           <div className="flex-1 space-y-4 w-full order-3">
             <FeatureRowRight title="Huge Discounts & Offers" desc="Enjoy exciting offers, discounts and coupons exclusively on the app" Icon={Ticket} delay={0.1} />
-            <FeatureRowRight title="CityFood GOLD" desc="Get free delivery and extra discounts on every order with premium membership" Icon={Award} delay={0.2} />
+            <FeatureRowRight title="Jharkhand Rasoi GOLD" desc="Get free delivery and extra discounts on every order with premium membership" Icon={Award} delay={0.2} />
             <FeatureRowRight title="Safety & Hygiene" desc="Best in class safety standards with regular temperature checks" Icon={ShieldCheck} delay={0.3} />
           </div>
 
@@ -445,14 +445,14 @@ export default function MasterLandingPage() {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="w-full max-w-5xl bg-[#FFF6F7] rounded-[40px] p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-12 border border-[#ffe0e3]"
+          className="w-full max-w-5xl bg-[#FEFCE8] rounded-[40px] p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-12 border border-[#FEF08A]"
         >
           <div className="flex-1 text-center md:text-left">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
               Download the app now!
             </h2>
             <p className="text-xl text-gray-500 font-medium mb-10 max-w-md">
-              Experience seamless online ordering only on the CityFood app
+              Experience seamless online ordering only on the Jharkhand Rasoi app
             </p>
             <div className="flex gap-4 justify-center md:justify-start">
               <img
@@ -471,7 +471,7 @@ export default function MasterLandingPage() {
           </div>
 
           <div className="flex-shrink-0 relative">
-            <div className="absolute inset-0 bg-[#E23744]/5 blur-[50px] rounded-full pointer-events-none" />
+            <div className="absolute inset-0 bg-[#FACC15]/10 blur-[50px] rounded-full pointer-events-none" />
             <div className="relative w-64 h-[450px] bg-white rounded-[40px] shadow-2xl border-[10px] border-[#1C1C1C] overflow-hidden flex flex-col items-center justify-center p-6">
               <div className="absolute top-0 inset-x-0 h-6 bg-[#1C1C1C] rounded-b-3xl w-1/2 mx-auto z-20" />
               <p className="text-sm font-bold text-gray-700 text-center mb-6 mt-4">
@@ -484,7 +484,7 @@ export default function MasterLandingPage() {
                     <div key={i} className={`bg-black rounded-sm ${Math.random() > 0.3 ? 'opacity-100' : 'opacity-0'}`} />
                   ))}
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-gray-200 rounded-md flex items-center justify-center">
-                    <span className="text-xs font-black text-[#E23744]">IB</span>
+                    <span className="text-xs font-black text-gray-950 bg-[#FACC15] px-1 rounded">JR</span>
                   </div>
                 </div>
               </div>
@@ -500,7 +500,7 @@ export default function MasterLandingPage() {
           <div className="flex flex-col lg:flex-row justify-between mb-16 gap-12">
             <div className="lg:w-1/4">
               <h1 className="text-4xl font-black italic tracking-tighter mb-8">
-                CityFood
+                Jharkhand Rasoi
               </h1>
             </div>
 
@@ -551,27 +551,27 @@ export default function MasterLandingPage() {
           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex gap-4">
               {(!landingSettings?.socialLinks || landingSettings.socialLinks.linkedin) && (
-                <div onClick={() => window.open(landingSettings?.socialLinks?.linkedin || '#', '_blank')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#E23744] transition-colors cursor-pointer text-white">
+                <div onClick={() => window.open(landingSettings?.socialLinks?.linkedin || '#', '_blank')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#FACC15] hover:text-black transition-colors cursor-pointer text-white">
                   <Linkedin className="w-5 h-5" />
                 </div>
               )}
               {(!landingSettings?.socialLinks || landingSettings.socialLinks.instagram) && (
-                <div onClick={() => window.open(landingSettings?.socialLinks?.instagram || '#', '_blank')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#E23744] transition-colors cursor-pointer text-white">
+                <div onClick={() => window.open(landingSettings?.socialLinks?.instagram || '#', '_blank')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#FACC15] hover:text-black transition-colors cursor-pointer text-white">
                   <Instagram className="w-5 h-5" />
                 </div>
               )}
               {(!landingSettings?.socialLinks || landingSettings.socialLinks.twitter) && (
-                <div onClick={() => window.open(landingSettings?.socialLinks?.twitter || '#', '_blank')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#E23744] transition-colors cursor-pointer text-white">
+                <div onClick={() => window.open(landingSettings?.socialLinks?.twitter || '#', '_blank')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#FACC15] hover:text-black transition-colors cursor-pointer text-white">
                   <Twitter className="w-5 h-5" />
                 </div>
               )}
               {(!landingSettings?.socialLinks || landingSettings.socialLinks.youtube) && (
-                <div onClick={() => window.open(landingSettings?.socialLinks?.youtube || '#', '_blank')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#E23744] transition-colors cursor-pointer text-white">
+                <div onClick={() => window.open(landingSettings?.socialLinks?.youtube || '#', '_blank')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#FACC15] hover:text-black transition-colors cursor-pointer text-white">
                   <Youtube className="w-5 h-5" />
                 </div>
               )}
               {(!landingSettings?.socialLinks || landingSettings.socialLinks.facebook) && (
-                <div onClick={() => window.open(landingSettings?.socialLinks?.facebook || '#', '_blank')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#E23744] transition-colors cursor-pointer text-white">
+                <div onClick={() => window.open(landingSettings?.socialLinks?.facebook || '#', '_blank')} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#FACC15] hover:text-black transition-colors cursor-pointer text-white">
                   <Facebook className="w-5 h-5" />
                 </div>
               )}
@@ -595,7 +595,7 @@ export default function MasterLandingPage() {
 
           <div className="text-gray-500 text-sm font-medium mt-10 text-center md:text-left leading-relaxed">
             By continuing past this page, you agree to our Terms of Service, Cookie Policy, Privacy Policy and Content Policies. All trademarks are properties of their respective owners. <br />
-            {landingSettings?.copyrightText || '© 2026 CityFood™ Ltd. All rights reserved.'}
+            {landingSettings?.copyrightText || '© 2026 Jharkhand Rasoi™ Ltd. All rights reserved.'}
           </div>
         </div>
       </footer>

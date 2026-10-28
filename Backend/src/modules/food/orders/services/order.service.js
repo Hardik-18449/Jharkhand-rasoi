@@ -164,9 +164,13 @@ export async function createOrder(userId, dto) {
       zoneId: dto.zoneId || restaurant.zoneId,
     });
     if (!riderAvailability.available) {
-      const err = new ValidationError('All riders are busy, kindly try after some time');
-      err.code = 'NO_RIDERS_AVAILABLE';
-      throw err;
+      if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_ORDER_WITHOUT_RIDERS) {
+        const err = new ValidationError('All riders are busy, kindly try after some time');
+        err.code = 'NO_RIDERS_AVAILABLE';
+        throw err;
+      } else {
+        console.warn('[createOrder] No online riders available, but allowing order creation in non-production mode.');
+      }
     }
   }
 
@@ -177,10 +181,10 @@ export async function createOrder(userId, dto) {
     label: dto.address?.label || "Home",
     name: dto.address?.name || dto.address?.fullName || dto.customerName || "",
     fullName: dto.address?.fullName || dto.address?.name || dto.customerName || "",
-    street: dto.address?.street || "",
+    street: dto.address?.street || dto.address?.formattedAddress || dto.address?.address || "Selected Location",
     additionalDetails: dto.address?.additionalDetails || "",
-    city: dto.address?.city || "",
-    state: dto.address?.state || "",
+    city: dto.address?.city || "Indore",
+    state: dto.address?.state || "Madhya Pradesh",
     zipCode: dto.address?.zipCode || "",
     phone: dto.address?.phone || "",
     location: dto.address?.location?.coordinates
@@ -1519,13 +1523,7 @@ export async function getPaymentStatus(orderId, deliveryPartnerId) {
 // ----- Admin -----
 export async function listOrdersAdmin(query) {
   const { page, limit, skip } = buildPaginationOptions(query);
-  const filter = {
-    $or: [
-      { "payment.method": { $in: ["cash", "wallet", "razorpay_qr"] } },
-      { "payment.status": { $in: ["paid", "authorized", "captured", "settled", "refunded"] } },
-      { orderStatus: { $in: ["confirmed", "preparing", "ready_for_pickup", "picked_up", "delivered"] } },
-    ],
-  };
+  const filter = {};
 
   const rawStatus =
     typeof query.status === "string" ? query.status.trim().toLowerCase() : "";
@@ -1543,7 +1541,7 @@ export async function listOrdersAdmin(query) {
   if (rawStatus && rawStatus !== "all") {
     switch (rawStatus) {
       case "pending":
-        filter.orderStatus = "created";
+        filter.orderStatus = { $in: ["created", "pending"] };
         break;
       case "accepted":
         filter.orderStatus = "confirmed";
@@ -1552,7 +1550,7 @@ export async function listOrdersAdmin(query) {
         filter.orderStatus = { $in: ["preparing", "ready_for_pickup"] };
         break;
       case "food-on-the-way":
-        filter.orderStatus = "picked_up";
+        filter.orderStatus = { $in: ["picked_up", "reached_drop"] };
         break;
       case "delivered":
         filter.orderStatus = "delivered";

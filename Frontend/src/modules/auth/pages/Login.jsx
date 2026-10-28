@@ -369,7 +369,7 @@ export default function UnifiedOTPFastLogin() {
         {/* --- Main Content Area --- */}
         <div className="w-full px-6 flex-1 flex flex-col items-center justify-center relative z-20 pt-1 pb-4">
           
-          {/* Circular CityFood Badge Logo (Rounded-full with border & shadow to clip white background) */}
+          {/* Circular Jharkhand Rasoi Badge Logo (Rounded-full with border & shadow to clip white background) */}
           <motion.div
             initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -378,7 +378,7 @@ export default function UnifiedOTPFastLogin() {
           >
             <img
               src="/logo.png"
-              alt="CityFood Logo"
+              alt="Jharkhand Rasoi Logo"
               className="w-full h-full object-cover scale-[1.04] select-none pointer-events-none transition-transform hover:scale-108 duration-300"
               onError={(e) => {
                 e.target.onerror = null
@@ -396,10 +396,10 @@ export default function UnifiedOTPFastLogin() {
           >
             {step === 1 ? (
               <>
-                <h1 className="text-[34px] sm:text-[38px] font-extrabold tracking-[-0.03em] leading-[1.12] text-[#0A4D27]">
+                <h1 className="text-[34px] sm:text-[38px] font-extrabold tracking-[-0.03em] leading-[1.12] text-[#000000]">
                   Delicious food
                 </h1>
-                <div className="text-[34px] sm:text-[38px] font-extrabold tracking-[-0.03em] leading-[1.12] text-[#E52E2E] flex items-center justify-center gap-2 mt-0.5">
+                <div className="text-[34px] sm:text-[38px] font-extrabold tracking-[-0.03em] leading-[1.12] text-[#FACC15] flex items-center justify-center gap-2 mt-0.5">
                   <span>Delivered fast</span>
                   <span className="inline-block transform hover:rotate-12 transition-transform text-[32px] cursor-default select-none">🍕</span>
                 </div>
@@ -409,14 +409,14 @@ export default function UnifiedOTPFastLogin() {
               </>
             ) : (
               <>
-                <h1 className="text-[30px] sm:text-[34px] font-extrabold tracking-tight text-[#0A4D27]">
+                <h1 className="text-[30px] sm:text-[34px] font-extrabold tracking-tight text-[#000000]">
                   Verify OTP
                 </h1>
                 <div className="flex items-center justify-center gap-2 mt-1.5 text-[#6B7280] font-medium text-[15px]">
                   <span>Code sent to <strong>+91 {phoneNumber}</strong></span>
                   <button
                     onClick={handleEditNumber}
-                    className="p-1 hover:bg-gray-200/60 rounded-full text-[#E52E2E] transition-colors"
+                    className="p-1 hover:bg-gray-200/60 rounded-full text-gray-700 transition-colors"
                     title="Change phone number"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -478,10 +478,10 @@ export default function UnifiedOTPFastLogin() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-[56px] rounded-full bg-[#E52E2E] hover:bg-[#D92323] text-white font-bold text-[17px] shadow-[0_12px_28px_rgba(229,46,46,0.36)] hover:shadow-[0_16px_34px_rgba(229,46,46,0.46)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 cursor-pointer"
+                    className="w-full h-[56px] rounded-full bg-[#f7f7f7] hover:bg-[#eaeaea] text-[#111827] border border-gray-300 font-bold text-[17px] shadow-[0_12px_28px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_34px_rgba(0,0,0,0.1)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 cursor-pointer"
                   >
                     {loading ? (
-                      <Loader2 className="w-6 h-6 animate-spin text-white" />
+                      <Loader2 className="w-6 h-6 animate-spin text-[#111827]" />
                     ) : (
                       <>
                         <span>Send OTP</span>
@@ -495,7 +495,7 @@ export default function UnifiedOTPFastLogin() {
                     By continuing, you agree to our{" "}
                     <Link
                       to="/profile/terms"
-                      className="text-[#0A4D27] font-bold underline decoration-[#0A4D27]/40 underline-offset-2 hover:text-[#064E3B] transition-colors"
+                      className="text-[#FACC15] font-bold underline decoration-[#FACC15]/40 underline-offset-2 hover:text-[#eab308] transition-colors"
                     >
                       Terms & Privacy Policy
                     </Link>
@@ -543,7 +543,7 @@ export default function UnifiedOTPFastLogin() {
                             }
                           }
                         }}
-                        className="w-12 h-14 text-center text-2xl font-bold bg-white border border-gray-200 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] text-[#111827] focus:border-[#E52E2E] focus:ring-2 focus:ring-[#E52E2E]/20 outline-none transition-all"
+                        className="w-12 h-14 text-center text-2xl font-bold bg-white border border-gray-200 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] text-[#111827] focus:border-[#FACC15] focus:ring-2 focus:ring-[#FACC15]/20 outline-none transition-all"
                       />
                     ))}
                   </div>
@@ -557,7 +557,7 @@ export default function UnifiedOTPFastLogin() {
                         type="button"
                         onClick={handleResendOTP}
                         disabled={loading}
-                        className="text-[#E52E2E] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                        className="text-[#FACC15] font-bold hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <RotateCcw className="w-3 h-3" /> Resend OTP
                       </button>
@@ -575,10 +575,10 @@ export default function UnifiedOTPFastLogin() {
                   <button
                     type="submit"
                     disabled={loading || otp.replace(/\D/g, "").length !== 6}
-                    className="w-full h-[56px] rounded-full bg-[#E52E2E] hover:bg-[#D92323] text-white font-bold text-[17px] shadow-[0_12px_28px_rgba(229,46,46,0.36)] hover:shadow-[0_16px_34px_rgba(229,46,46,0.46)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-3 cursor-pointer disabled:opacity-60"
+                    className="w-full h-[56px] rounded-full bg-[#f7f7f7] hover:bg-[#eaeaea] text-[#111827] border border-gray-300 font-bold text-[17px] shadow-[0_12px_28px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_34px_rgba(0,0,0,0.1)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-3 cursor-pointer disabled:opacity-60"
                   >
                     {loading ? (
-                      <Loader2 className="w-6 h-6 animate-spin text-white" />
+                      <Loader2 className="w-6 h-6 animate-spin text-[#111827]" />
                     ) : (
                       <>
                         <span>Verify & Login</span>
@@ -596,7 +596,7 @@ export default function UnifiedOTPFastLogin() {
         <div className="w-full relative z-10 leading-none select-none pointer-events-none mt-auto">
           <img
             src="/food/login-bottom-banner.png"
-            alt="CityFood - Good Food, Fast Delivery, Better Tomorrow"
+            alt="Jharkhand Rasoi - Good Food, Fast Delivery, Better Tomorrow"
             className="w-full object-cover object-top block drop-shadow-sm"
           />
         </div>
@@ -604,8 +604,8 @@ export default function UnifiedOTPFastLogin() {
         {/* --- New User Name Registration Modal --- */}
         <Dialog open={showNameModal} onOpenChange={setShowNameModal}>
           <DialogContent className="sm:max-w-md bg-white rounded-3xl p-6 shadow-2xl border-0">
-            <DialogTitle className="text-xl font-extrabold text-[#0A4D27] text-center">
-              Welcome to CityFood! 🎉
+            <DialogTitle className="text-xl font-extrabold text-[#FACC15] text-center">
+              Welcome to Jharkhand Rasoi! 🎉
             </DialogTitle>
             <DialogDescription className="text-center text-gray-600 text-sm mt-1">
               What should we call you? Please enter your name to complete your profile.
@@ -620,7 +620,7 @@ export default function UnifiedOTPFastLogin() {
                   placeholder="e.g. John Doe"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="h-12 rounded-xl bg-gray-50 border-gray-200 text-gray-900 font-semibold focus:border-[#E52E2E] focus:ring-1 focus:ring-[#E52E2E]"
+                  className="h-12 rounded-xl bg-gray-50 border-gray-200 text-gray-900 font-semibold focus:border-[#FACC15] focus:ring-1 focus:ring-[#FACC15]/20"
                   autoFocus
                   required
                 />
@@ -628,12 +628,12 @@ export default function UnifiedOTPFastLogin() {
               <Button
                 type="submit"
                 disabled={isUpdatingName || !newName.trim()}
-                className="w-full h-12 rounded-xl bg-[#E52E2E] hover:bg-[#D92323] text-white font-bold text-base shadow-lg shadow-red-500/30 hover:brightness-105"
+                className="w-full h-12 rounded-xl bg-[#f7f7f7] hover:bg-[#eaeaea] text-[#111827] border border-gray-300 font-bold text-base shadow-lg shadow-gray-200 hover:brightness-105"
               >
                 {isUpdatingName ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin text-[#111827]" />
                 ) : (
-                  "Continue to CityFood"
+                  "Continue to Jharkhand Rasoi"
                 )}
               </Button>
             </form>

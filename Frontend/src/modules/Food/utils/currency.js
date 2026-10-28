@@ -1,6 +1,6 @@
 /**
  * Currency Conversion Utility
- * Converts USD to INR (CityFood Rupees)
+ * Converts USD to INR (Jharkhand Rasoi Rupees)
  */
 
 // Exchange rate: 1 USD = 83 INR (approximate)

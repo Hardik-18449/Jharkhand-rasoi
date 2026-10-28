@@ -1,12 +1,12 @@
 {
-  "name": "cityfood-backend",
+  "name": "jharkhandrasoi-backend",
   "version": "1.0.0",
   "type": "module",
-  "description": "CityFood Master Product Backend",
+  "description": "Jharkhand Rasoi Master Product Backend",
   "main": "server.js",
   "scripts": {
-    "start": "node api.js && node server.js",
-    "dev": "node api.js && nodemon server.js",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
     "dev:socket": "nodemon socket-server.js",
     "worker:otp": "node src/queues/workers/otp.worker.js",
     "worker:notification": "node src/queues/workers/notification.worker.js",

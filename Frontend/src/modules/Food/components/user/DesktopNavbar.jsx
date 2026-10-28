@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useEffect, useState, useRef, useMemo } from "react"
-import { ChevronDown, ShoppingCart, Wallet, Search, Mic } from "lucide-react"
+import { ChevronDown, ShoppingCart, Wallet, Search, Mic, Bell, X } from "lucide-react"
 import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
 import { Switch } from "@food/components/ui/switch"
@@ -36,6 +36,7 @@ export default function DesktopNavbar({ showLogo = true }) {
     const [showDining, setShowDining] = useState(true)
     const navRef = useRef(null)
     const cartCount = getCartCount()
+    
 
     // Show area if available, otherwise show city
     const areaName = userLocation?.area && userLocation?.area.trim() ? userLocation.area.trim() : null
@@ -74,17 +75,14 @@ export default function DesktopNavbar({ showLogo = true }) {
         openLocationSelector()
     }
 
-    // Check active routes - support both /user/* and /* paths
-    const isDining = location.pathname === "/food/user/dining" || location.pathname === "/food/dining"
-    const isUnder250 = location.pathname === "/food/user/under-250" || location.pathname === "/food/under-250"
-    const isProfile = location.pathname.startsWith("/food/user/profile") || location.pathname.startsWith("/food/profile")
-    const isDelivery = !isDining && !isUnder250 && !isProfile && (location.pathname === "/food/user" || location.pathname === "/food" || (location.pathname.startsWith("/food/user") && !location.pathname.includes("/dining") && !location.pathname.includes("/under-250") && !location.pathname.includes("/profile")))
-    const isBannerRoute =
-        location.pathname === "/food/user" ||
-        location.pathname === "/food" ||
-        location.pathname === "/food/user/under-250" ||
-        location.pathname === "/food/under-250"
-
+    // Check active routes - robust against trailing slashes
+    const currentPath = (location.pathname || "/").replace(/\/+$/, "") || "/food/user"
+    const isDining = currentPath === "/food/user/dining" || currentPath === "/food/dining"
+    const isUnder250 = currentPath === "/food/user/under-250" || currentPath === "/food/under-250"
+    const isProfile = currentPath.startsWith("/food/user/profile") || currentPath.startsWith("/food/profile")
+    const isDelivery = !isDining && !isUnder250 && !isProfile
+    const isBannerRoute = currentPath === "/food/user" || currentPath === "/food" || currentPath === "/food/user/under-250" || currentPath === "/food/under-250"
+    
     // Load business settings company name
     useEffect(() => {
         const loadName = async () => {
@@ -118,37 +116,8 @@ export default function DesktopNavbar({ showLogo = true }) {
         }
     }, [])
 
-    useEffect(() => {
-        if (!isBannerRoute) {
-            setHasScrolledPastBanner(true)
-            return
-        }
+// Scroll listener removed for performance
 
-        const handleScroll = () => {
-            const heroShell =
-                document.querySelector('[data-home-hero-shell="true"]') ||
-                document.querySelector('[data-banner-shell="true"]')
-            const navElement = navRef.current
-
-            if (!heroShell || !navElement) {
-                setHasScrolledPastBanner(false)
-                return
-            }
-
-            const heroRect = heroShell.getBoundingClientRect()
-            const navHeight = navElement.getBoundingClientRect().height || 0
-            setHasScrolledPastBanner(heroRect.bottom <= navHeight)
-        }
-
-        handleScroll()
-        window.addEventListener("scroll", handleScroll, { passive: true })
-        window.addEventListener("resize", handleScroll)
-
-        return () => {
-            window.removeEventListener("scroll", handleScroll)
-            window.removeEventListener("resize", handleScroll)
-        }
-    }, [isBannerRoute])
 
     // Fetch landing settings to get dynamic price limit
     useEffect(() => {
@@ -175,13 +144,10 @@ export default function DesktopNavbar({ showLogo = true }) {
     return (
         <nav
             ref={navRef}
-            className={`hidden md:flex flex-col fixed top-0 left-0 right-0 z-50 py-2 transition-all duration-300 ${(isBannerRoute && !hasScrolledPastBanner)
-                ? "bg-transparent !bg-transparent border-0 shadow-none"
-                : "bg-background border-b border-border shadow-sm"
-                }`}
+            className="hidden md:flex flex-col fixed top-0 left-0 right-0 z-50 py-1 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm transition-colors duration-200"
         >
             {/* Top Row: Location - Search - Icons */}
-            <div className={`w-full ${(isBannerRoute && !hasScrolledPastBanner) ? "border-b border-transparent" : "border-b border-border"}`}>
+            <div className="w-full border-b border-gray-100 dark:border-gray-800/80">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 gap-4">
                         {/* Left: Logo & Location */}
@@ -200,7 +166,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                                         />
                                     ) : (
                                         <span className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
-                                            {companyName || "CityFood"}
+                                            {companyName || "Jharkhand Rasoi"}
                                         </span>
                                     )}
                                 </Link>
@@ -273,7 +239,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                                                 onClick={() => setHeroSearch("")}
                                             >
                                                 <span className="sr-only">Clear</span>
-                                                <span aria-hidden="true">�</span>
+                                                <X className="h-3 w-3 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200" />
                                             </Button>
                                         )}
                                     </div>
@@ -294,8 +260,18 @@ export default function DesktopNavbar({ showLogo = true }) {
                             </div>
                         </div>
 
-                        {/* Right: Wallet and Cart Icons */}
+                        {/* Right: Notifications, Wallet and Cart Icons */}
                         <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
+                            {/* Notifications Icon */}
+                            <Link to="/food/user/notifications">
+                                <Button
+                                    variant="ghost"
+                                    className="h-10 w-10 lg:h-12 lg:w-12 rounded-full p-0 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                    title="Notifications"
+                                >
+                                    <Bell className="!h-5 !w-5 lg:!h-6 lg:!w-6 text-gray-700 dark:text-gray-300" strokeWidth={2} />
+                                </Button>
+                            </Link>
                             {/* Wallet Icon */}
                             <Link to="/food/user/wallet">
                                 <Button
@@ -328,7 +304,7 @@ export default function DesktopNavbar({ showLogo = true }) {
             </div>
 
             {/* Bottom Row: Navigation Tabs & Veg Mode */}
-            <div className={`w-full pb-3 ${(isBannerRoute && !hasScrolledPastBanner) ? "bg-transparent !bg-transparent" : "bg-background"}`}>
+            <div className="w-full pb-2">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-center h-12">
                         {/* Navigation Tabs - Centered with spacing */}
@@ -345,7 +321,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                                 {isDelivery && (
                                     <motion.div
                                         layoutId="navIndicator"
-                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-primary"
+                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#FACC15]"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.3 }}
@@ -365,7 +341,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                                 {isUnder250 && (
                                     <motion.div
                                         layoutId="navIndicator"
-                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-primary"
+                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#FACC15]"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.3 }}
@@ -386,7 +362,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                                     {isDining && (
                                         <motion.div
                                             layoutId="navIndicator"
-                                            className="absolute -bottom-3 left-0 right-0 h-0.5 bg-primary"
+                                            className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#FACC15]"
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             transition={{ duration: 0.3 }}
@@ -407,7 +383,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                                 {isProfile && (
                                     <motion.div
                                         layoutId="navIndicator"
-                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-primary"
+                                        className="absolute -bottom-3 left-0 right-0 h-0.5 bg-[#FACC15]"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.3 }}

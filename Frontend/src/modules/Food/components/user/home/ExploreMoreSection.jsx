@@ -8,7 +8,7 @@ export default function ExploreMoreSection({
   showSkeleton = false,
 }) {
   return (
-    <section className="content-auto pt-2 sm:pt-3 lg:pt-4">
+    <section className="pt-2 sm:pt-3 lg:pt-4">
       <div className="px-4 mb-6 flex items-center gap-2">
         <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight">
           {heading}

@@ -195,6 +195,15 @@ export function PhotoUploadModal({ isOpen, onClose, onUpload }) {
         setLocationState({ loading: false, address, error: null });
       },
       (err) => {
+        const isLocalDev = typeof window !== 'undefined' && (
+          window.location.hostname === 'localhost' || 
+          window.location.hostname === '127.0.0.1' || 
+          Boolean(import.meta.env.DEV)
+        );
+        if (isLocalDev) {
+          setLocationState({ loading: false, address: 'Indore, Madhya Pradesh (Demo)', error: null });
+          return;
+        }
         setLocationState({ loading: false, address: null, error: 'Location permission denied' });
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }

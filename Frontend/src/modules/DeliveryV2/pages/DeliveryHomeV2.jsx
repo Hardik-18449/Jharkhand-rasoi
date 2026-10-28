@@ -771,6 +771,19 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
         deliveryAPI.updateLocation(lat, lng, true, { heading: resolvedHeading, speed: speed || 0, accuracy: pos.coords.accuracy }).catch(() => {});
       }
     }, (error) => {
+      const isLocalDev = typeof window !== 'undefined' && (
+        window.location.hostname === 'localhost' || 
+        window.location.hostname === '127.0.0.1' || 
+        Boolean(import.meta.env.DEV)
+      );
+
+      if (isLocalDev) {
+        if (!riderLocation) {
+          setRiderLocation({ lat: 22.7169, lng: 75.8732, heading: 0 });
+        }
+        return;
+      }
+
       const isTimeout = error?.code === 3;
       const message = isTimeout
         ? 'Unable to get your current location. Retrying GPS…'
@@ -1439,28 +1452,45 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                 onClick={async () => {
                   const nextState = !isOnline;
                   if (nextState) {
+                      const isLocalDev = typeof window !== 'undefined' && (
+                        window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1' || 
+                        Boolean(import.meta.env.DEV)
+                      );
+
+                      const proceedOnlineWithCoords = (lat, lng, heading = 0) => {
+                          setRiderLocation({
+                            lat,
+                            lng,
+                            heading,
+                          });
+                          setLocationError('');
+                          setShowPhotoModal(true);
+                      };
+
                       if (!navigator.geolocation) {
+                          if (isLocalDev) {
+                              toast.info("Using local test coordinates (Indore)");
+                              proceedOnlineWithCoords(22.7169, 75.8732);
+                              return;
+                          }
                           toast.error("Geolocation is not supported by your browser.");
                           return;
                       }
-                      
-                      // Show a small loading state if needed, but since it's fast we just request
+
                       navigator.geolocation.getCurrentPosition(
                         (pos) => {
-                            // GPS is enabled and accessible
-                            setRiderLocation({
-                              lat: pos.coords.latitude,
-                              lng: pos.coords.longitude,
-                              heading: pos.coords.heading || 0,
-                            });
-                            setLocationError('');
-                            setShowPhotoModal(true);
+                            proceedOnlineWithCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.heading || 0);
                         },
                         (err) => {
-                            // GPS is blocked or disabled
+                            if (isLocalDev) {
+                                toast.info("GPS unavailable on desktop; using demo location (Indore)");
+                                proceedOnlineWithCoords(22.7169, 75.8732);
+                                return;
+                            }
                             toast.error("Please enable your GPS for current location");
                         },
-                        { timeout: 10000, enableHighAccuracy: true }
+                        { timeout: 8000, enableHighAccuracy: false, maximumAge: 30000 }
                       );
                   } else {
                       toggleOnline(); // Store action

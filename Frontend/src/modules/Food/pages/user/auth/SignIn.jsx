@@ -225,7 +225,7 @@ export default function SignIn() {
         {/* --- Main Content Area --- */}
         <div className="w-full px-6 flex-1 flex flex-col items-center justify-center relative z-20 pt-1 pb-4">
           
-          {/* Circular CityFood Badge Logo */}
+          {/* Circular Jharkhand Rasoi Badge Logo */}
           <motion.div
             initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -234,7 +234,7 @@ export default function SignIn() {
           >
             <img
               src="/logo.png"
-              alt="CityFood Logo"
+              alt="Jharkhand Rasoi Logo"
               className="w-full h-full object-cover scale-[1.04] select-none pointer-events-none transition-transform hover:scale-108 duration-300"
               onError={(e) => {
                 e.target.onerror = null
@@ -250,10 +250,10 @@ export default function SignIn() {
             transition={{ duration: 0.4, delay: 0.1 }}
             className="text-center w-full mb-6"
           >
-            <h1 className="text-[34px] sm:text-[38px] font-extrabold tracking-[-0.03em] leading-[1.12] text-[#0A4D27]">
+            <h1 className="text-[34px] sm:text-[38px] font-extrabold tracking-[-0.03em] leading-[1.12] text-[#FACC15]">
               Delicious food
             </h1>
-            <div className="text-[34px] sm:text-[38px] font-extrabold tracking-[-0.03em] leading-[1.12] text-[#E52E2E] flex items-center justify-center gap-2 mt-0.5">
+            <div className="text-[34px] sm:text-[38px] font-extrabold tracking-[-0.03em] leading-[1.12] text-[#f7f7f7] flex items-center justify-center gap-2 mt-0.5">
               <span>Delivered fast</span>
               <span className="inline-block transform hover:rotate-12 transition-transform text-[32px] cursor-default select-none">🍕</span>
             </div>
@@ -309,10 +309,10 @@ export default function SignIn() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-[56px] rounded-full bg-[#E52E2E] hover:bg-[#D92323] text-white font-bold text-[17px] shadow-[0_12px_28px_rgba(229,46,46,0.36)] hover:shadow-[0_16px_34px_rgba(229,46,46,0.46)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 cursor-pointer"
+                className="w-full h-[56px] rounded-full bg-[#f7f7f7] hover:bg-[#eaeaea] text-[#111827] border border-gray-300 font-bold text-[17px] shadow-[0_12px_28px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_34px_rgba(0,0,0,0.1)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 cursor-pointer"
               >
                 {isLoading ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  <Loader2 className="w-6 h-6 animate-spin text-[#111827]" />
                 ) : (
                   <>
                     <span>Send OTP</span>
@@ -326,7 +326,7 @@ export default function SignIn() {
                 By continuing, you agree to our{" "}
                 <Link
                   to="/profile/terms"
-                  className="text-[#0A4D27] font-bold underline decoration-[#0A4D27]/40 underline-offset-2 hover:text-[#064E3B] transition-colors"
+                  className="text-[#FACC15] font-bold underline decoration-[#FACC15]/40 underline-offset-2 hover:text-[#eab308] transition-colors"
                 >
                   Terms & Privacy Policy
                 </Link>
@@ -339,7 +339,7 @@ export default function SignIn() {
         <div className="w-full relative z-10 leading-none select-none pointer-events-none mt-auto">
           <img
             src="/food/login-bottom-banner.png"
-            alt="CityFood - Good Food, Fast Delivery, Better Tomorrow"
+            alt="Jharkhand Rasoi - Good Food, Fast Delivery, Better Tomorrow"
             className="w-full object-cover object-top block drop-shadow-sm"
           />
         </div>

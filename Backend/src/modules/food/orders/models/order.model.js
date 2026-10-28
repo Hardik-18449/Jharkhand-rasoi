@@ -22,10 +22,10 @@ const deliveryAddressSchema = new mongoose.Schema(
         label: { type: String, enum: ['Home', 'Office', 'Other'], default: 'Home' },
         name: { type: String, default: '', trim: true },
         fullName: { type: String, default: '', trim: true },
-        street: { type: String, required: true, trim: true },
+        street: { type: String, default: 'Selected Location', trim: true },
         additionalDetails: { type: String, default: '', trim: true },
-        city: { type: String, required: true, trim: true },
-        state: { type: String, required: true, trim: true },
+        city: { type: String, default: 'Indore', trim: true },
+        state: { type: String, default: 'Madhya Pradesh', trim: true },
         zipCode: { type: String, default: '', trim: true },
         phone: { type: String, default: '', trim: true },
         location: {
@@ -59,13 +59,14 @@ const paymentSchema = new mongoose.Schema(
     {
         method: {
             type: String,
-            enum: ['cash', 'razorpay', 'razorpay_qr', 'wallet'],
+            enum: ['cash', 'razorpay', 'razorpay_qr', 'wallet', 'online'],
             required: true
         },
         status: {
             type: String,
             enum: [
                 'cod_pending',
+                'pending',
                 'created',
                 'authorized',
                 'paid',

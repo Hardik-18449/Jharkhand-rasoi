@@ -170,56 +170,8 @@ export default function Home() {
   const [isSwitchingOffVegMode, setIsSwitchingOffVegMode] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0, triangleLeft: 0 });
   const vegModeToggleRef = useRef(null);
-  const [isStickyHeaderVisible, setIsStickyHeaderVisible] = useState(false);
-  const [showStickySearch, setShowStickySearch] = useState(false);
-  const [isCategoryStuck, setIsCategoryStuck] = useState(false);
-  const categoryAnchorRef = useRef(null);
-  const lastScrollY = useRef(0);
-  const scrollRafRef = useRef(null);
+// Removed unused scroll work to eliminate layout reflows
 
-  useEffect(() => {
-    const runScrollWork = () => {
-      scrollRafRef.current = null;
-      const currentScrollY = window.scrollY;
-
-      const categoriesSection = document.getElementById("categories-section");
-      if (categoriesSection) {
-        const rect = categoriesSection.getBoundingClientRect();
-        const sectionBottom = rect.bottom + currentScrollY;
-        setIsStickyHeaderVisible(currentScrollY > sectionBottom);
-        setShowStickySearch(currentScrollY < lastScrollY.current);
-      }
-
-      const heroShell = heroShellRef.current;
-      const stickyHeader = stickyHeaderRef.current;
-      if (heroShell) {
-        const heroRect = heroShell.getBoundingClientRect();
-        const stickyHeight = stickyHeader?.getBoundingClientRect().height || 0;
-        setHasScrolledPastBanner(heroRect.bottom <= stickyHeight);
-      } else {
-        setHasScrolledPastBanner(false);
-      }
-
-      lastScrollY.current = currentScrollY;
-    };
-
-    const onScrollOrResize = () => {
-      if (scrollRafRef.current != null) return;
-      scrollRafRef.current = window.requestAnimationFrame(runScrollWork);
-    };
-
-    runScrollWork();
-    window.addEventListener("scroll", onScrollOrResize, { passive: true });
-    window.addEventListener("resize", onScrollOrResize);
-
-    return () => {
-      window.removeEventListener("scroll", onScrollOrResize);
-      window.removeEventListener("resize", onScrollOrResize);
-      if (scrollRafRef.current != null) {
-        window.cancelAnimationFrame(scrollRafRef.current);
-      }
-    };
-  }, []);
 
   const [heroBannerImages, setHeroBannerImages] = useState(() => homePageCache.heroBannerImages ?? []);
   const [heroBannersData, setHeroBannersData] = useState(() => homePageCache.heroBannersData ?? []);
@@ -982,23 +934,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("food");
   const [headerBgHeight, setHeaderBgHeight] = useState(0);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsCategoryStuck(!entry.isIntersecting);
-      },
-      {
-        threshold: 0,
-        rootMargin: "-72px 0px 0px 0px",
-      }
-    );
+// Category intersection observer removed to eliminate scroll jitter
 
-    if (categoryAnchorRef.current) {
-      observer.observe(categoryAnchorRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     const calculateHeight = () => {
@@ -2186,7 +2123,7 @@ export default function Home() {
           {/* Brand Top Section (Dark) */}
           {/* Decoupled Dark Background - Dynamic height based on actual components to prevent clipping sticky elements while covering properly */}
           <div 
-             className="absolute top-0 left-0 right-0 overflow-hidden rounded-b-[28px] bg-gradient-to-b from-[#3a142c] to-[#1a0a14] shadow-lg pointer-events-none z-0 transition-all duration-300 [transform:translateZ(0)] [mask-image:-webkit-radial-gradient(white,black)]"
+             className="md:hidden absolute top-0 left-0 right-0 overflow-hidden rounded-b-[28px] bg-gradient-to-b from-[#3a142c] to-[#1a0a14] shadow-lg pointer-events-none z-0 transition-all duration-300 [transform:translateZ(0)] [mask-image:-webkit-radial-gradient(white,black)]"
              style={{ height: festVideoActive ? '360px' : (headerBgHeight > 0 ? `${headerBgHeight}px` : (activeTab === 'food' ? '300px' : '140px')) }}
           >
             {festVideoActive && (
@@ -2240,7 +2177,6 @@ export default function Home() {
               placeholders={placeholders}
               vegMode={vegMode}
               handleVegModeChange={handleVegModeChange}
-              isCategoryStuck={isCategoryStuck}
               handleVoiceSearchClick={handleVoiceSearchClick}
               pushSearchDown={activeTab === "food" && festVideoActive}
             />
@@ -2250,13 +2186,11 @@ export default function Home() {
                 {festVideoActive ? (
                   <div className="w-full h-3 sm:h-4" />
                 ) : (
-                  <div className="pb-4 sm:pb-6">
-                    <FestBanner
-                      isVegMode={vegMode}
-                      images={[]}
-                      hideFoodImages={false}
-                    />
-                  </div>
+                  <FestBanner
+                    isVegMode={vegMode}
+                    images={[]}
+                    hideFoodImages={false}
+                  />
                 )}
               </div>
             )}
@@ -2275,12 +2209,8 @@ export default function Home() {
               >
 
                 {/* "What's on your mind today?" Section - Now with Sticky Logic */}
-                <div ref={categoryAnchorRef} className="h-0 w-full" />
-                <div
-                  id="categories-section"
-                  className={`sticky top-[60px] z-[50] w-full transition-all duration-300 ${isCategoryStuck ? "bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.05)] pb-2 pt-2 border-b border-white/50 dark:border-white/10 px-4" : "bg-transparent px-4 py-2.5"} space-y-3`}
-                >
-                  <div className={`flex items-center gap-2 min-w-0 ${isCategoryStuck ? 'hidden' : ''}`}>
+                <div id="categories-section" className="w-full px-4 py-2.5 space-y-3">
+                  <div className="flex items-center gap-2 min-w-0">
                     <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white min-w-0 flex-shrink leading-tight">What's on your mind today?</h2>
                     <div className="h-[1px] bg-gray-100 dark:bg-gray-800 flex-1"></div>
                     <Link to="/food/user/under-250" className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-0.5 whitespace-nowrap shrink-0 hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -2308,19 +2238,11 @@ export default function Home() {
                         className={`flex-shrink-0 flex flex-col items-center gap-1.5 group w-[76px] transition-transform ${isActive ? 'scale-105' : ''}`}
                       >
                         <div className={`relative w-[68px] h-[68px] sm:w-[84px] sm:h-[84px] rounded-full overflow-hidden shadow-md border-2 ${isActive ? 'border-primary ring-2 ring-primary/30' : 'border-gray-100 dark:border-gray-800'} bg-white dark:bg-[#1a1a1a] group-active:scale-95 transition-all duration-300`}>
-                          {/* Shining Glint Effect */}
+                          {/* Shining Glint Effect - GPU CSS */}
                           <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
-                            <motion.div
-                              animate={{
-                                x: ['-200%', '200%'],
-                              }}
-                              transition={{
-                                duration: 2,
-                                repeat: Infinity,
-                                repeatDelay: 3 + index * 0.5,
-                                ease: "easeInOut"
-                              }}
-                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-20deg] w-[150%] h-full"
+                            <div
+                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-20deg] w-[150%] h-full animate-explore-shine"
+                              style={{ animationDuration: `${3 + (index % 4) * 0.5}s` }}
                             />
                           </div>
 
@@ -2350,7 +2272,7 @@ export default function Home() {
 
 
                 {/* Filters Sticky Sidebar Header */}
-                <section className="bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md sticky top-0 z-[40] -mx-4 w-[calc(100%+2rem)] border-b border-gray-100 dark:border-white/5 shadow-sm transition-colors duration-300">
+                <section className="bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md sticky top-[64px] md:top-[116px] z-[30] -mx-4 w-[calc(100%+2rem)] border-b border-gray-100 dark:border-white/5 shadow-sm transition-colors duration-300">
                   <div
                     className="flex items-center gap-2 overflow-x-auto scrollbar-hide px-4 py-2.5"
                     style={{
@@ -2418,7 +2340,7 @@ export default function Home() {
 
         {recommendedForYouRestaurants.length > 0 && (
           <motion.section
-            className="content-auto pt-1 sm:pt-2"
+            className="pt-1 sm:pt-2"
             initial={false}
             animate={{ opacity: 1, y: 0 }}>
             <h2 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-400 dark:text-gray-500 tracking-widest uppercase mb-2 sm:mb-3 px-4">
@@ -2485,7 +2407,7 @@ export default function Home() {
 
         {/* Restaurants - Enhanced with Animations */}
         <section
-          className="content-auto space-y-0 pt-3 sm:pt-4 lg:pt-6 pb-8 md:pb-10"
+          className="space-y-0 pt-3 sm:pt-4 lg:pt-6 pb-8 md:pb-10"
         >
           {!shouldShowOutOfZoneHome && (
             <>

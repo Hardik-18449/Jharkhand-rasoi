@@ -174,15 +174,15 @@ export const getCachedSettings = () => cachedSettings;
 
 export const getCompanyName = () => {
   const settings = getCachedSettings();
-  return settings?.companyName || 'CityFood';
+  return settings?.companyName || 'Jharkhand Rasoi';
 };
 
 export const getCompanyNameAsync = async () => {
   try {
     const settings = await loadBusinessSettings();
-    return settings?.companyName || 'CityFood';
+    return settings?.companyName || 'Jharkhand Rasoi';
   } catch (_) {
-    return 'CityFood';
+    return 'Jharkhand Rasoi';
   }
 };
 
