@@ -18,7 +18,8 @@ pids
 *.pid
 *.seed
 *.pid.lock
-uploads/
+/uploads/
+!src/modules/uploads/
 backups/
 *.dump
 
