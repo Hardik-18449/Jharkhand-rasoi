@@ -329,6 +329,7 @@ export default function RestaurantsList() {
 
   const [searchParams] = useSearchParams()
   const restaurantIdFromUrl = searchParams.get("restaurantId")
+  const typeFromUrl = searchParams.get("type")
 
   useEffect(() => {
     if (restaurantIdFromUrl && restaurants.length > 0) {
@@ -343,8 +344,16 @@ export default function RestaurantsList() {
     all: "All",
     businessModel: "",
     zone: "",
-    restaurantType: "all",
+    restaurantType: typeFromUrl === "franchise" ? "franchise" : "all",
   })
+
+  useEffect(() => {
+    if (typeFromUrl === "franchise") {
+      setFilters(prev => ({ ...prev, restaurantType: "franchise" }))
+    } else if (typeFromUrl === "independent") {
+      setFilters(prev => ({ ...prev, restaurantType: "independent" }))
+    }
+  }, [typeFromUrl])
 
   const franchiseCount = useMemo(() => restaurants.filter(r => r.restaurantType === 'franchise').length, [restaurants])
   const independentCount = useMemo(() => restaurants.filter(r => (r.restaurantType || 'independent') === 'independent').length, [restaurants])
