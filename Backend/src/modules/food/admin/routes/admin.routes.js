@@ -1,3 +1,9 @@
+import {
+    getAdminFranchiseStockController,
+    allocateAdminFranchiseStockController,
+    removeAdminFranchiseStockController,
+    getAdminFranchiseReportsController,
+} from '../../restaurant/controllers/franchise.controller.js';
 import express from 'express';
 import { AuthError } from '../../../../core/auth/errors.js';
 import * as adminController from '../controllers/admin.controller.js';
@@ -291,5 +297,12 @@ router.patch('/app-intro-ads/order', appIntroAdController.updateAppIntroAdsOrder
 router.patch('/app-intro-ads/:id', upload.fields([{ name: 'media', maxCount: 1 }]), appIntroAdController.updateAppIntroAd);
 router.patch('/app-intro-ads/:id/toggle', appIntroAdController.toggleAppIntroAdStatus);
 router.delete('/app-intro-ads/:id', appIntroAdController.deleteAppIntroAd);
+
+
+// ----- Franchise Management -----
+router.get('/franchise/:restaurantId/stock', getAdminFranchiseStockController);
+router.post('/franchise/:restaurantId/stock/allocate', allocateAdminFranchiseStockController);
+router.delete('/franchise/:restaurantId/stock/:stockId', removeAdminFranchiseStockController);
+router.get('/franchise/:restaurantId/reports', getAdminFranchiseReportsController);
 
 export default router;

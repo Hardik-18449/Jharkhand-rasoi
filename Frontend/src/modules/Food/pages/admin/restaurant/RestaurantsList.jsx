@@ -5,6 +5,7 @@ import { adminAPI, restaurantAPI, uploadAPI } from "@food/api"
 import { clearModuleAuth } from "@food/utils/auth"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@food/components/ui/dropdown-menu"
 import { exportRestaurantsToPDF } from "@food/components/admin/restaurants/restaurantsExportUtils"
+import FranchiseManagementModal from "@food/components/admin/restaurants/FranchiseManagementModal"
 import { getGoogleMapsApiKey } from "@food/utils/googleMapsApiKey"
 import { getMediaUrl } from "@/shared/utils/media.js"
 import { getImageValidationError, getUploadErrorMessage } from '@/shared/utils/uploadErrors.js'
@@ -136,6 +137,7 @@ export default function RestaurantsList() {
   const [banConfirmDialog, setBanConfirmDialog] = useState(null) // { restaurant, action: 'ban' | 'unban' }
   const [banning, setBanning] = useState(false)
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState(null) // { restaurant }
+  const [franchiseModalRestaurant, setFranchiseModalRestaurant] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" })
   const [isEditingDetails, setIsEditingDetails] = useState(false)
@@ -292,6 +294,7 @@ export default function RestaurantsList() {
               isBanned: isBanned,
               rating: restaurant.ratings?.average || restaurant.rating || 0,
               logo: getPrimaryRestaurantImage(restaurant, PLACEHOLDER_40),
+              restaurantType: restaurant.restaurantType || "independent",
               originalData: restaurant,
             }
           })
@@ -340,7 +343,11 @@ export default function RestaurantsList() {
     all: "All",
     businessModel: "",
     zone: "",
+    restaurantType: "all",
   })
+
+  const franchiseCount = useMemo(() => restaurants.filter(r => r.restaurantType === 'franchise').length, [restaurants])
+  const independentCount = useMemo(() => restaurants.filter(r => (r.restaurantType || 'independent') === 'independent').length, [restaurants])
 
   const filteredRestaurants = useMemo(() => {
     let result = [...restaurants]
@@ -364,6 +371,10 @@ export default function RestaurantsList() {
 
     if (filters.zone) {
       result = result.filter(restaurant => restaurant.zone === filters.zone)
+    }
+
+    if (filters.restaurantType && filters.restaurantType !== "all") {
+      result = result.filter(restaurant => (restaurant.restaurantType || "independent") === filters.restaurantType)
     }
 
     // Apply Sorting
@@ -1259,6 +1270,44 @@ export default function RestaurantsList() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-xl font-bold text-slate-900">Restaurants List</h2>
+              {/* Restaurant Model Tabs */}
+              <div className="flex items-center bg-purple-50/80 border border-purple-200/60 p-1 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setFilters(prev => ({ ...prev, restaurantType: "all" }))}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                    filters.restaurantType === "all" || !filters.restaurantType
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  All Outlets ({totalRestaurants})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilters(prev => ({ ...prev, restaurantType: "independent" }))}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                    filters.restaurantType === "independent"
+                      ? "bg-white text-blue-700 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  Independent ({independentCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilters(prev => ({ ...prev, restaurantType: "franchise" }))}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                    filters.restaurantType === "franchise"
+                      ? "bg-purple-700 text-white shadow-sm"
+                      : "text-purple-700 hover:text-purple-900"
+                  }`}
+                >
+                  🏢 Franchise List ({franchiseCount})
+                </button>
+              </div>
+
+              {/* Status Filter */}
               <div className="flex items-center bg-slate-100 p-1 rounded-lg">
                 <button
                   type="button"
@@ -1269,7 +1318,7 @@ export default function RestaurantsList() {
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
-                  All ({totalRestaurants})
+                  All Status
                 </button>
                 <button
                   type="button"
@@ -1463,6 +1512,16 @@ export default function RestaurantsList() {
                               </span>
                               <span className="text-xs text-slate-500">ID #{formatRestaurantId(restaurant.originalData?.restaurantId || restaurant.originalData?._id || restaurant._id || restaurant.id)}</span>
                               <span className="text-xs text-slate-500">{renderStars(restaurant.rating)}</span>
+                              {restaurant.restaurantType === 'franchise' ? (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 w-fit mt-1">
+                                  <Building2 className="w-2.5 h-2.5" />
+                                  Franchise
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200 w-fit mt-1">
+                                  Independent
+                                </span>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -1511,6 +1570,19 @@ export default function RestaurantsList() {
                                 <span>Download Menu</span>
                               </button>
                             )}
+                            <button
+                              type="button"
+                              onClick={() => setFranchiseModalRestaurant(restaurant)}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                                restaurant.restaurantType === 'franchise'
+                                  ? 'bg-purple-100 text-purple-800 hover:bg-purple-200 border border-purple-300'
+                                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                              }`}
+                              title="Franchise Stock & Daily Reports"
+                            >
+                              <Package className="w-3.5 h-3.5" />
+                              <span>Stock & Reports</span>
+                            </button>
                             <button
                               onClick={() => handleViewDetails(restaurant)}
                               className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
@@ -2813,6 +2885,13 @@ export default function RestaurantsList() {
           </div>
         </div>
       )}
+
+      {/* Franchise Stock & Reports Modal */}
+      <FranchiseManagementModal
+        isOpen={Boolean(franchiseModalRestaurant)}
+        onClose={() => setFranchiseModalRestaurant(null)}
+        restaurant={franchiseModalRestaurant}
+      />
 
       {/* Delete Confirmation Dialog */}
       {deleteConfirmDialog && (

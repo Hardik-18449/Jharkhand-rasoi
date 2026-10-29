@@ -18,6 +18,7 @@ const PrivacyPolicyPage = lazy(() => import("@food/pages/restaurant/PrivacyPolic
 const TermsAndConditionsPage = lazy(() => import("@food/pages/restaurant/TermsAndConditionsPage"))
 const MenuCategoriesPage = lazy(() => import("@food/pages/restaurant/MenuCategoriesPage"))
 
+const FranchiseOperations = lazy(() => import("@food/pages/restaurant/FranchiseOperations"))
 const ExploreMore = lazy(() => import("@food/pages/restaurant/ExploreMore"))
 const DeliverySettings = lazy(() => import("@food/pages/restaurant/DeliverySettings"))
 const RushHour = lazy(() => import("@food/pages/restaurant/RushHour"))
@@ -117,6 +118,7 @@ export default function RestaurantRouter() {
             <Route path="update-bank-details" element={<UpdateBankDetails />} />
             <Route path="reservations" element={<Navigate to="/food/restaurant/explore" replace />} />
             <Route path="zone-setup" element={<ZoneSetup />} />
+            <Route path="franchise-operations" element={<FranchiseOperations />} />
             </Route>
           </Route>
         </Routes>

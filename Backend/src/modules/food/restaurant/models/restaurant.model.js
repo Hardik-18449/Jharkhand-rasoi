@@ -305,6 +305,12 @@ const restaurantSchema = new mongoose.Schema(
       default: false,
       index: true,
     },
+    restaurantType: {
+      type: String,
+      enum: ["independent", "franchise"],
+      default: "independent",
+      index: true,
+    },
   },
   {
     collection: "food_restaurants",

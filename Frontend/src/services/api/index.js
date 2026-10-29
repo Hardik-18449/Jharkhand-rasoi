@@ -682,6 +682,14 @@ export const adminAPI = {
     adminClient.patch("/food/admin/business-settings/toggles", body ?? {}),
   getDailySales: (date) =>
     adminClient.get("/food/admin/daily-sales", { params: { date } }),
+  getFranchiseStock: (restaurantId) =>
+    adminClient.get(`/food/admin/franchise/${restaurantId}/stock`),
+  allocateFranchiseStock: (restaurantId, body) =>
+    adminClient.post(`/food/admin/franchise/${restaurantId}/stock/allocate`, body),
+  removeFranchiseStock: (restaurantId, stockId) =>
+    adminClient.delete(`/food/admin/franchise/${restaurantId}/stock/${stockId}`),
+  getFranchiseReports: (restaurantId, params = {}) =>
+    adminClient.get(`/food/admin/franchise/${restaurantId}/reports`, { params }),
 };
 
 /** Restaurant API - OTP login via new backend; no email/password. */
@@ -1111,6 +1119,12 @@ export const restaurantAPI = {
   /** DELETE /food/restaurant/account - permanently delete restaurant account */
   deleteAccount: () =>
     restaurantClient.delete("/food/restaurant/account"),
+  getFranchiseStock: () =>
+    restaurantClient.get("/food/restaurant/franchise/stock"),
+  submitFranchiseDailyReport: (body) =>
+    restaurantClient.post("/food/restaurant/franchise/daily-report", body),
+  getFranchiseDailyReports: (params = {}) =>
+    restaurantClient.get("/food/restaurant/franchise/daily-reports", { params }),
 };
 
 function stableStringify(value) {

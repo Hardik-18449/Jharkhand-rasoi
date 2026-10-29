@@ -614,6 +614,7 @@ export const getCurrentRestaurantProfile = async (restaurantId) => {
         .select(
             [
                 'restaurantName',
+                'restaurantType',
                 'zoneId',
                 'cuisines',
                 'location',

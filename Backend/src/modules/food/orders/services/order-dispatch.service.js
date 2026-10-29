@@ -395,10 +395,13 @@ export async function tryAutoAssign(orderId, options = {}) {
         logger.warn(`[PM2 LOG] [Firebase DB] Failed to publish order ${order._id} to rider ${p.partnerId}`);
       }
 
-      // 2. Socket.IO (Fallback)
+      // 2. Socket.IO Broadcast to Rider
       if (io) {
         io.to(roomName).emit('new_order_available', eventPayload);
-        logger.info(`[PM2 LOG] [Socket.IO] Emitted order ${order._id} to room ${roomName}`);
+        io.to(roomName).emit('play_notification_sound', eventPayload);
+        io.to(roomName).emit('new_order', eventPayload);
+        io.to('all_delivery').emit('new_order_available', eventPayload);
+        logger.info(`[PM2 LOG] [Socket.IO] Emitted order ${order._id} to room ${roomName} & all_delivery`);
       }
     }
 

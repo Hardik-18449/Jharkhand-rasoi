@@ -305,12 +305,15 @@ export async function getRestaurants(query) {
     if (query.zoneId) {
         filter.zoneId = query.zoneId;
     }
+    if (query.restaurantType && ['independent', 'franchise'].includes(query.restaurantType)) {
+        filter.restaurantType = query.restaurantType;
+    }
     const [restaurants, total] = await Promise.all([
         FoodRestaurant.find(filter)
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
-            .select('restaurantName location area city profileImage coverImages menuImages menuPdf status rejectionReason rejectedAt isBanned ownerName ownerPhone zoneId zoneRank rating discount itemDiscounts discountRules openingTime closingTime deliveryTimings onboarding openDays estimatedDeliveryTime isActive')
+            .select('restaurantName restaurantType location area city profileImage coverImages menuImages menuPdf status rejectionReason rejectedAt isBanned ownerName ownerPhone zoneId zoneRank rating discount itemDiscounts discountRules openingTime closingTime deliveryTimings onboarding openDays estimatedDeliveryTime isActive')
             .populate('zoneId', 'name zoneName')
             .lean(),
         FoodRestaurant.countDocuments(filter)
@@ -2650,6 +2653,9 @@ export async function updateRestaurantById(id, body = {}) {
         doc.openDays = body.openDays.map(d => toStr(d)).filter(Boolean);
     }
     if (body.offer !== undefined) doc.offer = toStr(body.offer);
+    if (body.restaurantType !== undefined && ['independent', 'franchise'].includes(body.restaurantType)) {
+        doc.restaurantType = body.restaurantType;
+    }
     
     if (body.discount !== undefined) {
         const disc = Number(body.discount);
@@ -3582,6 +3588,7 @@ export async function createRestaurantByAdmin(body) {
                 diningType: toStr(body.diningSettings.diningType) || 'family-dining'
             }
             : undefined,
+        restaurantType: ['independent', 'franchise'].includes(body.restaurantType) ? body.restaurantType : 'independent',
         status: 'approved',
         approvedAt: new Date()
     };

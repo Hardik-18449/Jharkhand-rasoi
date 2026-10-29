@@ -67,6 +67,7 @@ const normalizeLocationFormFromRestaurant = (restaurant) => {
 const normalizeDetailsFormFromRestaurant = (restaurant) => {
   return {
     name: restaurant?.name || restaurant?.restaurantName || "",
+    restaurantType: restaurant?.restaurantType || "independent",
     pureVegRestaurant:
       typeof restaurant?.pureVegRestaurant === "boolean"
         ? restaurant.pureVegRestaurant
@@ -302,6 +303,7 @@ export default function EditRestaurant() {
 
       const payload = {
         name: detailsForm.name,
+        restaurantType: detailsForm.restaurantType || "independent",
         pureVegRestaurant: detailsForm.pureVegRestaurant === true,
         ownerName: detailsForm.ownerName,
         ownerEmail: detailsForm.ownerEmail,
@@ -431,6 +433,33 @@ export default function EditRestaurant() {
                 <div>
                   <Label>Restaurant Name</Label>
                   <Input value={detailsForm.name} onChange={(e) => setDetailsForm((p) => ({ ...p, name: e.target.value }))} />
+                </div>
+                <div>
+                  <Label>Restaurant Business Model / Type</Label>
+                  <div className="mt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDetailsForm((p) => ({ ...p, restaurantType: "independent" }))}
+                      className={`px-3 py-1.5 text-xs rounded-full border cursor-pointer ${
+                        (detailsForm.restaurantType || "independent") === "independent"
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white text-slate-700 border-slate-200"
+                      }`}
+                    >
+                      Independent Restaurant
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDetailsForm((p) => ({ ...p, restaurantType: "franchise" }))}
+                      className={`px-3 py-1.5 text-xs rounded-full border cursor-pointer ${
+                        detailsForm.restaurantType === "franchise"
+                          ? "bg-purple-700 text-white border-purple-700 shadow-sm"
+                          : "bg-white text-slate-700 border-slate-200"
+                      }`}
+                    >
+                      🏢 Franchise Outlet
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <Label>Pure Veg</Label>

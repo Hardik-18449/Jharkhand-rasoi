@@ -168,6 +168,7 @@ export default function AddRestaurant() {
   // Step 1: Basic Info
   const [step1, setStep1] = useState({
     restaurantName: "",
+    restaurantType: "independent",
     pureVegRestaurant: null,
     ownerName: "",
     ownerEmail: "",
@@ -572,6 +573,7 @@ export default function AddRestaurant() {
       const payload = {
         // Step 1
         restaurantName: step1.restaurantName,
+        restaurantType: step1.restaurantType || "independent",
         pureVegRestaurant: step1.pureVegRestaurant,
         ownerName: step1.ownerName,
         ownerEmail: step1.ownerEmail,
@@ -913,6 +915,36 @@ export default function AddRestaurant() {
             </div>
             <p className="text-[11px] text-gray-500 mt-1">
               This helps users filter restaurants by dietary preference.
+            </p>
+          </div>
+          <div>
+            <Label className="text-xs text-gray-700 font-semibold">Restaurant Business Model / Type*</Label>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setStep1({ ...step1, restaurantType: "independent" })}
+                className={`px-3 py-1.5 text-xs rounded-full border cursor-pointer ${
+                  (step1.restaurantType || "independent") === "independent"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                    : "bg-white text-gray-700 border-gray-200"
+                }`}
+              >
+                Independent Restaurant
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep1({ ...step1, restaurantType: "franchise" })}
+                className={`px-3 py-1.5 text-xs rounded-full border cursor-pointer ${
+                  step1.restaurantType === "franchise"
+                    ? "bg-purple-700 text-white border-purple-700 shadow-sm"
+                    : "bg-white text-gray-700 border-gray-200"
+                }`}
+              >
+                🏢 Franchise Outlet
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-500 mt-1">
+              Franchise outlets receive raw inventory/stock supplied by Admin and submit daily sales and stock usage reports.
             </p>
           </div>
         </div>

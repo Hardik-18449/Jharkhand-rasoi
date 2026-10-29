@@ -49,6 +49,12 @@ export const RESTAURANT_SIDEBAR_SECTIONS = [
     ],
   },
   {
+    title: "Franchise",
+    items: [
+      { label: "Franchise Stock & Sales", route: `${BASE}/franchise-operations`, icon: "inventory" },
+    ],
+  },
+  {
     title: "Outlet",
     items: [
       { label: "Outlet info", route: `${BASE}/outlet-info` },

@@ -1,3 +1,8 @@
+import {
+    getMyFranchiseStockController,
+    submitMyFranchiseDailyReportController,
+    getMyFranchiseDailyReportsController,
+} from '../controllers/franchise.controller.js';
 import express from 'express';
 import { moneyRateLimiter } from '../../../../middleware/rateLimit.js';
 import { upload } from '../../../../middleware/upload.js';
@@ -229,6 +234,12 @@ router.get('/download-menu-pdf/:id', authMiddleware, (req, res, next) => {
     // Call the download function
     downloadRestaurantMenuPdf(req, res, next);
 });
+
+
+// Franchise Holder Operations (Bearer token + RESTAURANT role)
+router.get('/franchise/stock', authMiddleware, requireRestaurant, getMyFranchiseStockController);
+router.post('/franchise/daily-report', authMiddleware, requireRestaurant, submitMyFranchiseDailyReportController);
+router.get('/franchise/daily-reports', authMiddleware, requireRestaurant, getMyFranchiseDailyReportsController);
 
 // Delete account (Bearer RESTAURANT)
 router.delete('/account', authMiddleware, requireRestaurant, deleteRestaurantAccountController);

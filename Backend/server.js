@@ -58,16 +58,15 @@ const startServer = async () => {
         // 2. Create HTTP server from Express app
         const httpServer = http.createServer(app);
 
-        logger.info('[Bootstrap] Local Socket.IO init skipped in API server; expecting socket-server.js or Redis emitter for broadcasts');
-
-
-        if (config.redisEnabled) {
+        if (!config.redisEnabled) {
+            const { initSocket } = await import('./src/config/socket.js');
+            await initSocket(httpServer);
+            logger.info(`[Bootstrap] Embedded Socket.IO initialized on API server port ${config.port}`);
+        } else {
             logger.info('[Bootstrap] Redis is enabled for API server; connecting Redis client for socket emitter/queues');
             await connectRedis();
             initRedisEmitter(getRedisClient());
             logger.info('[Bootstrap] Redis emitter setup attempted from API server');
-        } else {
-            logger.warn('[Bootstrap] Redis is disabled in API server; getIO() will warn unless socket events stay inside socket-server.js');
         }
 
         // Watchdog recovered stuck orders is moved to scheduler-server.js
