@@ -1209,24 +1209,66 @@ export default function RestaurantsList() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
           {/* Total Restaurants */}
           <button
             type="button"
-            onClick={() => setFilters(prev => ({ ...prev, all: "All" }))}
-            className={`text-left bg-white rounded-xl shadow-sm border p-6 transition-all duration-200 cursor-pointer hover:shadow-md ${
-              filters.all === "All"
+            onClick={() => setFilters(prev => ({ ...prev, all: "All", restaurantType: "all" }))}
+            className={`text-left bg-white rounded-xl shadow-sm border p-4 transition-all duration-200 cursor-pointer hover:shadow-md ${
+              (filters.all === "All" && filters.restaurantType === "all")
                 ? "border-blue-500 ring-2 ring-blue-500/20 shadow-sm"
                 : "border-slate-200 hover:border-slate-300"
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Total restaurants</p>
-                <p className="text-2xl font-bold text-slate-900">{totalRestaurants}</p>
+                <p className="text-xs font-medium text-slate-600 mb-1">Total Outlets</p>
+                <p className="text-xl font-bold text-slate-900">{totalRestaurants}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-blue-600" />
+              <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                <MapPin className="w-5 h-5 text-blue-600" />
+              </div>
+            </div>
+          </button>
+
+          {/* Franchise Outlets */}
+          <button
+            type="button"
+            onClick={() => setFilters(prev => ({ ...prev, all: "All", restaurantType: "franchise" }))}
+            className={`text-left bg-white rounded-xl shadow-sm border p-4 transition-all duration-200 cursor-pointer hover:shadow-md ${
+              filters.restaurantType === "franchise"
+                ? "border-purple-600 ring-2 ring-purple-600/30 shadow-sm bg-purple-50/30"
+                : "border-slate-200 hover:border-slate-300"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-purple-700 mb-1">🏢 Franchise</p>
+                <p className="text-xl font-bold text-purple-900">{franchiseCount}</p>
+              </div>
+              <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
+                <Package className="w-5 h-5 text-purple-700" />
+              </div>
+            </div>
+          </button>
+
+          {/* Independent Outlets */}
+          <button
+            type="button"
+            onClick={() => setFilters(prev => ({ ...prev, all: "All", restaurantType: "independent" }))}
+            className={`text-left bg-white rounded-xl shadow-sm border p-4 transition-all duration-200 cursor-pointer hover:shadow-md ${
+              filters.restaurantType === "independent"
+                ? "border-indigo-600 ring-2 ring-indigo-600/20 shadow-sm"
+                : "border-slate-200 hover:border-slate-300"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-slate-600 mb-1">Independent</p>
+                <p className="text-xl font-bold text-slate-900">{independentCount}</p>
+              </div>
+              <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-indigo-600" />
               </div>
             </div>
           </button>
@@ -1235,7 +1277,7 @@ export default function RestaurantsList() {
           <button
             type="button"
             onClick={() => setFilters(prev => ({ ...prev, all: "Active" }))}
-            className={`text-left bg-white rounded-xl shadow-sm border p-6 transition-all duration-200 cursor-pointer hover:shadow-md ${
+            className={`text-left bg-white rounded-xl shadow-sm border p-4 transition-all duration-200 cursor-pointer hover:shadow-md ${
               filters.all === "Active"
                 ? "border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm"
                 : "border-slate-200 hover:border-slate-300"
@@ -1243,11 +1285,11 @@ export default function RestaurantsList() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Active restaurants</p>
-                <p className="text-2xl font-bold text-slate-900">{activeRestaurants}</p>
+                <p className="text-xs font-medium text-slate-600 mb-1">Active Outlets</p>
+                <p className="text-xl font-bold text-slate-900">{activeRestaurants}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-green-600" />
+              <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-green-600" />
               </div>
             </div>
           </button>
@@ -1256,7 +1298,7 @@ export default function RestaurantsList() {
           <button
             type="button"
             onClick={() => setFilters(prev => ({ ...prev, all: "Banned" }))}
-            className={`text-left bg-white rounded-xl shadow-sm border p-6 transition-all duration-200 cursor-pointer hover:shadow-md ${
+            className={`text-left bg-white rounded-xl shadow-sm border p-4 transition-all duration-200 cursor-pointer hover:shadow-md ${
               filters.all === "Banned" || filters.all === "Inactive"
                 ? "border-rose-500 ring-2 ring-rose-500/20 shadow-sm"
                 : "border-slate-200 hover:border-slate-300"
@@ -1264,11 +1306,11 @@ export default function RestaurantsList() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Banned restaurants</p>
-                <p className="text-2xl font-bold text-slate-900">{bannedRestaurants}</p>
+                <p className="text-xs font-medium text-slate-600 mb-1">Banned</p>
+                <p className="text-xl font-bold text-slate-900">{bannedRestaurants}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-                <ShieldX className="w-6 h-6 text-red-600" />
+              <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center">
+                <ShieldX className="w-5 h-5 text-red-600" />
               </div>
             </div>
           </button>
