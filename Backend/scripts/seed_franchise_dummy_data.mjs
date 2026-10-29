@@ -344,9 +344,9 @@ async function seed() {
   console.log('🎉 FRANCHISE DUMMY DATA SEED COMPLETED 100%!');
   console.log('======================================================');
   console.log('1. Admin Credentials: admin@jharkhandrasoi.com / Admin@123');
-  console.log('2. Ranchi Franchise Login: Phone 9876543210 (OTP: 1234)');
-  console.log('3. Jamshedpur Franchise Login: Phone 9876543211 (OTP: 1234)');
-  console.log('4. Dedicated Rider Login: Phone 9876543299 (OTP: 1234)');
+  console.log('2. Ranchi Franchise Login: Phone 9876543210 (OTP: 123456)');
+  console.log('3. Jamshedpur Franchise Login: Phone 9876543211 (OTP: 123456)');
+  console.log('4. Dedicated Rider Login: Phone 9876543299 (OTP: 123456)');
   console.log('5. Admin Records Page: /admin/food/franchise-records');
   console.log('======================================================\n');
 
