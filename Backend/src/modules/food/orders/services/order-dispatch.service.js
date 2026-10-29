@@ -87,7 +87,7 @@ async function filterPartnersByCashLimit(partners = [], options = {}) {
   }));
 }
 
-async function listNearbyOnlineDeliveryPartners(
+export async function listNearbyOnlineDeliveryPartners(
   restaurantId,
   {
     maxKm = 15,
