@@ -2,7 +2,6 @@ import { useState, useEffect } from "react"
 import { Outlet } from "react-router-dom"
 import AdminSidebar from "./AdminSidebar"
 import AdminNavbar from "./AdminNavbar"
-import { API_BASE_URL } from "@food/api/config"
 import { adminAPI } from "@/services/api/index.js"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
@@ -72,13 +71,6 @@ export default function AdminLayout() {
         {/* Top Navbar */}
         <AdminNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
-        {/* Backend disconnected banner */}
-        {!API_BASE_URL && (
-          <div className="w-full bg-amber-100 border-b border-amber-300 px-4 py-2 text-center text-sm text-amber-900">
-            Backend disconnected. Data is not live.
-          </div>
-        )}
-
         {/* Page Content */}
         <main className="flex-1 min-h-0 w-full max-w-full overflow-x-hidden overflow-y-auto bg-neutral-100">
           <Outlet />
@@ -87,4 +79,3 @@ export default function AdminLayout() {
     </div>
   );
 }
-
