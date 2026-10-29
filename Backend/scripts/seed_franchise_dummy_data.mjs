@@ -45,12 +45,30 @@ async function seed() {
   const ranchiData = {
     restaurantName: 'Jharkhand Rasoi (Ranchi Main Franchise)',
     name: 'Jharkhand Rasoi (Ranchi Main Franchise)',
+    restaurantNameNormalized: 'jharkhand rasoi ranchi main franchise',
+    ownerName: 'Ranchi Franchise Manager',
+    ownerEmail: 'ranchi.franchise@jharkhandrasoi.com',
+    ownerPhone: '9876543210',
+    ownerPhoneDigits: '9876543210',
+    ownerPhoneLast10: '9876543210',
+    primaryContactNumber: '9876543210',
     phone: '9876543210',
     email: 'ranchi.franchise@jharkhandrasoi.com',
     restaurantType: 'franchise',
     status: 'approved',
+    approvedAt: new Date(),
     isActive: true,
     isAcceptingOrders: true,
+    pureVegRestaurant: false,
+    addressLine1: 'Main Road, Overbridge Chowk',
+    area: 'Main Road',
+    city: 'Ranchi',
+    state: 'Jharkhand',
+    pincode: '834001',
+    cuisines: ['North Indian', 'Jharkhand Special', 'Thali'],
+    openingTime: '09:00',
+    closingTime: '23:00',
+    openDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
     zoneId: zone._id,
     address: {
       street: 'Main Road, Overbridge Chowk',
@@ -64,27 +82,49 @@ async function seed() {
       hasDedicatedDelivery: true,
       openForPublicDelivery: false,
     },
+    onboarding: {
+      completedSteps: 4,
+      isCompleted: true,
+    },
     updatedAt: new Date(),
   };
 
   const ranchiOutlet = await db.collection('food_restaurants').findOneAndUpdate(
-    { phone: '9876543210' },
+    { $or: [{ phone: '9876543210' }, { ownerPhone: '9876543210' }] },
     { $set: ranchiData, $setOnInsert: { createdAt: new Date() } },
     { upsert: true, returnDocument: 'after' }
   );
-  const ranchiId = ranchiOutlet._id || (await db.collection('food_restaurants').findOne({ phone: '9876543210' }))._id;
+  const ranchiId = ranchiOutlet._id || (await db.collection('food_restaurants').findOne({ $or: [{ phone: '9876543210' }, { ownerPhone: '9876543210' }] }))._id;
   console.log('Franchise 1 Ready:', ranchiData.restaurantName, ranchiId.toString());
 
   // 3. Upsert Franchise Outlet 2 (Jamshedpur)
   const jmpData = {
     restaurantName: 'Jharkhand Rasoi (Jamshedpur Franchise)',
     name: 'Jharkhand Rasoi (Jamshedpur Franchise)',
+    restaurantNameNormalized: 'jharkhand rasoi jamshedpur franchise',
+    ownerName: 'Jamshedpur Franchise Manager',
+    ownerEmail: 'jamshedpur.franchise@jharkhandrasoi.com',
+    ownerPhone: '9876543211',
+    ownerPhoneDigits: '9876543211',
+    ownerPhoneLast10: '9876543211',
+    primaryContactNumber: '9876543211',
     phone: '9876543211',
     email: 'jamshedpur.franchise@jharkhandrasoi.com',
     restaurantType: 'franchise',
     status: 'approved',
+    approvedAt: new Date(),
     isActive: true,
     isAcceptingOrders: true,
+    pureVegRestaurant: false,
+    addressLine1: 'Bistupur Main Market',
+    area: 'Bistupur',
+    city: 'Jamshedpur',
+    state: 'Jharkhand',
+    pincode: '831001',
+    cuisines: ['North Indian', 'Jharkhand Special', 'Fast Food'],
+    openingTime: '09:00',
+    closingTime: '23:00',
+    openDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
     zoneId: zone._id,
     address: {
       street: 'Bistupur Main Market',
@@ -98,15 +138,19 @@ async function seed() {
       hasDedicatedDelivery: true,
       openForPublicDelivery: true,
     },
+    onboarding: {
+      completedSteps: 4,
+      isCompleted: true,
+    },
     updatedAt: new Date(),
   };
 
   const jmpOutlet = await db.collection('food_restaurants').findOneAndUpdate(
-    { phone: '9876543211' },
+    { $or: [{ phone: '9876543211' }, { ownerPhone: '9876543211' }] },
     { $set: jmpData, $setOnInsert: { createdAt: new Date() } },
     { upsert: true, returnDocument: 'after' }
   );
-  const jmpId = jmpOutlet._id || (await db.collection('food_restaurants').findOne({ phone: '9876543211' }))._id;
+  const jmpId = jmpOutlet._id || (await db.collection('food_restaurants').findOne({ $or: [{ phone: '9876543211' }, { ownerPhone: '9876543211' }] }))._id;
   console.log('Franchise 2 Ready:', jmpData.restaurantName, jmpId.toString());
 
   // 4. Seed Stock for Ranchi Outlet

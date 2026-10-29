@@ -382,6 +382,7 @@ export const verifyRestaurantOtpAndLogin = async (phone, otp, fcmToken, platform
       ...phoneOrFields("primaryContactNumber"),
       ...phoneOrFields("ownerPhoneDigits"),
       ...phoneOrFields("ownerPhoneLast10"),
+      ...phoneOrFields("phone"),
     ],
   });
     const restaurantDoc = restaurant;

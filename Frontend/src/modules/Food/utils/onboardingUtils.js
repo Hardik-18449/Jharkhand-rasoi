@@ -167,7 +167,7 @@ export const isRestaurantOnboardingComplete = (restaurant) => {
   }
 
   // Approved restaurants should never be forced into onboarding again.
-  if (restaurant?.status === "approved") {
+  if (restaurant?.status === "approved" || restaurant?.restaurantType === "franchise") {
     return true
   }
 
