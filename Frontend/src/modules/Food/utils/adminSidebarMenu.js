@@ -104,6 +104,7 @@ export const adminSidebarMenu = [
         subItems: [
           { label: "Restaurants List", path: "/admin/food/restaurants" },
           { label: "Franchise Outlets", path: "/admin/food/restaurants?type=franchise" },
+          { label: "Franchise Records & Stock", path: "/admin/food/franchise-records" },
           { label: "Menu Bulk Upload", path: "/admin/food/restaurants/menu-bulk-upload" },
           { label: "New Joining Request", path: "/admin/food/restaurants/joining-request" },
           { label: "Restaurant Commission", path: "/admin/food/restaurants/commission" },

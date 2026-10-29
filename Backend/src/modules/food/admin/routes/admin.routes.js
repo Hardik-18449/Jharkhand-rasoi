@@ -3,6 +3,7 @@ import {
     allocateAdminFranchiseStockController,
     removeAdminFranchiseStockController,
     getAdminFranchiseReportsController,
+    getAllFranchiseOverviewController,
 } from '../../restaurant/controllers/franchise.controller.js';
 import express from 'express';
 import { AuthError } from '../../../../core/auth/errors.js';
@@ -300,6 +301,7 @@ router.delete('/app-intro-ads/:id', appIntroAdController.deleteAppIntroAd);
 
 
 // ----- Franchise Management -----
+router.get('/franchise/all-records', getAllFranchiseOverviewController);
 router.get('/franchise/:restaurantId/stock', getAdminFranchiseStockController);
 router.post('/franchise/:restaurantId/stock/allocate', allocateAdminFranchiseStockController);
 router.delete('/franchise/:restaurantId/stock/:stockId', removeAdminFranchiseStockController);

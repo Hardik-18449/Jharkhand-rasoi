@@ -690,6 +690,8 @@ export const adminAPI = {
     adminClient.delete(`/food/admin/franchise/${restaurantId}/stock/${stockId}`),
   getFranchiseReports: (restaurantId, params = {}) =>
     adminClient.get(`/food/admin/franchise/${restaurantId}/reports`, { params }),
+  getAllFranchiseRecords: (params = {}) =>
+    adminClient.get('/food/admin/franchise/all-records', { params }),
 };
 
 /** Restaurant API - OTP login via new backend; no email/password. */

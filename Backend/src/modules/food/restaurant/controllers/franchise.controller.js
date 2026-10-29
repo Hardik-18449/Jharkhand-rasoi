@@ -80,3 +80,13 @@ export const getAdminFranchiseReportsController = async (req, res, next) => {
     next(error);
   }
 };
+
+
+export const getAllFranchiseOverviewController = async (req, res, next) => {
+  try {
+    const data = await franchiseService.getAllFranchiseOverview(req.query);
+    return sendResponse(res, 200, 'All franchise records fetched successfully', data);
+  } catch (error) {
+    next(error);
+  }
+};

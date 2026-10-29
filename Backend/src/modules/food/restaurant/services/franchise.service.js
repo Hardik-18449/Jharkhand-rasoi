@@ -233,3 +233,119 @@ export async function getFranchiseDailyReports(restaurantId, query = {}) {
 
   return { reports, total, page, limit };
 }
+
+
+/**
+ * Get comprehensive overview of all franchise outlets, aggregate stock, and reports (Admin view).
+ */
+export async function getAllFranchiseOverview(query = {}) {
+  const filter = { restaurantType: 'franchise' };
+  if (query.status) {
+    filter.status = query.status;
+  }
+
+  // 1. Fetch all franchise outlets
+  const franchises = await FoodRestaurant.find(filter)
+    .select('_id restaurantName name phone email status address zoneId deliverySettings createdAt')
+    .sort({ restaurantName: 1 })
+    .lean();
+
+  const franchiseIds = franchises.map((f) => f._id);
+
+  // 2. Fetch all stocks for all franchise outlets
+  const stocks = await FoodFranchiseStock.find({ restaurantId: { $in: franchiseIds } })
+    .populate('restaurantId', 'restaurantName name phone')
+    .sort({ restaurantId: 1, itemName: 1 })
+    .lean();
+
+  const formattedStocks = stocks.map((item) => ({
+    ...item,
+    isLowStock: Number(item.currentStock || 0) <= Number(item.minimumThreshold || 0),
+  }));
+
+  // 3. Fetch all daily reports
+  const reportFilter = { restaurantId: { $in: franchiseIds } };
+  if (query.restaurantId && mongoose.Types.ObjectId.isValid(query.restaurantId)) {
+    reportFilter.restaurantId = new mongoose.Types.ObjectId(query.restaurantId);
+  }
+  if (query.startDate || query.endDate) {
+    reportFilter.reportDate = {};
+    if (query.startDate) reportFilter.reportDate.$gte = new Date(query.startDate);
+    if (query.endDate) reportFilter.reportDate.$lte = new Date(query.endDate);
+  }
+
+  const reports = await FoodFranchiseDailyReport.find(reportFilter)
+    .populate('restaurantId', 'restaurantName name phone')
+    .sort({ reportDate: -1, createdAt: -1 })
+    .limit(Math.min(parseInt(query.limit, 10) || 100, 200))
+    .lean();
+
+  // 4. Compute per-outlet metrics
+  const stockByOutlet = new Map();
+  for (const item of formattedStocks) {
+    const rid = String(item.restaurantId?._id || item.restaurantId);
+    if (!stockByOutlet.has(rid)) {
+      stockByOutlet.set(rid, { totalItems: 0, lowStockCount: 0, totalStockUnits: 0 });
+    }
+    const stat = stockByOutlet.get(rid);
+    stat.totalItems += 1;
+    if (item.isLowStock) stat.lowStockCount += 1;
+    stat.totalStockUnits += Number(item.currentStock || 0);
+  }
+
+  const reportsByOutlet = new Map();
+  for (const rep of reports) {
+    const rid = String(rep.restaurantId?._id || rep.restaurantId);
+    if (!reportsByOutlet.has(rid)) {
+      reportsByOutlet.set(rid, {
+        latestReport: rep,
+        totalCounterSales: 0,
+        totalOnlineSales: 0,
+        totalFootfall: 0,
+        reportCount: 0,
+      });
+    }
+    const stat = reportsByOutlet.get(rid);
+    stat.totalCounterSales += Number(rep.counterSalesAmount || 0);
+    stat.totalOnlineSales += Number(rep.onlineSalesAmount || 0);
+    stat.totalFootfall += Number(rep.customerFootfall || 0);
+    stat.reportCount += 1;
+  }
+
+  const enrichedOutlets = franchises.map((outlet) => {
+    const rid = String(outlet._id);
+    const stockStat = stockByOutlet.get(rid) || { totalItems: 0, lowStockCount: 0, totalStockUnits: 0 };
+    const repStat = reportsByOutlet.get(rid) || {
+      latestReport: null,
+      totalCounterSales: 0,
+      totalOnlineSales: 0,
+      totalFootfall: 0,
+      reportCount: 0,
+    };
+
+    return {
+      ...outlet,
+      stockStats: stockStat,
+      reportStats: repStat,
+      hasLowStock: stockStat.lowStockCount > 0,
+    };
+  });
+
+  // 5. Global Summary
+  const summary = {
+    totalFranchises: franchises.length,
+    activeFranchises: franchises.filter((f) => f.status === 'approved').length,
+    totalStockItems: formattedStocks.length,
+    totalLowStockAlerts: formattedStocks.filter((s) => s.isLowStock).length,
+    totalCounterSales: reports.reduce((sum, r) => sum + Number(r.counterSalesAmount || 0), 0),
+    totalOnlineSales: reports.reduce((sum, r) => sum + Number(r.onlineSalesAmount || 0), 0),
+    totalFootfall: reports.reduce((sum, r) => sum + Number(r.customerFootfall || 0), 0),
+  };
+
+  return {
+    summary,
+    outlets: enrichedOutlets,
+    stocks: formattedStocks,
+    reports,
+  };
+}
