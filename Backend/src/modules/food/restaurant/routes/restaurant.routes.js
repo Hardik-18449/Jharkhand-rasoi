@@ -1,4 +1,10 @@
 import {
+    getDedicatedRidersController,
+    addDedicatedRiderController,
+    removeDedicatedRiderController,
+    updateDeliveryDispatchToggleController,
+} from '../controllers/dedicatedDelivery.controller.js';
+import {
     getMyFranchiseStockController,
     submitMyFranchiseDailyReportController,
     getMyFranchiseDailyReportsController,
@@ -235,6 +241,13 @@ router.get('/download-menu-pdf/:id', authMiddleware, (req, res, next) => {
     downloadRestaurantMenuPdf(req, res, next);
 });
 
+
+
+// Dedicated / Personal Delivery Partners (Bearer token + RESTAURANT role)
+router.get('/dedicated-riders', authMiddleware, requireRestaurant, getDedicatedRidersController);
+router.post('/dedicated-riders', authMiddleware, requireRestaurant, addDedicatedRiderController);
+router.delete('/dedicated-riders/:id', authMiddleware, requireRestaurant, removeDedicatedRiderController);
+router.patch('/delivery-dispatch-settings', authMiddleware, requireRestaurant, updateDeliveryDispatchToggleController);
 
 // Franchise Holder Operations (Bearer token + RESTAURANT role)
 router.get('/franchise/stock', authMiddleware, requireRestaurant, getMyFranchiseStockController);

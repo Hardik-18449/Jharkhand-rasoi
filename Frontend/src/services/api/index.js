@@ -1125,6 +1125,15 @@ export const restaurantAPI = {
     restaurantClient.post("/food/restaurant/franchise/daily-report", body),
   getFranchiseDailyReports: (params = {}) =>
     restaurantClient.get("/food/restaurant/franchise/daily-reports", { params }),
+  // Dedicated / Personal Delivery Partners
+  getDedicatedRiders: () =>
+    restaurantClient.get("/food/restaurant/dedicated-riders"),
+  addDedicatedRider: (body) =>
+    restaurantClient.post("/food/restaurant/dedicated-riders", body),
+  removeDedicatedRider: (partnerId) =>
+    restaurantClient.delete(`/food/restaurant/dedicated-riders/${partnerId}`),
+  updateDeliveryDispatchSettings: (body) =>
+    restaurantClient.patch("/food/restaurant/delivery-dispatch-settings", body),
 };
 
 function stableStringify(value) {

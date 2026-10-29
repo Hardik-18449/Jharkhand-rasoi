@@ -311,6 +311,10 @@ const restaurantSchema = new mongoose.Schema(
       default: "independent",
       index: true,
     },
+    deliverySettings: {
+      hasDedicatedDelivery: { type: Boolean, default: false },
+      openForPublicDelivery: { type: Boolean, default: true },
+    },
   },
   {
     collection: "food_restaurants",

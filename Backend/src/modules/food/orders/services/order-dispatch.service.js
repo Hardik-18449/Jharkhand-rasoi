@@ -99,7 +99,7 @@ async function listNearbyOnlineDeliveryPartners(
 ) {
   const rId = (restaurantId?._id || restaurantId).toString();
   const restaurant = await FoodRestaurant.findById(rId)
-    .select('location zoneId')
+    .select('location zoneId deliverySettings restaurantType')
     .lean();
 
   if (!restaurant?.location?.coordinates?.length) {
@@ -107,6 +107,66 @@ async function listNearbyOnlineDeliveryPartners(
     return { restaurant: null, partners: [] };
   }
 
+  const [rLng, rLat] = restaurant.location.coordinates;
+  const capacityFullIds = await getCapacityFullDeliveryPartnerIds();
+
+  // Check for dedicated / personal delivery partners for this restaurant/franchise
+  const dedicatedRiders = await FoodDeliveryPartner.find({
+    restaurantId: new mongoose.Types.ObjectId(rId),
+    status: 'approved',
+  })
+    .select('_id status lastLat lastLng lastLocationAt name availabilityStatus')
+    .lean();
+
+  const hasDedicatedRiders = dedicatedRiders.length > 0;
+  const openForPublicDelivery = restaurant?.deliverySettings?.openForPublicDelivery !== false;
+
+  // Case 1: Restaurant has dedicated delivery partners and toggle is EXCLUSIVE (openForPublicDelivery = false)
+  // Flow: Order is ONLY visible and dispatched to their own delivery boy, not everyone in the zone.
+  if (hasDedicatedRiders && !openForPublicDelivery) {
+    const onlineDedicated = dedicatedRiders.filter(
+      (p) => p.availabilityStatus === 'online' && !capacityFullIds.has(String(p._id))
+    );
+
+    logger.info(
+      `[Dispatch] Dedicated-only delivery mode for restaurant ${rId}. Total dedicated=${dedicatedRiders.length}, online=${onlineDedicated.length}`
+    );
+
+    const dedicatedEligible = onlineDedicated.map((p) => {
+      const hasCoords = p.lastLat != null && p.lastLng != null;
+      const d = hasCoords ? haversineKm(rLat, rLng, p.lastLat, p.lastLng) : null;
+      return {
+        partnerId: p._id,
+        distanceKm: d,
+        status: p.status,
+        locationUnknown: !hasCoords,
+        isDedicated: true,
+      };
+    });
+
+    dedicatedEligible.sort((a, b) => {
+      if (a.distanceKm == null && b.distanceKm == null) return 0;
+      if (a.distanceKm == null) return 1;
+      if (b.distanceKm == null) return -1;
+      return a.distanceKm - b.distanceKm;
+    });
+
+    if (dedicatedEligible.length === 0) {
+      logger.warn(
+        `[Dispatch] Dedicated-only mode: No online dedicated riders available for restaurant ${rId}`
+      );
+      return { partners: [] };
+    }
+
+    const cashEligible = await filterPartnersByCashLimit(dedicatedEligible, {
+      requiredAmount,
+      allowOverLimitFallback,
+    });
+
+    return { partners: cashEligible };
+  }
+
+  // Case 2 & 3: Standard dispatch or Open for All Zone Riders
   let zonePolygon = null;
   if (zoneOnly && restaurant.zoneId) {
     const zoneDoc = await FoodZone.findById(restaurant.zoneId)
@@ -121,13 +181,18 @@ async function listNearbyOnlineDeliveryPartners(
     }
   }
 
-  const [rLng, rLat] = restaurant.location.coordinates;
-  const capacityFullIds = await getCapacityFullDeliveryPartnerIds();
+  // Fetch online riders: platform riders (without dedicated restaurant) + this restaurant's own dedicated riders
+  // (Excludes riders dedicated to OTHER restaurants)
   const allOnline = await FoodDeliveryPartner.find({
     availabilityStatus: 'online',
     status: 'approved',
+    $or: [
+      { restaurantId: null },
+      { restaurantId: { $exists: false } },
+      { restaurantId: new mongoose.Types.ObjectId(rId) },
+    ],
   })
-    .select('_id status lastLat lastLng lastLocationAt name')
+    .select('_id status lastLat lastLng lastLocationAt name restaurantId')
     .lean();
 
   const radiusEligible = [];
@@ -137,6 +202,7 @@ async function listNearbyOnlineDeliveryPartners(
     if (capacityFullIds.has(String(p._id))) continue;
 
     const hasCoords = p.lastLat != null && p.lastLng != null;
+    const isOwnDedicated = p.restaurantId && String(p.restaurantId) === String(rId);
 
     if (hasCoords) {
       const d = haversineKm(rLat, rLng, p.lastLat, p.lastLng);
@@ -147,10 +213,11 @@ async function listNearbyOnlineDeliveryPartners(
         distanceKm: d,
         status: p.status,
         locationUnknown: false,
+        isDedicated: Boolean(isOwnDedicated),
       };
       radiusEligible.push(entry);
 
-      if (!zonePolygon || isPointInPolygon(p.lastLat, p.lastLng, zonePolygon)) {
+      if (isOwnDedicated || !zonePolygon || isPointInPolygon(p.lastLat, p.lastLng, zonePolygon)) {
         zoneEligible.push(entry);
       }
       continue;
@@ -162,6 +229,7 @@ async function listNearbyOnlineDeliveryPartners(
       distanceKm: null,
       status: p.status,
       locationUnknown: true,
+      isDedicated: Boolean(isOwnDedicated),
     };
     radiusEligible.push(entry);
     zoneEligible.push(entry);
@@ -177,7 +245,10 @@ async function listNearbyOnlineDeliveryPartners(
     }
   }
 
+  // Prioritize dedicated riders first, then sort by proximity
   scored.sort((a, b) => {
+    if (a.isDedicated && !b.isDedicated) return -1;
+    if (!a.isDedicated && b.isDedicated) return 1;
     if (a.distanceKm == null && b.distanceKm == null) return 0;
     if (a.distanceKm == null) return 1;
     if (b.distanceKm == null) return -1;

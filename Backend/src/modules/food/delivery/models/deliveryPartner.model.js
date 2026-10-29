@@ -142,7 +142,19 @@ const deliveryPartnerSchema = new mongoose.Schema(
             max: 5,
             set: normalizeRatingValue
         },
-        totalRatings: { type: Number, default: 0, min: 0 }
+        totalRatings: { type: Number, default: 0, min: 0 },
+        restaurantId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FoodRestaurant',
+            default: null,
+            index: true
+        },
+        partnerType: {
+            type: String,
+            enum: ['platform', 'dedicated'],
+            default: 'platform',
+            index: true
+        }
     },
     {
         collection: 'food_delivery_partners',
