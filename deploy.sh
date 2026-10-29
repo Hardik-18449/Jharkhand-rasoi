@@ -18,7 +18,7 @@ cd "$SCRIPT_DIR"
 
 echo "📂 Current Directory: $PWD"
 
-# 1. Stash or discard minor local changes (e.g. package-lock from npm) to avoid merge conflicts
+# 1. Stash or discard minor local changes to avoid merge conflicts
 echo "📥 Checking git status & pulling latest code..."
 if [ -f "Frontend/package-lock.json" ]; then
     git restore Frontend/package-lock.json 2>/dev/null || true
@@ -46,18 +46,24 @@ cd "$SCRIPT_DIR"
 echo "✅ Frontend build completed successfully."
 echo ""
 
-# 3. Check Nginx Root & Reload
-echo "🌐 Checking Nginx configuration..."
-NGINX_ROOT=$(grep -rh "root " /etc/nginx/sites-enabled/ 2>/dev/null | head -n 1 | awk '{print $2}' | tr -d ';' || true)
+# 3. Sync Built Frontend to Nginx Web Root
+echo "🌐 Syncing frontend to Nginx web root..."
+NGINX_ROOT=$(nginx -T 2>/dev/null | grep -E "root " | grep "jharkhandrasoi" | head -n 1 | awk '{print $2}' | tr -d ';' || true)
 
-if [ -n "$NGINX_ROOT" ]; then
-    echo "   Nginx document root detected: $NGINX_ROOT"
-    # If Nginx document root is different from Frontend/dist, copy built files
-    FRONTEND_DIST="$SCRIPT_DIR/Frontend/dist"
-    if [ "$NGINX_ROOT" != "$FRONTEND_DIST" ] && [ -d "$NGINX_ROOT" ]; then
-        echo "   Syncing Frontend/dist to $NGINX_ROOT..."
-        cp -r "$FRONTEND_DIST"/* "$NGINX_ROOT"/
-    fi
+if [ -z "$NGINX_ROOT" ]; then
+    NGINX_ROOT="/var/www/jharkhandrasoi"
+fi
+
+echo "   Target Nginx web root: $NGINX_ROOT"
+if [ -d "$NGINX_ROOT" ]; then
+    echo "   Copying Frontend/dist/* to $NGINX_ROOT/..."
+    cp -r "$SCRIPT_DIR/Frontend/dist"/* "$NGINX_ROOT"/
+    echo "✅ Frontend files successfully synced to $NGINX_ROOT"
+else
+    echo "⚠️ Directory $NGINX_ROOT does not exist, creating..."
+    mkdir -p "$NGINX_ROOT"
+    cp -r "$SCRIPT_DIR/Frontend/dist"/* "$NGINX_ROOT"/
+    echo "✅ Frontend files copied to $NGINX_ROOT"
 fi
 
 if command -v nginx >/dev/null 2>&1; then
@@ -72,7 +78,7 @@ echo ""
 echo "⚙️  Restarting Backend with PM2..."
 if command -v pm2 >/dev/null 2>&1; then
     pm2 restart Jharkhand-rasoi-backend || pm2 start Backend/server.js --name Jharkhand-rasoi-backend
-    if pm2 list | grep -q "Jharkhand-rasoi-socket"; then
+    if pm2 list 2>/dev/null | grep -q "Jharkhand-rasoi-socket"; then
         pm2 restart Jharkhand-rasoi-socket || true
     fi
     echo "✅ PM2 process restarted."
