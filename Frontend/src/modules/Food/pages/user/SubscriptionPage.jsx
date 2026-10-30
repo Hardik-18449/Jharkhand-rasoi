@@ -230,8 +230,8 @@ export default function SubscriptionPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {plans.map((plan, idx) => {
-              const isPopular = idx === 1;
+            {plans.map((plan) => {
+              const isPopular = Boolean(plan.isPopular);
               const isCurrentPlan = mySub?.isSubscribed && mySub?.planName === plan.name;
               const cleanedBadge = cleanText(plan.badgeText) || "VIP";
               const cleanedName = cleanText(plan.name) || plan.name;

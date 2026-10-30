@@ -25,6 +25,7 @@ export async function createPlan(data) {
         freeDeliveryMinOrder = 0,
         discountPercent = 0,
         isActive = true,
+        isPopular = false,
         sortOrder = 0
     } = data;
 
@@ -40,6 +41,10 @@ export async function createPlan(data) {
     const numDuration = Number(durationDays);
     if (!Number.isFinite(numDuration) || numDuration < 1) {
         throw new ValidationError('Duration must be at least 1 day');
+    }
+
+    if (isPopular) {
+        await SubscriptionPlan.updateMany({}, { isPopular: false });
     }
 
     const plan = await SubscriptionPlan.create({
@@ -61,6 +66,7 @@ export async function createPlan(data) {
         freeDeliveryMinOrder: Number(freeDeliveryMinOrder) || 0,
         discountPercent: Number(discountPercent) || 0,
         isActive: isActive !== false,
+        isPopular: Boolean(isPopular),
         sortOrder: Number(sortOrder) || 0
     });
 
@@ -99,6 +105,14 @@ export async function updatePlan(planId, data) {
     if (data.freeDeliveryMinOrder !== undefined) plan.freeDeliveryMinOrder = Math.max(0, Number(data.freeDeliveryMinOrder));
     if (data.discountPercent !== undefined) plan.discountPercent = Math.min(100, Math.max(0, Number(data.discountPercent)));
     if (data.isActive !== undefined) plan.isActive = Boolean(data.isActive);
+    if (data.isPopular !== undefined) {
+        if (data.isPopular) {
+            await SubscriptionPlan.updateMany({ _id: { $ne: plan._id } }, { isPopular: false });
+            plan.isPopular = true;
+        } else {
+            plan.isPopular = false;
+        }
+    }
     if (data.sortOrder !== undefined) plan.sortOrder = Number(data.sortOrder);
 
     await plan.save();
@@ -113,6 +127,22 @@ export async function togglePlanStatus(planId) {
     if (!plan) throw new NotFoundError('Subscription plan not found');
 
     plan.isActive = !plan.isActive;
+    await plan.save();
+    return plan;
+}
+
+export async function togglePopularStatus(planId) {
+    if (!mongoose.Types.ObjectId.isValid(planId)) {
+        throw new ValidationError('Invalid Plan ID');
+    }
+    const plan = await SubscriptionPlan.findById(planId);
+    if (!plan) throw new NotFoundError('Subscription plan not found');
+
+    const nextState = !plan.isPopular;
+    if (nextState) {
+        await SubscriptionPlan.updateMany({ _id: { $ne: plan._id } }, { isPopular: false });
+    }
+    plan.isPopular = nextState;
     await plan.save();
     return plan;
 }

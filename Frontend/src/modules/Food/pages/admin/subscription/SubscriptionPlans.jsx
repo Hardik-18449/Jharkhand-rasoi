@@ -20,6 +20,7 @@ import {
   Truck,
   Flame,
   ArrowRight,
+  Star,
 } from "lucide-react";
 import { adminAPI } from "@food/api";
 import { toast } from "sonner";
@@ -67,6 +68,7 @@ export default function SubscriptionPlans() {
       "Dedicated 24/7 VIP Customer Support"
     ],
     isActive: true,
+    isPopular: false,
   });
 
   const [newFeatureText, setNewFeatureText] = useState("");
@@ -128,6 +130,7 @@ export default function SubscriptionPlans() {
         "Dedicated 24/7 VIP Customer Support"
       ],
       isActive: true,
+      isPopular: false,
     });
     setNewFeatureText("");
     setIsModalOpen(true);
@@ -148,9 +151,20 @@ export default function SubscriptionPlans() {
       discountPercent: plan.discountPercent || 0,
       features: Array.isArray(plan.features) && plan.features.length > 0 ? [...plan.features] : [],
       isActive: plan.isActive !== false,
+      isPopular: Boolean(plan.isPopular),
     });
     setNewFeatureText("");
     setIsModalOpen(true);
+  };
+
+  const handleTogglePopular = async (planId) => {
+    try {
+      const res = await adminAPI.togglePopularSubscriptionPlan(planId);
+      toast.success(res?.data?.message || "Popular status updated");
+      fetchPlans();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to update popular status");
+    }
   };
 
   const handleToggleStatus = async (planId) => {
@@ -212,6 +226,7 @@ export default function SubscriptionPlans() {
         priorityLevel: Number(formData.priorityLevel),
         freeDeliveryMinOrder: Number(formData.freeDeliveryMinOrder) || 0,
         discountPercent: Number(formData.discountPercent) || 0,
+        isPopular: Boolean(formData.isPopular),
       };
 
       if (editingPlan) {
@@ -384,9 +399,16 @@ export default function SubscriptionPlans() {
                 <div
                   key={plan._id}
                   className={`bg-white rounded-3xl border transition-all duration-200 shadow-sm hover:shadow-md overflow-hidden flex flex-col ${
-                    plan.isActive ? "border-gray-200" : "border-gray-200 opacity-60 bg-gray-50/50"
+                    plan.isPopular
+                      ? "border-amber-400 ring-2 ring-amber-200"
+                      : plan.isActive ? "border-gray-200" : "border-gray-200 opacity-60 bg-gray-50/50"
                   }`}
                 >
+                  {plan.isPopular && (
+                    <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-[10px] font-black uppercase text-center py-1 tracking-wider">
+                      Most Popular Choice
+                    </div>
+                  )}
                   {/* Plan Top Banner */}
                   <div
                     className="p-5 text-white flex items-center justify-between"
@@ -500,6 +522,19 @@ export default function SubscriptionPlans() {
                               Inactive
                             </>
                           )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleTogglePopular(plan._id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                            plan.isPopular
+                              ? "bg-amber-100 text-amber-900 border border-amber-300"
+                              : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                          }`}
+                          title={plan.isPopular ? "Currently Most Popular Choice (Click to unset)" : "Set as Most Popular Choice"}
+                        >
+                          <Star className={`h-3.5 w-3.5 ${plan.isPopular ? "fill-amber-500 text-amber-500" : ""}`} />
+                          {plan.isPopular ? "Popular" : "Set Popular"}
                         </button>
                       </div>
 
@@ -859,17 +894,35 @@ export default function SubscriptionPlans() {
             </div>
 
             {/* Active Toggle */}
-            <div className="flex items-center gap-2 pt-2">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={formData.isActive}
-                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary"
-              />
-              <label htmlFor="isActive" className="text-xs font-bold text-gray-700 cursor-pointer">
-                Publish plan as active immediately
-              </label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  className="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary"
+                />
+                <label htmlFor="isActive" className="text-xs font-bold text-gray-700 cursor-pointer">
+                  Active
+                </label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isPopular"
+                  checked={formData.isPopular}
+                  onChange={(e) => setFormData({ ...formData, isPopular: e.target.checked })}
+                  className="h-4 w-4 text-amber-500 rounded border-gray-300 focus:ring-amber-400"
+                />
+                <label htmlFor="isPopular" className="text-xs font-bold text-gray-700 cursor-pointer flex items-center gap-1.5">
+                  <span>Feature as &quot;Most Popular Choice&quot;</span>
+                  <span className="text-[10px] text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 font-semibold">
+                    Highlights on user app
+                  </span>
+                </label>
+              </div>
             </div>
 
             {/* Modal Actions */}

@@ -69,6 +69,11 @@ const subscriptionPlanSchema = new mongoose.Schema(
             default: true,
             index: true
         },
+        /** Set by admin to highlight as "Most Popular Choice" on customer app */
+        isPopular: {
+            type: Boolean,
+            default: false
+        },
         sortOrder: {
             type: Number,
             default: 0

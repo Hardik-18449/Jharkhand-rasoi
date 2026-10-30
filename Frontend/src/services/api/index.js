@@ -241,6 +241,7 @@ export const adminAPI = {
   getSubscriptionPlanById: (id) => adminClient.get(`/food/admin/subscriptions/plans/${id}`),
   updateSubscriptionPlan: (id, data) => adminClient.put(`/food/admin/subscriptions/plans/${id}`, data),
   toggleSubscriptionPlan: (id) => adminClient.patch(`/food/admin/subscriptions/plans/${id}/toggle`),
+  togglePopularSubscriptionPlan: (id) => adminClient.patch(`/food/admin/subscriptions/plans/${id}/popular`),
   deleteSubscriptionPlan: (id) => adminClient.delete(`/food/admin/subscriptions/plans/${id}`),
   getSubscribers: (params = {}) => adminClient.get("/food/admin/subscriptions/subscribers", { params }),
   // Sub Admins

@@ -25,6 +25,7 @@ subscriptionAdminRouter.post('/plans', subCtrl.createPlanController);
 subscriptionAdminRouter.get('/plans/:id', subCtrl.getPlanByIdController);
 subscriptionAdminRouter.put('/plans/:id', subCtrl.updatePlanController);
 subscriptionAdminRouter.patch('/plans/:id/toggle', subCtrl.togglePlanStatusController);
+subscriptionAdminRouter.patch('/plans/:id/popular', subCtrl.togglePopularStatusController);
 subscriptionAdminRouter.delete('/plans/:id', subCtrl.deletePlanController);
 
 // Admin: List all subscribers

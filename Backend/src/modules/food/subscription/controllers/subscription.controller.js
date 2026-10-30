@@ -84,6 +84,22 @@ export async function togglePlanStatusController(req, res) {
     }
 }
 
+export async function togglePopularStatusController(req, res) {
+    try {
+        const plan = await subscriptionService.togglePopularStatus(req.params.id);
+        return res.status(200).json({
+            success: true,
+            message: `Plan ${plan.isPopular ? 'marked as Most Popular Choice' : 'unmarked from Most Popular Choice'}`,
+            data: plan
+        });
+    } catch (err) {
+        return res.status(err.status || 400).json({
+            success: false,
+            message: err.message || 'Failed to toggle popular status'
+        });
+    }
+}
+
 export async function deletePlanController(req, res) {
     try {
         const result = await subscriptionService.deletePlan(req.params.id);
