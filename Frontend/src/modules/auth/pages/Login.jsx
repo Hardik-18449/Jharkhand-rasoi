@@ -600,13 +600,13 @@ export default function UnifiedOTPFastLogin() {
         <div className={`w-full max-w-sm flex flex-col my-auto ${step === 2 ? "relative -top-4" : ""}`}>
 
           {/* Logo & Header */}
-          <div className="mb-7 mt-2 text-center flex flex-col items-center">
+          <div className="mb-6 mt-1 text-center flex flex-col items-center">
             <img
               src="/logo.png"
               alt={companyName}
-              className="h-24 sm:h-28 mt-2 mb-1.5 object-contain drop-shadow-md"
+              className="h-32 sm:h-36 md:h-40 w-auto object-contain drop-shadow-md transition-transform hover:scale-105 duration-300"
             />
-            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium flex items-center justify-center gap-1.5">
+            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium flex items-center justify-center gap-1.5 mt-1">
               {step === 1 ? (
                 <span>Login or signup with your phone number</span>
               ) : (
