@@ -247,66 +247,18 @@ export default function UnifiedOTPFastLogin() {
   }, [step, resendTimer])
 
   return (
-    <div className="relative min-h-screen w-full bg-white flex flex-col justify-between overflow-hidden selection:bg-amber-400 selection:text-black font-sans">
+    <div className="relative h-screen h-[100dvh] max-h-screen w-full bg-white flex flex-col justify-between overflow-hidden select-none selection:bg-amber-400 selection:text-black font-sans">
       
-      {/* Smooth hardware-accelerated animations for left-to-right continuous motion */}
-      <style>{`
-        @keyframes driftLeftToRight {
-          0% {
-            transform: translateX(-50%);
-          }
-          100% {
-            transform: translateX(0%);
-          }
-        }
-        @keyframes floatGentleBob {
-          0%, 100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-6px) rotate(2deg);
-          }
-        }
-        @keyframes floatReverseBob {
-          0%, 100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(6px) rotate(-2deg);
-          }
-        }
-        .animate-drift-right-top {
-          animation: driftLeftToRight 28s linear infinite;
-        }
-        .animate-drift-right-bottom {
-          animation: driftLeftToRight 26s linear infinite;
-        }
-        .animate-dish-bob {
-          animation: floatGentleBob 4s ease-in-out infinite;
-        }
-        .animate-dish-reverse-bob {
-          animation: floatReverseBob 4.5s ease-in-out infinite;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .animate-drift-right-top,
-          .animate-drift-right-bottom,
-          .animate-dish-bob,
-          .animate-dish-reverse-bob {
-            animation: none !important;
-          }
-        }
-      `}</style>
-
       {/* ========================================================= */}
       {/* TOP CURVED WAVE (Exact RedGo Curve, System Yellow Theme) */}
-      {/* Uses ONLY /food_dish.png moving from LEFT to RIGHT */}
+      {/* Single Image: food_dish.png moving from LEFT then RIGHT */}
       {/* ========================================================= */}
-      <div className="relative w-full h-[190px] sm:h-[230px] md:h-[270px] overflow-hidden select-none pointer-events-none">
+      <div className="relative w-full h-[18vh] sm:h-[22vh] min-h-[110px] max-h-[175px] shrink-0 overflow-hidden pointer-events-none">
         
         {/* SVG Top Wave */}
         <div className="absolute inset-0 z-0">
           <svg
-            viewBox="0 0 1440 280"
+            viewBox="0 0 1440 220"
             className="w-full h-full object-cover"
             preserveAspectRatio="none"
             fill="none"
@@ -320,53 +272,54 @@ export default function UnifiedOTPFastLogin() {
               </linearGradient>
             </defs>
             <path
-              d="M0,0 L1440,0 L1440,140 Q720,185 0,250 Z"
+              d="M0,0 L1440,0 L1440,110 Q720,150 0,200 Z"
               fill="url(#jhTopWave)"
             />
           </svg>
         </div>
 
-        {/* Continuous Stream of /food_dish.png Gliding from LEFT to RIGHT */}
-        <div className="absolute top-4 sm:top-6 md:top-8 inset-x-0 z-10 overflow-hidden pointer-events-none">
-          <div className="flex w-max animate-drift-right-top">
-            {[1, 2, 3, 4, 1, 2, 3, 4].map((item, idx) => (
-              <div
-                key={`top-dish-move-${idx}`}
-                className="mx-16 sm:mx-28 md:mx-40 shrink-0 pointer-events-auto"
-              >
-                <div className={idx % 2 === 0 ? "animate-dish-bob" : "animate-dish-reverse-bob"}>
-                  <img
-                    src="/food_dish.png"
-                    alt="Delicious Dish"
-                    className="w-20 h-20 sm:w-26 sm:h-26 md:w-32 md:h-32 object-contain drop-shadow-[0_12px_22px_rgba(0,0,0,0.18)] transition-transform duration-300 hover:scale-105"
-                    onError={(e) => {
-                      e.target.onerror = null
-                      e.target.src = "/logo.png"
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Single Image: /food_dish.png (Goes from Left to Right and back) */}
+        <motion.div
+          animate={{
+            x: [0, 80, 0],
+            y: [0, -6, 0],
+            rotate: [-2, 3, -2],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute top-2 sm:top-3 md:top-5 left-4 sm:left-10 md:left-20 z-10 pointer-events-auto cursor-pointer"
+        >
+          <img
+            src="/food_dish.png"
+            alt="Delicious Noodle Bowl"
+            className="w-16 h-16 sm:w-22 sm:h-22 md:w-28 md:h-28 object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.18)] transition-transform duration-300 hover:scale-105"
+            onError={(e) => {
+              e.target.onerror = null
+              e.target.src = "/logo.png"
+            }}
+          />
+        </motion.div>
       </div>
 
       {/* ========================================================= */}
-      {/* CENTER LOGIN FORM (Pixel-Aligned to RedGo Reference)     */}
+      {/* CENTER LOGIN FORM (Clean, Non-Scrollable, RedGo Aligned) */}
       {/* ========================================================= */}
-      <div className="relative z-20 w-full max-w-[360px] mx-auto px-6 py-2 sm:py-4 flex flex-col items-center justify-center text-center">
+      <div className="relative z-20 flex-1 flex flex-col items-center justify-center w-full max-w-[350px] mx-auto px-5 py-1 text-center shrink-0">
         
         {/* Brand Logo (Jharkhand Rasoi) */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
-          className="mb-2"
+          className="mb-1.5"
         >
           <img
             src="/logo.png"
             alt={`${companyName} Logo`}
-            className="h-14 sm:h-16 w-auto max-w-[200px] object-contain select-none"
+            className="h-11 sm:h-13 w-auto max-w-[180px] object-contain select-none"
             onError={(e) => {
               e.target.onerror = null
               e.target.src = "/favicon.ico"
@@ -374,12 +327,12 @@ export default function UnifiedOTPFastLogin() {
           />
         </motion.div>
 
-        {/* Subtitle (Exact text from RedGo reference) */}
-        <p className="text-gray-500 font-medium text-xs sm:text-sm mb-5 select-none">
+        {/* Subtitle (Exact RedGo text) */}
+        <p className="text-gray-500 font-medium text-xs sm:text-sm mb-4 select-none">
           {step === 1 ? "Login or signup with your phone number" : "Enter verification code"}
         </p>
 
-        {/* Step 1: Phone Entry */}
+        {/* Step 1: Phone Entry Form */}
         <AnimatePresence mode="wait">
           {step === 1 ? (
             <motion.form
@@ -414,11 +367,11 @@ export default function UnifiedOTPFastLogin() {
                 />
               </div>
 
-              {/* Main "Log in" CTA Button (System Theme Yellow with Bold Black Text) */}
+              {/* Main "Log in" Button (System Theme Yellow with Bold Black Text) */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 sm:h-12 rounded-full bg-[#FEC600] hover:bg-amber-400 active:scale-[0.98] text-black font-extrabold text-sm shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-2 mt-3.5 cursor-pointer disabled:opacity-60"
+                className="w-full h-11 sm:h-12 rounded-full bg-[#FEC600] hover:bg-amber-400 active:scale-[0.98] text-black font-extrabold text-sm shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-2 mt-3 cursor-pointer disabled:opacity-60"
               >
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin text-black" />
@@ -427,18 +380,18 @@ export default function UnifiedOTPFastLogin() {
                 )}
               </button>
 
-              {/* Secondary "Skip for now →" Pill */}
+              {/* Secondary "Skip for now →" Button */}
               <button
                 type="button"
                 onClick={() => navigate("/food/user")}
-                className="mt-3 px-5 py-1.5 rounded-full bg-black hover:bg-gray-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                className="mt-2.5 px-5 py-1.5 rounded-full bg-black hover:bg-gray-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer"
               >
                 <span>Skip for now</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
 
-              {/* Legal Footer Links (Exact RedGo Text) */}
-              <div className="mt-6 text-center space-y-1">
+              {/* Legal Footer Links (Exact RedGo Format) */}
+              <div className="mt-5 text-center space-y-1">
                 <p className="text-[11px] text-gray-400 font-medium">
                   By continuing, you agree to our
                 </p>
@@ -467,7 +420,7 @@ export default function UnifiedOTPFastLogin() {
               </div>
             </motion.form>
           ) : (
-            /* Step 2: 6-Digit OTP Verification */
+            /* Step 2: 6-Digit OTP Verification Form */
             <motion.form
               key="form-step-otp"
               initial={{ opacity: 0, y: 6 }}
@@ -477,7 +430,7 @@ export default function UnifiedOTPFastLogin() {
               className="w-full flex flex-col items-center"
             >
               {/* Sent to Number info + Edit Button */}
-              <div className="flex items-center justify-center gap-2 mb-3.5 text-xs text-gray-600 font-medium">
+              <div className="flex items-center justify-center gap-2 mb-3 text-xs text-gray-600 font-medium">
                 <span>Code sent to <strong>+91 {phoneNumber}</strong></span>
                 <button
                   type="button"
@@ -490,7 +443,7 @@ export default function UnifiedOTPFastLogin() {
               </div>
 
               {/* 6 Digit Input Boxes */}
-              <div className="flex justify-between gap-2 w-full mb-3">
+              <div className="flex justify-between gap-1.5 sm:gap-2 w-full mb-3">
                 {[0, 1, 2, 3, 4, 5].map((index) => (
                   <input
                     key={index}
@@ -530,7 +483,7 @@ export default function UnifiedOTPFastLogin() {
                         document.getElementById("otp-input-5")?.focus()
                       }
                     }}
-                    className="w-10 h-12 sm:w-11 sm:h-13 text-center text-lg sm:text-xl font-bold bg-white border border-gray-200 rounded-xl shadow-2xs text-gray-900 focus:border-[#FEC600] focus:ring-2 focus:ring-[#FEC600]/30 outline-none transition-all"
+                    className="w-9 h-11 sm:w-11 sm:h-12 text-center text-lg sm:text-xl font-bold bg-white border border-gray-200 rounded-xl shadow-2xs text-gray-900 focus:border-[#FEC600] focus:ring-2 focus:ring-[#FEC600]/30 outline-none transition-all"
                   />
                 ))}
               </div>
@@ -562,7 +515,7 @@ export default function UnifiedOTPFastLogin() {
               <button
                 type="submit"
                 disabled={loading || otp.replace(/\D/g, "").length !== 6}
-                className="w-full h-11 sm:h-12 rounded-full bg-[#FEC600] hover:bg-amber-400 active:scale-[0.98] text-black font-extrabold text-sm shadow-xs transition-all flex items-center justify-center gap-2 mt-3 cursor-pointer disabled:opacity-50"
+                className="w-full h-11 sm:h-12 rounded-full bg-[#FEC600] hover:bg-amber-400 active:scale-[0.98] text-black font-extrabold text-sm shadow-xs transition-all flex items-center justify-center gap-2 mt-2.5 cursor-pointer disabled:opacity-50"
               >
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin text-black" />
@@ -574,11 +527,11 @@ export default function UnifiedOTPFastLogin() {
                 )}
               </button>
 
-              {/* Back to Login */}
+              {/* Back to Login Link */}
               <button
                 type="button"
                 onClick={handleEditNumber}
-                className="mt-3 text-xs font-semibold text-gray-500 hover:text-black transition-colors"
+                className="mt-2.5 text-xs font-semibold text-gray-500 hover:text-black transition-colors"
               >
                 ← Back to Login
               </button>
@@ -589,14 +542,14 @@ export default function UnifiedOTPFastLogin() {
 
       {/* ========================================================= */}
       {/* BOTTOM CURVED WAVE (Exact RedGo Curve, System Yellow Theme)*/}
-      {/* Uses ONLY /food_dish_2.png moving from LEFT to RIGHT      */}
+      {/* Single Image: food_dish_2.png moving in OPPOSITE direction */}
       {/* ========================================================= */}
-      <div className="relative w-full h-[180px] sm:h-[220px] md:h-[260px] overflow-hidden select-none pointer-events-none">
+      <div className="relative w-full h-[18vh] sm:h-[22vh] min-h-[110px] max-h-[175px] shrink-0 overflow-hidden pointer-events-none">
         
         {/* SVG Bottom Wave */}
         <div className="absolute inset-0 z-0">
           <svg
-            viewBox="0 0 1440 280"
+            viewBox="0 0 1440 220"
             className="w-full h-full object-cover"
             preserveAspectRatio="none"
             fill="none"
@@ -610,35 +563,36 @@ export default function UnifiedOTPFastLogin() {
               </linearGradient>
             </defs>
             <path
-              d="M0,280 L1440,280 L1440,90 Q720,230 0,255 Z"
+              d="M0,220 L1440,220 L1440,70 Q720,180 0,205 Z"
               fill="url(#jhBottomWave)"
             />
           </svg>
         </div>
 
-        {/* Continuous Stream of /food_dish_2.png Gliding from LEFT to RIGHT */}
-        <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 inset-x-0 z-10 overflow-hidden pointer-events-none">
-          <div className="flex w-max animate-drift-right-bottom">
-            {[1, 2, 3, 4, 1, 2, 3, 4].map((item, idx) => (
-              <div
-                key={`bottom-dish-move-${idx}`}
-                className="mx-16 sm:mx-28 md:mx-40 shrink-0 pointer-events-auto"
-              >
-                <div className={idx % 2 === 0 ? "animate-dish-reverse-bob" : "animate-dish-bob"}>
-                  <img
-                    src="/food_dish_2.png"
-                    alt="Gourmet Dish"
-                    className="w-20 h-20 sm:w-26 sm:h-26 md:w-32 md:h-32 object-contain drop-shadow-[0_12px_22px_rgba(0,0,0,0.18)] transition-transform duration-300 hover:scale-105"
-                    onError={(e) => {
-                      e.target.onerror = null
-                      e.target.src = "/logo.png"
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Single Image: /food_dish_2.png (Goes in OPPOSITE direction: Right to Left then back) */}
+        <motion.div
+          animate={{
+            x: [0, -80, 0],
+            y: [0, 6, 0],
+            rotate: [2, -3, 2],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute bottom-2 sm:bottom-3 md:bottom-5 right-4 sm:right-10 md:right-20 z-10 pointer-events-auto cursor-pointer"
+        >
+          <img
+            src="/food_dish_2.png"
+            alt="Gourmet Pasta Dish"
+            className="w-16 h-16 sm:w-22 sm:h-22 md:w-28 md:h-28 object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.18)] transition-transform duration-300 hover:scale-105"
+            onError={(e) => {
+              e.target.onerror = null
+              e.target.src = "/logo.png"
+            }}
+          />
+        </motion.div>
       </div>
 
       {/* ========================================================= */}
