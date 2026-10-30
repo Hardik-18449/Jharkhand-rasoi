@@ -205,46 +205,46 @@ export default function SubscriptionPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8 space-y-6 md:space-y-8">
-        {/* 2. HERO BANNER (Jharkhand Rasoi Brand Colors) */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-[#6d2f57] to-secondary text-white p-6 md:p-8 shadow-sm">
+        {/* 2. HERO BANNER (Yellow Background with Black Text) */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-black p-6 md:p-8 shadow-sm border border-amber-300">
           <div className="relative z-10 max-w-2xl space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-xs text-white text-xs font-bold uppercase tracking-wider">
-              <Crown className="h-3.5 w-3.5 text-amber-300 fill-amber-300" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/10 text-black border border-black/15 text-xs font-bold uppercase tracking-wider">
+              <Crown className="h-3.5 w-3.5 text-black fill-black" />
               <span>{companyName} VIP Club</span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-black leading-tight">
               Cooked First &amp; Served Faster.
             </h2>
 
-            <p className="text-xs sm:text-sm text-white/90 font-medium leading-relaxed">
+            <p className="text-xs sm:text-sm text-black/85 font-medium leading-relaxed">
               Join the VIP tier to get priority cooking in restaurant kitchens, free delivery on eligible orders, and member-exclusive discounts.
             </p>
 
             {/* Quick Benefits Strip */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
-              <div className="bg-white/10 rounded-xl p-2.5 text-center border border-white/10">
-                <Flame className="h-4 w-4 text-amber-300 mx-auto mb-1" />
-                <div className="text-xs font-bold text-white">Kitchen Priority</div>
-                <div className="text-[10px] text-white/80">Cooked First</div>
+              <div className="bg-black/5 hover:bg-black/10 rounded-xl p-2.5 text-center border border-black/10 transition-colors">
+                <Flame className="h-4 w-4 text-black mx-auto mb-1" />
+                <div className="text-xs font-bold text-black">Kitchen Priority</div>
+                <div className="text-[10px] text-black/75 font-medium">Cooked First</div>
               </div>
 
-              <div className="bg-white/10 rounded-xl p-2.5 text-center border border-white/10">
-                <Truck className="h-4 w-4 text-emerald-300 mx-auto mb-1" />
-                <div className="text-xs font-bold text-white">Free Delivery</div>
-                <div className="text-[10px] text-white/80">Eligible orders</div>
+              <div className="bg-black/5 hover:bg-black/10 rounded-xl p-2.5 text-center border border-black/10 transition-colors">
+                <Truck className="h-4 w-4 text-black mx-auto mb-1" />
+                <div className="text-xs font-bold text-black">Free Delivery</div>
+                <div className="text-[10px] text-black/75 font-medium">Eligible orders</div>
               </div>
 
-              <div className="bg-white/10 rounded-xl p-2.5 text-center border border-white/10">
-                <Percent className="h-4 w-4 text-pink-300 mx-auto mb-1" />
-                <div className="text-xs font-bold text-white">Extra Discounts</div>
-                <div className="text-[10px] text-white/80">Up to 20% OFF</div>
+              <div className="bg-black/5 hover:bg-black/10 rounded-xl p-2.5 text-center border border-black/10 transition-colors">
+                <Percent className="h-4 w-4 text-black mx-auto mb-1" />
+                <div className="text-xs font-bold text-black">Extra Discounts</div>
+                <div className="text-[10px] text-black/75 font-medium">Up to 20% OFF</div>
               </div>
 
-              <div className="bg-white/10 rounded-xl p-2.5 text-center border border-white/10">
-                <Award className="h-4 w-4 text-yellow-300 mx-auto mb-1" />
-                <div className="text-xs font-bold text-white">VIP Badge</div>
-                <div className="text-[10px] text-white/80">Profile &amp; Orders</div>
+              <div className="bg-black/5 hover:bg-black/10 rounded-xl p-2.5 text-center border border-black/10 transition-colors">
+                <Award className="h-4 w-4 text-black mx-auto mb-1" />
+                <div className="text-xs font-bold text-black">VIP Badge</div>
+                <div className="text-[10px] text-black/75 font-medium">Profile &amp; Orders</div>
               </div>
             </div>
           </div>
@@ -333,14 +333,14 @@ export default function SubscriptionPage() {
                     key={plan._id}
                     className={`rounded-2xl transition-all duration-200 flex flex-col justify-between overflow-hidden relative ${
                       isPopular
-                        ? "border-2 border-primary shadow-md dark:border-primary ring-1 ring-primary/20"
+                        ? "border-2 border-amber-400 shadow-md ring-2 ring-amber-300/30"
                         : "border border-gray-200 dark:border-gray-800 hover:border-gray-300 shadow-xs"
                     }`}
                   >
                     {/* RECOMMENDED CHOICE BANNER */}
                     {isPopular && (
-                      <div className="bg-primary text-white text-xs font-bold uppercase tracking-wider py-1.5 px-4 text-center flex items-center justify-center gap-1.5">
-                        <Crown className="h-3.5 w-3.5 fill-white" />
+                      <div className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-black text-xs font-black uppercase tracking-wider py-1.5 px-4 text-center flex items-center justify-center gap-1.5 shadow-xs">
+                        <Crown className="h-3.5 w-3.5 fill-black text-black" />
                         <span>Recommended Choice</span>
                       </div>
                     )}
@@ -441,7 +441,7 @@ export default function SubscriptionPage() {
                         onClick={() => handleOpenSubscribe(plan)}
                         className={`w-full py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-xs ${
                           isPopular
-                            ? "bg-primary hover:bg-primary/90 text-white"
+                            ? "bg-amber-400 hover:bg-amber-500 text-black font-extrabold shadow-xs"
                             : "bg-gray-900 hover:bg-black text-white dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100"
                         }`}
                       >
