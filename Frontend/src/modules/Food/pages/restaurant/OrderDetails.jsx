@@ -764,7 +764,7 @@ export default function OrderDetails({ idProp, mongoIdProp, onClose }) {
           {orderData.isPriority && (
             <div className="mb-4 p-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 rounded-xl text-white shadow-md border border-amber-300 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xl">⭐</span>
+                <span className="px-2 py-0.5 rounded bg-black/20 text-white font-black text-xs">VIP</span>
                 <div>
                   <div className="text-xs font-black uppercase tracking-wider text-black">
                     VIP PRIORITY CUSTOMER • SERVE FIRST
@@ -775,7 +775,7 @@ export default function OrderDetails({ idProp, mongoIdProp, onClose }) {
                 </div>
               </div>
               <span className="text-xs font-black bg-black/25 px-2.5 py-1 rounded-full text-white whitespace-nowrap">
-                {orderData.customerSubscription?.badgeText || orderData.customerSubscription?.planName || "⭐ VIP Member"}
+                {orderData.customerSubscription?.badgeText || orderData.customerSubscription?.planName || "VIP Member"}
               </span>
             </div>
           )}

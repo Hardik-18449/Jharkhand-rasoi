@@ -15,7 +15,7 @@ export async function createPlan(data) {
     const {
         name,
         description = '',
-        badgeText = '⭐ VIP',
+        badgeText = 'VIP',
         badgeColor = '#F59E0B',
         price,
         originalPrice = 0,
@@ -45,7 +45,7 @@ export async function createPlan(data) {
     const plan = await SubscriptionPlan.create({
         name: name.trim(),
         description: (description || '').trim(),
-        badgeText: (badgeText || '⭐ VIP').trim(),
+        badgeText: (badgeText || 'VIP').trim(),
         badgeColor: (badgeColor || '#F59E0B').trim(),
         price: numPrice,
         originalPrice: Number(originalPrice) || 0,
@@ -55,7 +55,7 @@ export async function createPlan(data) {
             'Priority Kitchen Cooking - Order Prepared First',
             'VIP High Priority Restaurant Tag',
             'Free Delivery on orders above ₹149',
-            'VIP Golden Badge on Profile & Orders',
+            'VIP Badge on Profile & Orders',
             'Dedicated Customer Support'
         ],
         freeDeliveryMinOrder: Number(freeDeliveryMinOrder) || 0,
@@ -132,7 +132,6 @@ export async function deletePlan(planId) {
     });
 
     if (activeSubscribersCount > 0) {
-        // Soft-delete by deactivating
         plan.isActive = false;
         await plan.save();
         return { message: 'Plan deactivated as active subscribers exist', plan, softDeleted: true };
@@ -222,7 +221,7 @@ export async function getUserActiveSubscription(userId) {
     return {
         isSubscribed: isCurrentlySubscribed,
         planName: isCurrentlySubscribed ? (user.subscriptionPlanName || activeRecord?.planName || 'VIP Club') : null,
-        badgeText: isCurrentlySubscribed ? (user.subscriptionBadge || activeRecord?.badgeText || '⭐ VIP') : null,
+        badgeText: isCurrentlySubscribed ? (user.subscriptionBadge || activeRecord?.badgeText || 'VIP') : null,
         priorityLevel: isCurrentlySubscribed ? (user.subscriptionPriority || activeRecord?.priorityLevel || 1) : 0,
         expiresAt: isCurrentlySubscribed ? user.subscriptionExpiresAt : null,
         daysRemaining,
@@ -275,7 +274,6 @@ export async function subscribeUser(userId, { planId, paymentMethod = 'wallet' }
     }
 
     const now = new Date();
-    // If user already has an active subscription, extend the expiry date
     let startDate = now;
     let baseTime = now.getTime();
     if (user.isSubscribed && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > now) {
@@ -285,12 +283,11 @@ export async function subscribeUser(userId, { planId, paymentMethod = 'wallet' }
     const durationMs = plan.durationDays * 24 * 60 * 60 * 1000;
     const expiresAt = new Date(baseTime + durationMs);
 
-    // Create UserSubscription entry
     const userSub = await UserSubscription.create({
         userId: user._id,
         planId: plan._id,
         planName: plan.name,
-        badgeText: plan.badgeText || '⭐ VIP',
+        badgeText: plan.badgeText || 'VIP',
         pricePaid: price,
         durationDays: plan.durationDays,
         priorityLevel: plan.priorityLevel || 1,
@@ -302,11 +299,10 @@ export async function subscribeUser(userId, { planId, paymentMethod = 'wallet' }
         features: plan.features || []
     });
 
-    // Update User model fields
     user.isSubscribed = true;
     user.subscriptionPlanId = plan._id;
     user.subscriptionPlanName = plan.name;
-    user.subscriptionBadge = plan.badgeText || '⭐ VIP';
+    user.subscriptionBadge = plan.badgeText || 'VIP';
     user.subscriptionPriority = plan.priorityLevel || 1;
     user.subscriptionExpiresAt = expiresAt;
     await user.save();

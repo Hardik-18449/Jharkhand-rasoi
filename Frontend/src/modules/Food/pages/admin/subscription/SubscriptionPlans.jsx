@@ -52,7 +52,7 @@ export default function SubscriptionPlans() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    badgeText: "⭐ VIP",
+    badgeText: "VIP",
     badgeColor: "#F59E0B",
     price: "",
     originalPrice: "",
@@ -113,7 +113,7 @@ export default function SubscriptionPlans() {
     setFormData({
       name: "",
       description: "",
-      badgeText: "⭐ VIP",
+      badgeText: "VIP",
       badgeColor: "#F59E0B",
       price: "",
       originalPrice: "",
@@ -138,7 +138,7 @@ export default function SubscriptionPlans() {
     setFormData({
       name: plan.name || "",
       description: plan.description || "",
-      badgeText: plan.badgeText || "⭐ VIP",
+      badgeText: plan.badgeText || "VIP",
       badgeColor: plan.badgeColor || "#F59E0B",
       price: plan.price ?? "",
       originalPrice: plan.originalPrice ?? "",
@@ -396,7 +396,7 @@ export default function SubscriptionPlans() {
                   >
                     <div>
                       <span className="inline-block text-[11px] font-black uppercase tracking-wider bg-black/25 px-2.5 py-0.5 rounded-full mb-1.5">
-                        {plan.badgeText || "⭐ VIP"}
+                        {plan.badgeText || "VIP"}
                       </span>
                       <h3 className="text-lg font-black">{plan.name}</h3>
                     </div>
@@ -579,7 +579,7 @@ export default function SubscriptionPlans() {
                         </td>
                         <td className="py-3.5 px-4">
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 font-bold">
-                            <span>⭐</span>
+                            
                             {sub.planName}
                           </span>
                         </td>
@@ -654,7 +654,7 @@ export default function SubscriptionPlans() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. ⭐ VIP Gold"
+                  placeholder="e.g. VIP Gold"
                   value={formData.badgeText}
                   onChange={(e) => setFormData({ ...formData, badgeText: e.target.value })}
                   className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-primary/20 focus:outline-none"

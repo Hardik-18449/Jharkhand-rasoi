@@ -20,7 +20,7 @@ const userSubscriptionSchema = new mongoose.Schema(
         },
         badgeText: {
             type: String,
-            default: '⭐ VIP'
+            default: 'VIP'
         },
         pricePaid: {
             type: Number,

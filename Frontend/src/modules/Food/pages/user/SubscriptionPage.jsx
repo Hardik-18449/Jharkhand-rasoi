@@ -12,27 +12,32 @@ import {
   Wallet,
   ArrowRight,
   ChevronLeft,
-  Star,
   Zap,
-  Gift,
   RefreshCw,
 } from "lucide-react";
 import { userAPI } from "@food/api";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@food/components/ui/dialog";
 
+// Helper to guarantee no emojis are rendered on this page
+const cleanText = (str) => {
+  if (!str || typeof str !== "string") return "";
+  return str
+    .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1FA00}-\u{1FAFF}]|[⭐★✨⚡🔥🎉👑💎🚀🛵?]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
 export default function SubscriptionPage() {
   const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mySub, setMySub] = useState(null);
-  const [walletBalance, setWalletBalance] = useState(0);
 
   // Subscribe Modal
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("wallet");
 
   useEffect(() => {
     loadData();
@@ -41,10 +46,9 @@ export default function SubscriptionPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [plansRes, mySubRes, walletRes] = await Promise.allSettled([
+      const [plansRes, mySubRes] = await Promise.allSettled([
         userAPI.getPublicSubscriptionPlans(),
         userAPI.getMySubscription(),
-        userAPI.getProfile().catch(() => null),
       ]);
 
       if (plansRes.status === "fulfilled") {
@@ -55,11 +59,6 @@ export default function SubscriptionPage() {
       if (mySubRes.status === "fulfilled") {
         setMySub(mySubRes.value?.data?.data || null);
       }
-
-      // Check wallet balance
-      try {
-        const wRes = await userAPI.getMySubscription(); // fallback or getWallet
-      } catch (e) {}
     } catch (err) {
       console.error(err);
     } finally {
@@ -82,14 +81,13 @@ export default function SubscriptionPage() {
         paymentMethod: "wallet",
       });
 
-      toast.success(res?.data?.message || `Welcome to ${selectedPlan.name}!`);
+      toast.success(res?.data?.message || `Welcome to ${cleanText(selectedPlan.name)}!`);
       setIsModalOpen(false);
       loadData();
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || "Failed to activate subscription";
-      toast.error(msg);
+      toast.error(cleanText(msg) || msg);
       if (msg.toLowerCase().includes("insufficient") || msg.toLowerCase().includes("wallet")) {
-        // Option to go to wallet page
         setTimeout(() => {
           if (window.confirm("Would you like to recharge your wallet now?")) {
             navigate("/user/wallet");
@@ -119,7 +117,7 @@ export default function SubscriptionPage() {
               VIP Priority Club
             </span>
           </div>
-          <div className="w-12" /> {/* spacer */}
+          <div className="w-12" />
         </div>
       </div>
 
@@ -156,7 +154,7 @@ export default function SubscriptionPage() {
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2.5 border border-white/10 text-center">
                 <Truck className="h-5 w-5 text-emerald-400 mx-auto mb-1" />
                 <div className="text-[11px] font-black">Free Delivery</div>
-                <div className="text-[9px] text-gray-300">On every order</div>
+                <div className="text-[9px] text-gray-300">On eligible orders</div>
               </div>
 
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2.5 border border-white/10 text-center">
@@ -167,8 +165,8 @@ export default function SubscriptionPage() {
 
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2.5 border border-white/10 text-center">
                 <Crown className="h-5 w-5 text-yellow-400 mx-auto mb-1" />
-                <div className="text-[11px] font-black">Golden Badge</div>
-                <div className="text-[9px] text-gray-300">VIP Status</div>
+                <div className="text-[11px] font-black">VIP Badge</div>
+                <div className="text-[9px] text-gray-300">Priority Status</div>
               </div>
             </div>
           </div>
@@ -181,14 +179,14 @@ export default function SubscriptionPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-black uppercase tracking-wider bg-black/20 text-white px-2.5 py-0.5 rounded-full">
-                    {mySub.badgeText || "⭐ VIP Active"}
+                    {cleanText(mySub.badgeText) || "VIP Active"}
                   </span>
                   <span className="text-xs font-bold text-amber-950">
                     Priority Rank #{mySub.priorityLevel || 1}
                   </span>
                 </div>
                 <h2 className="text-xl font-black text-gray-950">
-                  {mySub.planName || "VIP Pass Member"}
+                  {cleanText(mySub.planName) || "VIP Pass Member"}
                 </h2>
                 <p className="text-xs text-amber-950 font-medium mt-0.5">
                   Your orders are automatically marked as <strong>High Priority</strong> in all restaurant kitchens.
@@ -214,7 +212,7 @@ export default function SubscriptionPage() {
             Choose Your VIP Pass
           </h2>
           <p className="text-xs text-gray-500 mt-1">
-            Instant activation with priority queue status in all restaurant POS & kitchens.
+            Instant activation with priority queue status in all restaurant POS and kitchens.
           </p>
         </div>
 
@@ -233,8 +231,11 @@ export default function SubscriptionPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {plans.map((plan, idx) => {
-              const isPopular = idx === 1; // highlight middle plan as most popular
+              const isPopular = idx === 1;
               const isCurrentPlan = mySub?.isSubscribed && mySub?.planName === plan.name;
+              const cleanedBadge = cleanText(plan.badgeText) || "VIP";
+              const cleanedName = cleanText(plan.name) || plan.name;
+              const cleanedDesc = cleanText(plan.description) || plan.description;
 
               return (
                 <div
@@ -246,8 +247,8 @@ export default function SubscriptionPage() {
                   }`}
                 >
                   {isPopular && (
-                    <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-[10px] font-black uppercase text-center py-1 tracking-wider">
-                      ★ Most Popular Choice ★
+                    <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-[10px] font-black uppercase text-center py-1 tracking-wider">
+                      Most Popular Choice
                     </div>
                   )}
 
@@ -259,17 +260,17 @@ export default function SubscriptionPage() {
                           className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full text-white"
                           style={{ backgroundColor: plan.badgeColor || "#F59E0B" }}
                         >
-                          {plan.badgeText || "⭐ VIP"}
+                          {cleanedBadge}
                         </span>
                         <span className="text-[11px] font-bold text-gray-400">
                           {plan.durationDays} Days
                         </span>
                       </div>
 
-                      <h3 className="text-lg font-black text-gray-900">{plan.name}</h3>
-                      {plan.description && (
+                      <h3 className="text-lg font-black text-gray-900">{cleanedName}</h3>
+                      {cleanedDesc && (
                         <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                          {plan.description}
+                          {cleanedDesc}
                         </p>
                       )}
                     </div>
@@ -304,12 +305,16 @@ export default function SubscriptionPage() {
 
                     {/* Features List */}
                     <div className="space-y-2 pt-2">
-                      {plan.features?.map((feat, fIdx) => (
-                        <div key={fIdx} className="flex items-start gap-2 text-xs text-gray-700 font-medium">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                          <span>{feat}</span>
-                        </div>
-                      ))}
+                      {plan.features?.map((feat, fIdx) => {
+                        const cleanedFeat = cleanText(feat);
+                        if (!cleanedFeat) return null;
+                        return (
+                          <div key={fIdx} className="flex items-start gap-2 text-xs text-gray-700 font-medium">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                            <span>{cleanedFeat}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -340,10 +345,10 @@ export default function SubscriptionPage() {
           </div>
           <div className="space-y-0.5">
             <h4 className="text-sm font-black text-gray-900">
-              100% Kitchen Priority Guarantee
+              Kitchen Priority Guarantee
             </h4>
             <p className="text-xs text-gray-500 font-medium">
-              Every order you place shows a bold golden VIP tag on restaurant screens and POS so cooks start
+              Every order you place displays a high-priority VIP tag on restaurant screens and POS so kitchen staff start
               preparing your food right away.
             </p>
           </div>
@@ -369,11 +374,11 @@ export default function SubscriptionPage() {
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase bg-black/20 px-2 py-0.5 rounded-full">
-                    {selectedPlan.badgeText || "⭐ VIP"}
+                    {cleanText(selectedPlan.badgeText) || "VIP"}
                   </span>
                   <span className="text-xs font-bold">{selectedPlan.durationDays} Days</span>
                 </div>
-                <div className="text-xl font-black mt-1">{selectedPlan.name}</div>
+                <div className="text-xl font-black mt-1">{cleanText(selectedPlan.name)}</div>
                 <div className="text-2xl font-black mt-2">₹{selectedPlan.price}</div>
               </div>
 
@@ -397,7 +402,7 @@ export default function SubscriptionPage() {
                   <span className="font-black text-gray-900">₹{selectedPlan.price}</span>
                 </div>
                 <p className="text-[11px] text-gray-500 font-medium">
-                  Instant activation. Amount will be deducted from your Jharkhand Rasoi wallet.
+                  Instant activation. Amount will be deducted from your wallet.
                 </p>
               </div>
 

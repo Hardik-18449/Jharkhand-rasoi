@@ -115,7 +115,7 @@ const transformOrderForList = (order) => ({
   customerSubscription: order.customerSubscription || (order.userId?.isSubscribed ? {
     isSubscribed: true,
     planName: order.userId?.subscriptionPlanName,
-    badgeText: order.userId?.subscriptionBadge || '⭐ VIP'
+    badgeText: order.userId?.subscriptionBadge || 'VIP'
   } : null),
 });
 
@@ -3622,7 +3622,7 @@ function OrderCard({
       {isPriority && (
         <div className="mb-2 px-2.5 py-1 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 rounded-lg flex items-center justify-between text-black shadow-sm border border-amber-300">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs">⭐</span>
+            <span className="text-[10px] font-black bg-black/25 px-1.5 py-0.5 rounded text-white mr-1">VIP</span>
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-900">
               VIP PRIORITY • SERVE FIRST
             </span>

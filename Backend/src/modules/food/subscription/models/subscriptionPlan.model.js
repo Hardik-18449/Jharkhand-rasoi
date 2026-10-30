@@ -14,7 +14,7 @@ const subscriptionPlanSchema = new mongoose.Schema(
         },
         badgeText: {
             type: String,
-            default: '⭐ VIP',
+            default: 'VIP',
             trim: true
         },
         badgeColor: {
@@ -50,7 +50,7 @@ const subscriptionPlanSchema = new mongoose.Schema(
                 'Priority Kitchen Cooking - Order Prepared First',
                 'VIP High Priority Restaurant Tag',
                 'Free Delivery on orders above ₹149',
-                'VIP Golden Badge on Profile & Orders',
+                'VIP Badge on Profile & Orders',
                 'Dedicated Customer Support'
             ]
         },
