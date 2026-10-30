@@ -183,7 +183,7 @@ export default function SubscriptionPage() {
                 <ArrowLeft className="h-5 w-5 md:h-6 md:w-6 text-gray-700 dark:text-white" />
               </button>
               <div className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-[#FEC600] fill-[#FEC600]" />
+                <Crown className="h-5 w-5 text-amber-500 fill-amber-500" />
                 <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
                   VIP Subscription
                 </h1>
@@ -192,10 +192,10 @@ export default function SubscriptionPage() {
 
             <Link
               to="/user/wallet"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FEC600]/15 hover:bg-[#FEC600]/25 border border-[#FEC600]/40 transition"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 transition"
               title="View or Recharge Wallet"
             >
-              <Wallet className="h-4 w-4 text-[#FEC600]" />
+              <Wallet className="h-4 w-4 text-primary" />
               <span className="text-xs font-bold text-gray-900 dark:text-white">
                 ₹{walletBalance.toLocaleString("en-IN")}
               </span>
@@ -205,46 +205,46 @@ export default function SubscriptionPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8 space-y-6 md:space-y-8">
-        {/* 2. HERO BANNER (System Theme with Admin Dashboard Default Yellow #FEC600) */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#2a0e20] via-[#1a0a14] to-[#2a0e20] text-white p-6 md:p-8 shadow-md border border-white/10">
-          <div className="relative z-10 max-w-2xl space-y-3.5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEC600] text-black text-xs font-black uppercase tracking-wider shadow-sm">
+        {/* 2. HERO BANNER (Admin Dynamic Theme Yellow with Black Text) */}
+        <div className="relative overflow-hidden rounded-2xl bg-primary text-primary-foreground p-6 md:p-8 shadow-sm border border-primary/40">
+          <div className="relative z-10 max-w-2xl space-y-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/10 text-black border border-black/15 text-xs font-bold uppercase tracking-wider">
               <Crown className="h-3.5 w-3.5 text-black fill-black" />
               <span>{companyName} VIP Club</span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-[#FEC600] uppercase leading-tight drop-shadow-sm">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-black leading-tight">
               Cooked First &amp; Served Faster.
             </h2>
 
-            <p className="text-xs sm:text-sm text-gray-200 font-medium leading-relaxed">
+            <p className="text-xs sm:text-sm text-black/85 font-medium leading-relaxed">
               Join the VIP tier to get priority cooking in restaurant kitchens, free delivery on eligible orders, and member-exclusive discounts.
             </p>
 
             {/* Quick Benefits Strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1.5">
-              <div className="bg-white/10 hover:bg-white/15 backdrop-blur-xs rounded-xl p-2.5 text-center border border-white/10 transition-colors">
-                <Flame className="h-4 w-4 text-[#FEC600] fill-[#FEC600] mx-auto mb-1" />
-                <div className="text-xs font-bold text-white">Kitchen Priority</div>
-                <div className="text-[10px] text-gray-300">Cooked First</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+              <div className="bg-black/5 hover:bg-black/10 rounded-xl p-2.5 text-center border border-black/10 transition-colors">
+                <Flame className="h-4 w-4 text-black mx-auto mb-1" />
+                <div className="text-xs font-bold text-black">Kitchen Priority</div>
+                <div className="text-[10px] text-black/75 font-medium">Cooked First</div>
               </div>
 
-              <div className="bg-white/10 hover:bg-white/15 backdrop-blur-xs rounded-xl p-2.5 text-center border border-white/10 transition-colors">
-                <Truck className="h-4 w-4 text-[#FEC600] mx-auto mb-1" />
-                <div className="text-xs font-bold text-white">Free Delivery</div>
-                <div className="text-[10px] text-gray-300">Eligible orders</div>
+              <div className="bg-black/5 hover:bg-black/10 rounded-xl p-2.5 text-center border border-black/10 transition-colors">
+                <Truck className="h-4 w-4 text-black mx-auto mb-1" />
+                <div className="text-xs font-bold text-black">Free Delivery</div>
+                <div className="text-[10px] text-black/75 font-medium">Eligible orders</div>
               </div>
 
-              <div className="bg-white/10 hover:bg-white/15 backdrop-blur-xs rounded-xl p-2.5 text-center border border-white/10 transition-colors">
-                <Percent className="h-4 w-4 text-[#FEC600] mx-auto mb-1" />
-                <div className="text-xs font-bold text-white">Extra Discounts</div>
-                <div className="text-[10px] text-gray-300">Up to 20% OFF</div>
+              <div className="bg-black/5 hover:bg-black/10 rounded-xl p-2.5 text-center border border-black/10 transition-colors">
+                <Percent className="h-4 w-4 text-black mx-auto mb-1" />
+                <div className="text-xs font-bold text-black">Extra Discounts</div>
+                <div className="text-[10px] text-black/75 font-medium">Up to 20% OFF</div>
               </div>
 
-              <div className="bg-white/10 hover:bg-white/15 backdrop-blur-xs rounded-xl p-2.5 text-center border border-white/10 transition-colors">
-                <Award className="h-4 w-4 text-[#FEC600] mx-auto mb-1" />
-                <div className="text-xs font-bold text-white">VIP Badge</div>
-                <div className="text-[10px] text-gray-300">Profile &amp; Orders</div>
+              <div className="bg-black/5 hover:bg-black/10 rounded-xl p-2.5 text-center border border-black/10 transition-colors">
+                <Award className="h-4 w-4 text-black mx-auto mb-1" />
+                <div className="text-xs font-bold text-black">VIP Badge</div>
+                <div className="text-[10px] text-black/75 font-medium">Profile &amp; Orders</div>
               </div>
             </div>
           </div>
@@ -252,33 +252,33 @@ export default function SubscriptionPage() {
 
         {/* 3. ACTIVE MEMBERSHIP STATUS (If user is currently subscribed) */}
         {mySub?.isSubscribed && (
-          <Card className="bg-gradient-to-r from-[#2a0e20] via-[#1a0a14] to-[#2a0e20] text-white rounded-2xl border border-[#FEC600]/40 p-5 shadow-xs">
+          <Card className="bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-yellow-500/10 rounded-2xl border border-amber-300 dark:border-amber-600/30 p-5 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-[#FEC600] text-black font-extrabold text-[10px] uppercase tracking-wider">
+                  <Badge className="bg-amber-500 text-black font-extrabold text-[10px] uppercase tracking-wider">
                     {cleanText(mySub.badgeText) || "VIP"} ACTIVE
                   </Badge>
-                  <span className="text-xs font-bold text-[#FEC600]">
+                  <span className="text-xs font-bold text-amber-900 dark:text-amber-300">
                     Kitchen Priority Rank #{mySub.priorityLevel || 1}
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                   {cleanText(mySub.planName) || "VIP Pass Member"}
                 </h3>
-                <p className="text-xs text-gray-300 font-medium">
+                <p className="text-xs text-gray-600 dark:text-gray-300 font-medium">
                   Your orders are automatically marked <strong>VIP PRIORITY - SERVE FIRST</strong> on restaurant kitchen screens.
                 </p>
               </div>
 
-              <div className="bg-black/60 rounded-xl p-3 sm:text-right border border-white/10 shadow-xs">
-                <div className="text-[10px] font-bold text-gray-400 uppercase">
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:text-right border border-gray-200 dark:border-gray-700 shadow-xs">
+                <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
                   Membership Validity
                 </div>
-                <div className="text-lg font-extrabold text-[#FEC600]">
+                <div className="text-lg font-extrabold text-gray-900 dark:text-white">
                   {mySub.daysRemaining} Days Remaining
                 </div>
-                <div className="text-[10px] text-gray-400">
+                <div className="text-[10px] text-gray-500">
                   Expires {new Date(mySub.expiresAt).toLocaleDateString()}
                 </div>
               </div>
@@ -333,13 +333,13 @@ export default function SubscriptionPage() {
                     key={plan._id}
                     className={`rounded-2xl transition-all duration-200 flex flex-col justify-between overflow-hidden relative ${
                       isPopular
-                        ? "border-2 border-[#FEC600] shadow-md ring-2 ring-[#FEC600]/30"
+                        ? "border-2 border-amber-400 shadow-md ring-2 ring-amber-300/30"
                         : "border border-gray-200 dark:border-gray-800 hover:border-gray-300 shadow-xs"
                     }`}
                   >
                     {/* RECOMMENDED CHOICE BANNER */}
                     {isPopular && (
-                      <div className="bg-[#FEC600] text-black text-xs font-black uppercase tracking-wider py-1.5 px-4 text-center flex items-center justify-center gap-1.5 shadow-xs">
+                      <div className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-black text-xs font-black uppercase tracking-wider py-1.5 px-4 text-center flex items-center justify-center gap-1.5 shadow-xs">
                         <Crown className="h-3.5 w-3.5 fill-black text-black" />
                         <span>Recommended Choice</span>
                       </div>
@@ -349,14 +349,14 @@ export default function SubscriptionPage() {
                       {/* Plan Header */}
                       <div className="flex items-center justify-between">
                         <Badge
-                          className="font-bold text-[10px] uppercase text-black shadow-xs"
-                          style={{ backgroundColor: plan.badgeColor || "#FEC600" }}
+                          className="font-bold text-[10px] uppercase text-white shadow-xs"
+                          style={{ backgroundColor: plan.badgeColor || "#7e3866" }}
                         >
                           {cleanedBadge}
                         </Badge>
 
                         <div className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 rounded-full">
-                          <Clock className="h-3 w-3 text-[#FEC600]" />
+                          <Clock className="h-3 w-3 text-primary" />
                           <span>{plan.durationDays} Days</span>
                         </div>
                       </div>
@@ -404,10 +404,10 @@ export default function SubscriptionPage() {
                       </div>
 
                       {/* Kitchen Priority Callout */}
-                      <div className="bg-[#FEC600]/10 dark:bg-[#FEC600]/20 border border-[#FEC600]/30 rounded-xl p-3 flex items-start gap-2.5">
-                        <Flame className="h-4 w-4 text-[#FEC600] flex-shrink-0 mt-0.5" />
+                      <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-start gap-2.5">
+                        <Flame className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                         <div className="text-xs text-gray-700 dark:text-gray-200">
-                          <span className="font-bold text-gray-950 dark:text-[#FEC600] block">
+                          <span className="font-bold text-primary block">
                             Kitchen Priority Rank #{plan.priorityLevel || 1}
                           </span>
                           Orders cooked first before standard customer tickets.
@@ -427,7 +427,7 @@ export default function SubscriptionPage() {
                               key={fIdx}
                               className="flex items-start gap-2 text-xs text-gray-700 dark:text-gray-300 font-medium"
                             >
-                              <Check className="h-3.5 w-3.5 text-[#FEC600] shrink-0 mt-0.5 stroke-[2.5]" />
+                              <Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5 stroke-[2.5]" />
                               <span>{cleanedFeat}</span>
                             </div>
                           );
@@ -441,7 +441,7 @@ export default function SubscriptionPage() {
                         onClick={() => handleOpenSubscribe(plan)}
                         className={`w-full py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-xs ${
                           isPopular
-                            ? "bg-[#FEC600] hover:bg-[#e6b300] text-black font-extrabold shadow-xs"
+                            ? "bg-amber-400 hover:bg-amber-500 text-black font-extrabold shadow-xs"
                             : "bg-gray-900 hover:bg-black text-white dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100"
                         }`}
                       >
@@ -469,7 +469,7 @@ export default function SubscriptionPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
             <Card className="rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs space-y-2">
-              <div className="h-8 w-8 rounded-lg bg-[#FEC600] text-black flex items-center justify-center font-black text-xs shadow-xs">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
                 1
               </div>
               <h4 className="text-sm font-bold text-gray-900 dark:text-white">VIP Tag Attached</h4>
@@ -479,7 +479,7 @@ export default function SubscriptionPage() {
             </Card>
 
             <Card className="rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs space-y-2">
-              <div className="h-8 w-8 rounded-lg bg-[#FEC600] text-black flex items-center justify-center font-black text-xs shadow-xs">
+              <div className="h-8 w-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center font-bold text-xs">
                 2
               </div>
               <h4 className="text-sm font-bold text-gray-900 dark:text-white">Kitchen POS Alert</h4>
@@ -489,7 +489,7 @@ export default function SubscriptionPage() {
             </Card>
 
             <Card className="rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs space-y-2">
-              <div className="h-8 w-8 rounded-lg bg-[#FEC600] text-black flex items-center justify-center font-black text-xs shadow-xs">
+              <div className="h-8 w-8 rounded-lg bg-orange-50 dark:bg-orange-950/40 text-orange-600 flex items-center justify-center font-bold text-xs">
                 3
               </div>
               <h4 className="text-sm font-bold text-gray-900 dark:text-white">Prepared First</h4>
@@ -499,7 +499,7 @@ export default function SubscriptionPage() {
             </Card>
 
             <Card className="rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs space-y-2">
-              <div className="h-8 w-8 rounded-lg bg-[#FEC600] text-black flex items-center justify-center font-black text-xs shadow-xs">
+              <div className="h-8 w-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center font-bold text-xs">
                 4
               </div>
               <h4 className="text-sm font-bold text-gray-900 dark:text-white">Express Handover</h4>
@@ -523,7 +523,7 @@ export default function SubscriptionPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
             <Card className="rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs space-y-2">
-              <div className="h-9 w-9 rounded-xl bg-[#FEC600]/20 text-gray-950 dark:text-[#FEC600] flex items-center justify-center">
+              <div className="h-9 w-9 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center">
                 <Flame className="h-4 w-4" />
               </div>
               <h4 className="text-sm font-bold text-gray-900 dark:text-white">Top Kitchen Priority</h4>
@@ -533,7 +533,7 @@ export default function SubscriptionPage() {
             </Card>
 
             <Card className="rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs space-y-2">
-              <div className="h-9 w-9 rounded-xl bg-[#FEC600]/20 text-gray-950 dark:text-[#FEC600] flex items-center justify-center">
+              <div className="h-9 w-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center">
                 <Truck className="h-4 w-4" />
               </div>
               <h4 className="text-sm font-bold text-gray-900 dark:text-white">Free Delivery</h4>
@@ -543,7 +543,7 @@ export default function SubscriptionPage() {
             </Card>
 
             <Card className="rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs space-y-2">
-              <div className="h-9 w-9 rounded-xl bg-[#FEC600]/20 text-gray-950 dark:text-[#FEC600] flex items-center justify-center">
+              <div className="h-9 w-9 rounded-xl bg-pink-50 dark:bg-pink-950/40 text-pink-600 flex items-center justify-center">
                 <Percent className="h-4 w-4" />
               </div>
               <h4 className="text-sm font-bold text-gray-900 dark:text-white">Exclusive Discounts</h4>
@@ -553,7 +553,7 @@ export default function SubscriptionPage() {
             </Card>
 
             <Card className="rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs space-y-2">
-              <div className="h-9 w-9 rounded-xl bg-[#FEC600]/20 text-gray-950 dark:text-[#FEC600] flex items-center justify-center">
+              <div className="h-9 w-9 rounded-xl bg-yellow-50 dark:bg-yellow-950/40 text-yellow-600 flex items-center justify-center">
                 <Crown className="h-4 w-4" />
               </div>
               <h4 className="text-sm font-bold text-gray-900 dark:text-white">Gold VIP Badge</h4>
@@ -702,7 +702,7 @@ export default function SubscriptionPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => navigate("/user/wallet")}
-                      className="w-full text-xs font-bold text-gray-900 border-[#FEC600] bg-[#FEC600]/15 hover:bg-[#FEC600]/25 flex items-center justify-center gap-1.5"
+                      className="w-full text-xs font-bold text-primary border-primary/30 hover:bg-primary/5 flex items-center justify-center gap-1.5"
                     >
                       <span>Recharge Wallet</span>
                       <ExternalLink className="h-3 w-3" />
@@ -725,7 +725,7 @@ export default function SubscriptionPage() {
                   type="button"
                   onClick={handleConfirmSubscribe}
                   disabled={isSubscribing || walletBalance < (selectedPlan.price || 0)}
-                  className="bg-[#FEC600] hover:bg-[#e6b300] text-black rounded-xl text-xs font-black shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+                  className="bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold shadow-xs disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {isSubscribing ? (
                     <>
@@ -734,7 +734,7 @@ export default function SubscriptionPage() {
                     </>
                   ) : (
                     <>
-                      <Zap className="h-3.5 w-3.5 fill-black text-black" />
+                      <Zap className="h-3.5 w-3.5 fill-white" />
                       <span>Pay ₹{selectedPlan.price} &amp; Join VIP</span>
                     </>
                   )}

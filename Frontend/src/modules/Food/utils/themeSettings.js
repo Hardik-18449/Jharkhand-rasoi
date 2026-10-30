@@ -1,5 +1,16 @@
 import { publicGetOnce } from "@food/api";
 
+const isLightColor = (hex) => {
+  if (!hex || typeof hex !== 'string') return false;
+  const cleanHex = hex.replace('#', '').trim();
+  if (cleanHex.length < 6) return true;
+  const r = parseInt(cleanHex.substring(0, 2), 16) || 0;
+  const g = parseInt(cleanHex.substring(2, 4), 16) || 0;
+  const b = parseInt(cleanHex.substring(4, 6), 16) || 0;
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 140; // Yellow, gold, amber, white etc. are light colors needing black text
+};
+
 export const applyDynamicTheme = async () => {
   try {
     const apps = ['user_app', 'restaurant_app', 'delivery_app', 'admin_app'];
@@ -29,6 +40,12 @@ export const applyDynamicTheme = async () => {
           root.style.setProperty('--primary', activeConfig.primaryColor);
           root.style.setProperty('--color-primary', activeConfig.primaryColor);
           root.style.setProperty('--color-primary-orange', activeConfig.primaryColor);
+          root.style.setProperty('--ring', activeConfig.primaryColor);
+
+          // If primary is yellow or light, ensure text on primary buttons is black
+          const fgColor = isLightColor(activeConfig.primaryColor) ? '#000000' : '#ffffff';
+          root.style.setProperty('--primary-foreground', fgColor);
+          root.style.setProperty('--color-primary-foreground', fgColor);
         }
         if (activeConfig.secondaryColor) {
           root.style.setProperty('--secondary', activeConfig.secondaryColor);
