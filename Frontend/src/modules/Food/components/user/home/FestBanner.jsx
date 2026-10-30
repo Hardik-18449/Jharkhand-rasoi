@@ -60,7 +60,7 @@ export default function FestBanner({ isVegMode, images = [], hideFoodImages = fa
     <motion.div
       initial={false}
       id="fest-banner-root"
-      className={`relative w-full px-4 pt-6 pb-8 sm:pb-10 overflow-hidden min-h-[160px] sm:min-h-[200px] transition-all duration-700 bg-gradient-to-r from-[#2a0e20] via-[#1a0a14] to-[#2a0e20] rounded-t-none rounded-b-[28px] sm:rounded-b-[36px] shadow-lg border-b border-white/10`}
+      className={`relative w-full px-4 pt-6 pb-8 sm:pb-10 overflow-hidden min-h-[160px] sm:min-h-[200px] transition-all duration-700 bg-gradient-to-r from-amber-400 via-[#FEC600] to-yellow-400 rounded-t-none rounded-b-[28px] sm:rounded-b-[36px] shadow-lg border-b border-amber-300 text-black`}
     >
       {hasBgImages && (
         <div className="absolute inset-0 z-0 bg-slate-900">
@@ -97,7 +97,7 @@ export default function FestBanner({ isVegMode, images = [], hideFoodImages = fa
               );
             })()}
           </AnimatePresence>
-          <div className="absolute inset-0 bg-black/35 z-10" />
+          <div className="absolute inset-0 bg-black/20 z-10" />
         </div>
       )}
 
@@ -107,11 +107,11 @@ export default function FestBanner({ isVegMode, images = [], hideFoodImages = fa
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm font-bold"
+          className="flex items-center gap-2 bg-black/10 backdrop-blur-md px-3 py-1 rounded-full border border-black/15 shadow-xs font-bold"
         >
-          <Sparkles className="h-2.5 w-2.5 text-[#fff200] animate-pulse" />
-          <span className="text-[9px] font-black text-white uppercase tracking-[0.2em]">Jharkhand Rasoi Missions</span>
-          <Sparkles className="h-2.5 w-2.5 text-[#fff200] animate-pulse" />
+          <Sparkles className="h-2.5 w-2.5 text-black animate-pulse" />
+          <span className="text-[9px] font-black text-black uppercase tracking-[0.2em]">Jharkhand Rasoi Missions</span>
+          <Sparkles className="h-2.5 w-2.5 text-black animate-pulse" />
         </motion.div>
 
         <motion.div
@@ -121,8 +121,7 @@ export default function FestBanner({ isVegMode, images = [], hideFoodImages = fa
           transition={{ type: "spring", damping: 10, stiffness: 100 }}
         >
           <h2
-            className="text-2xl sm:text-3xl font-black text-[#fff200] italic tracking-tighter drop-shadow-md uppercase leading-none"
-            style={{ WebkitTextStroke: '0.5px rgba(255,255,255,0.3)' }}
+            className="text-2xl sm:text-3xl font-black text-black italic tracking-tighter drop-shadow-xs uppercase leading-none"
           >
             {isVegMode ? 'VEGGIE DELIGHT' : 'FEAST BONANZA'}
           </h2>
@@ -131,20 +130,20 @@ export default function FestBanner({ isVegMode, images = [], hideFoodImages = fa
         <motion.div
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="flex items-center gap-2 px-4 py-1.5 bg-black/40 backdrop-blur-lg rounded-full border border-white/20 shadow-xl group cursor-pointer active:scale-95 transition-all text-white"
+          className="flex items-center gap-2 px-4 py-1.5 bg-black text-white rounded-full border border-black/20 shadow-xl group cursor-pointer active:scale-95 transition-all"
         >
-          {isVegMode ? <Leaf className="h-3.5 w-3.5 text-emerald-400 fill-emerald-400" /> : <Flame className="h-3.5 w-3.5 text-[#fff200] fill-[#fff200] animate-bounce" />}
-          <span className="text-sm font-black uppercase tracking-[0.1em]">
+          {isVegMode ? <Leaf className="h-3.5 w-3.5 text-emerald-400 fill-emerald-400" /> : <Flame className="h-3.5 w-3.5 text-[#FEC600] fill-[#FEC600] animate-bounce" />}
+          <span className="text-sm font-black uppercase tracking-[0.1em] text-white">
             {isVegMode ? 'PURE VEG MAGIC' : 'UPTO 60% OFF NOW'}
           </span>
-          <ArrowRightCircle className="h-5 w-5 text-[#fff200] shadow-sm" />
+          <ArrowRightCircle className="h-5 w-5 text-[#FEC600] shadow-sm" />
         </motion.div>
 
         {hideFoodImages ? (
           <div className="h-28 sm:h-36" />
         ) : (
           <div className="flex items-end justify-center gap-5 sm:gap-8 pt-10 relative w-full mb-2">
-            <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 w-56 h-12 blur-[45px] rounded-full transition-colors duration-700 ${isVegMode ? 'bg-emerald-500/40' : 'bg-yellow-400/40'}`} />
+            <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 w-56 h-12 blur-[45px] rounded-full transition-colors duration-700 ${isVegMode ? 'bg-emerald-500/40' : 'bg-black/15'}`} />
 
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.div
@@ -184,7 +183,7 @@ export default function FestBanner({ isVegMode, images = [], hideFoodImages = fa
                 }}
               >
                 <div className="relative h-full w-full">
-                  <div className={`absolute -inset-2.5 blur-3xl rounded-full animate-pulse transition-colors duration-700 ${isVegMode ? 'bg-white/40' : 'bg-yellow-400/40'}`} />
+                  <div className={`absolute -inset-2.5 blur-3xl rounded-full animate-pulse transition-colors duration-700 ${isVegMode ? 'bg-white/40' : 'bg-white/30'}`} />
                   <img src={displayImages[1]} alt="food" className="relative w-full h-full object-cover rounded-[2.5rem] border-[4px] border-white shadow-[0_22px_55px_rgba(0,0,0,0.4)]" />
                 </div>
               </motion.div>
@@ -215,5 +214,3 @@ export default function FestBanner({ isVegMode, images = [], hideFoodImages = fa
     </motion.div>
   );
 }
-
-

@@ -114,9 +114,9 @@ export default function HomeHeader({
   return (
     <>
       <div id="home-header-loc-row" className="md:hidden relative pt-2 pb-0 px-4 transition-all duration-700 overflow-hidden bg-transparent shadow-none">
-        {/* Subtle Artistic Glows - Adds depth without being 'boring' */}
-        <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-primary/5 blur-[80px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-[-20%] left-[-10%] w-48 h-48 bg-[#48c479]/5 blur-[80px] rounded-full pointer-events-none" />
+        {/* Subtle Artistic Glows */}
+        <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-primary/10 blur-[80px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-48 h-48 bg-yellow-400/10 blur-[80px] rounded-full pointer-events-none" />
 
         {/* Main Header Content */}
         <div className="relative z-10 space-y-2.5">
@@ -128,11 +128,11 @@ export default function HomeHeader({
             onClick={handleLocationClick}
           >
             <div className="flex-shrink-0 flex items-center justify-center">
-              <MapPin className="h-[26px] w-[26px] text-[#FACC15]" strokeWidth={2.5} />
+              <MapPin className="h-[26px] w-[26px] text-black" strokeWidth={2.5} />
             </div>
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1">
-                <span className="text-[15px] sm:text-[16px] font-bold text-white truncate tracking-tight">
+                <span className="text-[15px] sm:text-[16px] font-bold text-black truncate tracking-tight">
                   {(() => {
                     const area = location?.area || location?.subLocality || location?.mainTitle || location?.neighborhood;
                     const city = (location?.city || "").toLowerCase();
@@ -164,10 +164,10 @@ export default function HomeHeader({
                     return location?.area || location?.city || "Select Location";
                   })()}
                 </span>
-                <ChevronDown className="h-[16px] w-[16px] text-white flex-shrink-0" strokeWidth={2.5} />
+                <ChevronDown className="h-[16px] w-[16px] text-black flex-shrink-0" strokeWidth={2.5} />
               </div>
               
-              <span className="text-[11px] font-medium text-white/80 uppercase truncate leading-tight mt-0.5">
+              <span className="text-[11px] font-semibold text-black/80 uppercase truncate leading-tight mt-0.5">
                 {(() => {
                   const addr = location?.formattedAddress || location?.address || "";
                   if (addr && addr.length > 5 && addr !== "Select location") {
@@ -187,21 +187,21 @@ export default function HomeHeader({
             </div>
           </div>
 
-          {/* Right Actions: Bell */}
+          {/* Right Actions: VIP + Bell */}
           <div className="flex items-center gap-2">
             <Link
               to="/user/subscription"
-              className="h-8 px-2.5 flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black border border-amber-300 shadow-sm font-black text-[10px] tracking-tight hover:scale-105 active:scale-95 transition-all"
+              className="h-8 px-2.5 flex items-center gap-1 rounded-full bg-black text-[#FEC600] border border-black/40 shadow-sm font-black text-[10px] tracking-tight hover:scale-105 active:scale-95 transition-all"
               title="VIP Club"
             >
-              <Crown className="h-3.5 w-3.5 fill-black" />
+              <Crown className="h-3.5 w-3.5 fill-[#FEC600]" />
               <span>VIP</span>
             </Link>
 
             <Popover>
               <PopoverTrigger asChild>
-                <div className="h-8 w-8 relative flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/20 cursor-pointer active:scale-90 transition-all">
-                  <Bell className="h-4 w-4 text-white" />
+                <div className="h-8 w-8 relative flex items-center justify-center rounded-full bg-black/10 backdrop-blur-md border border-black/15 cursor-pointer active:scale-90 transition-all">
+                  <Bell className="h-4 w-4 text-black" />
                   {unreadCount > 0 && (
                     <span className={`absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full border animate-pulse ${vegMode ? 'bg-orange-400 border-[#00b09b]' : 'bg-orange-400 border-primary'}`} />
                   )}
@@ -254,8 +254,8 @@ export default function HomeHeader({
         </div>
       </div>
 
-      {/* Sticky Search Bar and Veg Toggle */}
-      <div id="home-header-search-row" className={`md:hidden sticky top-0 z-[60] w-full px-3 pt-2 pb-3 transition-all duration-300 ${pushSearchDown ? 'mt-[252px] sm:mt-[258px]' : 'mt-1 sm:mt-2'} bg-gradient-to-b from-[#3a142c] to-[#1a0a14] rounded-b-[24px] sm:rounded-b-[28px] shadow-lg border-b border-white/10`}>
+      {/* Sticky Search Bar and Veg Toggle (Yellow Background to match Theme) */}
+      <div id="home-header-search-row" className={`md:hidden sticky top-0 z-[60] w-full px-3 pt-2 pb-3 transition-all duration-300 ${pushSearchDown ? 'mt-[252px] sm:mt-[258px]' : 'mt-1 sm:mt-2'} bg-gradient-to-r from-amber-400 via-[#FEC600] to-yellow-400 rounded-b-[24px] sm:rounded-b-[28px] shadow-lg border-b border-amber-300`}>
         <div className="flex items-center gap-2.5 w-full max-w-lg mx-auto pointer-events-auto">
           {/* Search Bar */}
           <div

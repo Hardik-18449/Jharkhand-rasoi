@@ -2125,7 +2125,7 @@ export default function Home() {
           {/* Brand Top Section (Dark) */}
           {/* Decoupled Dark Background - Dynamic height based on actual components to prevent clipping sticky elements while covering properly */}
           <div 
-             className="md:hidden absolute top-0 left-0 right-0 overflow-hidden rounded-b-[28px] bg-gradient-to-b from-[#3a142c] to-[#1a0a14] shadow-lg pointer-events-none z-0 transition-all duration-300 [transform:translateZ(0)] [mask-image:-webkit-radial-gradient(white,black)]"
+             className="md:hidden absolute top-0 left-0 right-0 overflow-hidden rounded-b-[28px] bg-gradient-to-b from-amber-400 via-[#FEC600] to-yellow-400 shadow-lg pointer-events-none z-0 transition-all duration-300 [transform:translateZ(0)] [mask-image:-webkit-radial-gradient(white,black)]"
              style={{ height: festVideoActive ? '360px' : (headerBgHeight > 0 ? `${headerBgHeight}px` : (activeTab === 'food' ? '300px' : '140px')) }}
           >
             {festVideoActive && (

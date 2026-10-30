@@ -222,31 +222,6 @@ export default function SubscriptionPage() {
             </p>
 
             {/* Quick Benefits Strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
-              <div className="bg-black/5 hover:bg-black/10 rounded-xl p-2.5 text-center border border-black/10 transition-colors">
-                <Flame className="h-4 w-4 text-black mx-auto mb-1" />
-                <div className="text-xs font-bold text-black">Kitchen Priority</div>
-                <div className="text-[10px] text-black/75 font-medium">Cooked First</div>
-              </div>
-
-              <div className="bg-black/5 hover:bg-black/10 rounded-xl p-2.5 text-center border border-black/10 transition-colors">
-                <Truck className="h-4 w-4 text-black mx-auto mb-1" />
-                <div className="text-xs font-bold text-black">Free Delivery</div>
-                <div className="text-[10px] text-black/75 font-medium">Eligible orders</div>
-              </div>
-
-              <div className="bg-black/5 hover:bg-black/10 rounded-xl p-2.5 text-center border border-black/10 transition-colors">
-                <Percent className="h-4 w-4 text-black mx-auto mb-1" />
-                <div className="text-xs font-bold text-black">Extra Discounts</div>
-                <div className="text-[10px] text-black/75 font-medium">Up to 20% OFF</div>
-              </div>
-
-              <div className="bg-black/5 hover:bg-black/10 rounded-xl p-2.5 text-center border border-black/10 transition-colors">
-                <Award className="h-4 w-4 text-black mx-auto mb-1" />
-                <div className="text-xs font-bold text-black">VIP Badge</div>
-                <div className="text-[10px] text-black/75 font-medium">Profile &amp; Orders</div>
-              </div>
-            </div>
           </div>
         </div>
 
