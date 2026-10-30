@@ -307,19 +307,19 @@ export default function UnifiedOTPFastLogin() {
       {/* ========================================================= */}
       {/* CENTER LOGIN FORM (Clean, Non-Scrollable, RedGo Aligned) */}
       {/* ========================================================= */}
-      <div className="relative z-20 flex-1 flex flex-col items-center justify-center w-full max-w-[350px] mx-auto px-5 py-1 text-center shrink-0">
+      <div className="relative z-20 flex-1 flex flex-col items-center justify-center w-full max-w-[440px] sm:max-w-[480px] md:max-w-[500px] mx-auto px-6 py-2 text-center shrink-0">
         
         {/* Brand Logo (Jharkhand Rasoi) */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
-          className="mb-1.5"
+          className="mb-2 sm:mb-3"
         >
           <img
             src="/logo.png"
             alt={`${companyName} Logo`}
-            className="h-11 sm:h-13 w-auto max-w-[180px] object-contain select-none"
+            className="h-16 sm:h-20 md:h-22 w-auto max-w-[240px] object-contain select-none"
             onError={(e) => {
               e.target.onerror = null
               e.target.src = "/favicon.ico"
@@ -328,7 +328,7 @@ export default function UnifiedOTPFastLogin() {
         </motion.div>
 
         {/* Subtitle (Exact RedGo text) */}
-        <p className="text-gray-500 font-medium text-xs sm:text-sm mb-4 select-none">
+        <p className="text-gray-500 font-medium text-sm sm:text-base mb-5 sm:mb-6 select-none">
           {step === 1 ? "Login or signup with your phone number" : "Enter verification code"}
         </p>
 
@@ -343,12 +343,12 @@ export default function UnifiedOTPFastLogin() {
               onSubmit={handleSendOTP}
               className="w-full flex flex-col items-center"
             >
-              {/* Phone Input Pill */}
-              <div className="w-full h-11 sm:h-12 bg-white rounded-full border border-gray-200/90 shadow-2xs focus-within:border-[#FEC600] focus-within:ring-2 focus-within:ring-[#FEC600]/30 flex items-center px-4 transition-all duration-200">
-                <span className="text-gray-700 font-semibold text-sm pr-3 shrink-0 select-none">
+              {/* Phone Input Pill (Enlarged & Spacious) */}
+              <div className="w-full h-13 sm:h-14 bg-white rounded-full border border-gray-200 shadow-2xs focus-within:border-[#FEC600] focus-within:ring-2 focus-within:ring-[#FEC600]/30 flex items-center px-5 transition-all duration-200">
+                <span className="text-gray-800 font-bold text-base sm:text-lg pr-3.5 shrink-0 select-none">
                   +91
                 </span>
-                <div className="h-4 w-[1px] bg-gray-200 shrink-0 mr-3" />
+                <div className="h-6 w-[1.5px] bg-gray-200 shrink-0 mr-3.5" />
                 <input
                   type="tel"
                   inputMode="numeric"
@@ -363,18 +363,18 @@ export default function UnifiedOTPFastLogin() {
                   }}
                   maxLength={10}
                   placeholder="Mobile number"
-                  className="w-full bg-transparent border-none outline-none text-gray-900 font-medium text-sm placeholder:text-gray-400 p-0"
+                  className="w-full bg-transparent border-none outline-none text-gray-900 font-medium text-base sm:text-lg placeholder:text-gray-400 p-0"
                 />
               </div>
 
-              {/* Main "Log in" Button (System Theme Yellow with Bold Black Text) */}
+              {/* Main "Log in" Button (Enlarged, System Theme Yellow with Bold Black Text) */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 sm:h-12 rounded-full bg-[#FEC600] hover:bg-amber-400 active:scale-[0.98] text-black font-extrabold text-sm shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-2 mt-3 cursor-pointer disabled:opacity-60"
+                className="w-full h-13 sm:h-14 rounded-full bg-[#FEC600] hover:bg-amber-400 active:scale-[0.98] text-black font-black text-base sm:text-lg tracking-wide shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-2 mt-4 cursor-pointer disabled:opacity-60"
               >
                 {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-black" />
+                  <Loader2 className="w-5 h-5 animate-spin text-black" />
                 ) : (
                   <span>Log in</span>
                 )}
@@ -384,18 +384,18 @@ export default function UnifiedOTPFastLogin() {
               <button
                 type="button"
                 onClick={() => navigate("/food/user")}
-                className="mt-2.5 px-5 py-1.5 rounded-full bg-black hover:bg-gray-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                className="mt-3.5 px-6 sm:px-7 py-2 sm:py-2.5 rounded-full bg-black hover:bg-gray-800 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-2xs active:scale-95 transition-all cursor-pointer"
               >
                 <span>Skip for now</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-4 h-4" />
               </button>
 
               {/* Legal Footer Links (Exact RedGo Format) */}
-              <div className="mt-5 text-center space-y-1">
-                <p className="text-[11px] text-gray-400 font-medium">
+              <div className="mt-6 sm:mt-7 text-center space-y-1">
+                <p className="text-xs sm:text-[13px] text-gray-400 font-medium">
                   By continuing, you agree to our
                 </p>
-                <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-gray-500 tracking-wider">
+                <div className="flex items-center justify-center gap-2.5 text-[11px] sm:text-xs font-bold text-gray-500 tracking-wider">
                   <Link
                     to="/profile/terms"
                     className="hover:text-black transition-colors uppercase"
@@ -420,7 +420,7 @@ export default function UnifiedOTPFastLogin() {
               </div>
             </motion.form>
           ) : (
-            /* Step 2: 6-Digit OTP Verification Form */
+            /* Step 2: 6-Digit OTP Verification Form (Enlarged) */
             <motion.form
               key="form-step-otp"
               initial={{ opacity: 0, y: 6 }}
@@ -430,7 +430,7 @@ export default function UnifiedOTPFastLogin() {
               className="w-full flex flex-col items-center"
             >
               {/* Sent to Number info + Edit Button */}
-              <div className="flex items-center justify-center gap-2 mb-3 text-xs text-gray-600 font-medium">
+              <div className="flex items-center justify-center gap-2 mb-4 text-sm text-gray-600 font-medium">
                 <span>Code sent to <strong>+91 {phoneNumber}</strong></span>
                 <button
                   type="button"
@@ -438,12 +438,12 @@ export default function UnifiedOTPFastLogin() {
                   className="p-1 hover:bg-gray-100 rounded-full text-gray-700 transition-colors"
                   title="Change phone number"
                 >
-                  <Edit2 className="w-3.5 h-3.5" />
+                  <Edit2 className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* 6 Digit Input Boxes */}
-              <div className="flex justify-between gap-1.5 sm:gap-2 w-full mb-3">
+              {/* 6 Digit Input Boxes (Enlarged) */}
+              <div className="flex justify-between gap-2 sm:gap-3 w-full mb-4">
                 {[0, 1, 2, 3, 4, 5].map((index) => (
                   <input
                     key={index}
@@ -483,13 +483,13 @@ export default function UnifiedOTPFastLogin() {
                         document.getElementById("otp-input-5")?.focus()
                       }
                     }}
-                    className="w-9 h-11 sm:w-11 sm:h-12 text-center text-lg sm:text-xl font-bold bg-white border border-gray-200 rounded-xl shadow-2xs text-gray-900 focus:border-[#FEC600] focus:ring-2 focus:ring-[#FEC600]/30 outline-none transition-all"
+                    className="w-11 h-13 sm:w-13 sm:h-15 md:w-14 md:h-16 text-center text-xl sm:text-2xl font-black bg-white border border-gray-200 rounded-2xl shadow-2xs text-gray-900 focus:border-[#FEC600] focus:ring-2 focus:ring-[#FEC600]/30 outline-none transition-all"
                   />
                 ))}
               </div>
 
               {/* Resend Timer / Link */}
-              <div className="flex items-center justify-between w-full text-xs text-gray-500 font-medium px-1 mb-2">
+              <div className="flex items-center justify-between w-full text-xs sm:text-sm text-gray-500 font-medium px-1 mb-2">
                 {resendTimer > 0 ? (
                   <span>Resend code in <strong className="text-gray-800">{resendTimer}s</strong></span>
                 ) : (
@@ -499,7 +499,7 @@ export default function UnifiedOTPFastLogin() {
                     disabled={loading}
                     className="text-amber-600 font-bold hover:underline flex items-center gap-1 cursor-pointer"
                   >
-                    <RotateCcw className="w-3 h-3" /> Resend OTP
+                    <RotateCcw className="w-3.5 h-3.5" /> Resend OTP
                   </button>
                 )}
                 <button
@@ -511,18 +511,18 @@ export default function UnifiedOTPFastLogin() {
                 </button>
               </div>
 
-              {/* Verify & Login Button */}
+              {/* Verify & Login Button (Enlarged) */}
               <button
                 type="submit"
                 disabled={loading || otp.replace(/\D/g, "").length !== 6}
-                className="w-full h-11 sm:h-12 rounded-full bg-[#FEC600] hover:bg-amber-400 active:scale-[0.98] text-black font-extrabold text-sm shadow-xs transition-all flex items-center justify-center gap-2 mt-2.5 cursor-pointer disabled:opacity-50"
+                className="w-full h-13 sm:h-14 rounded-full bg-[#FEC600] hover:bg-amber-400 active:scale-[0.98] text-black font-black text-base sm:text-lg shadow-xs transition-all flex items-center justify-center gap-2 mt-3 cursor-pointer disabled:opacity-50"
               >
                 {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-black" />
+                  <Loader2 className="w-5 h-5 animate-spin text-black" />
                 ) : (
                   <>
                     <span>Verify &amp; Continue</span>
-                    <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                    <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
                   </>
                 )}
               </button>
@@ -531,7 +531,7 @@ export default function UnifiedOTPFastLogin() {
               <button
                 type="button"
                 onClick={handleEditNumber}
-                className="mt-2.5 text-xs font-semibold text-gray-500 hover:text-black transition-colors"
+                className="mt-3 text-xs sm:text-sm font-semibold text-gray-500 hover:text-black transition-colors"
               >
                 ← Back to Login
               </button>
