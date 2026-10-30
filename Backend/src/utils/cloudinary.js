@@ -13,15 +13,43 @@ export const isCloudinaryConfigured = () =>
 
 // Active provider chosen by the admin toggle ('local' | 'cloudinary'), cached briefly.
 let providerCache = { value: 'local', expiresAt: 0 };
+// Checks if current environment is running on localhost / development
+export const isLocalhostEnvironment = () => {
+    const nodeEnv = (process.env.NODE_ENV || '').toLowerCase().trim();
+    if (nodeEnv === 'production') return false;
+    const mongoEnv = (process.env.MONGO_ENV || '').toLowerCase().trim();
+    if (mongoEnv === 'production' || mongoEnv === 'prod') return false;
+    const frontendUrl = (process.env.FRONTEND_URL || '').toLowerCase();
+    const host = (process.env.HOST || '').toLowerCase();
+    return (
+        nodeEnv === 'development' ||
+        mongoEnv === 'local' ||
+        frontendUrl.includes('localhost') ||
+        frontendUrl.includes('127.0.0.1') ||
+        host === 'localhost' ||
+        host === '127.0.0.1' ||
+        host === '0.0.0.0'
+    );
+};
+
 
 export const getUploadProvider = async () => {
     if (providerCache.expiresAt > Date.now()) return providerCache.value;
-    let value = 'local';
+    
+    // Default provider by environment:
+    // Localhost -> Cloudinary (if configured)
+    // Production Domain -> Local Server Storage ('local')
+    const isLocal = isLocalhostEnvironment();
+    let defaultProvider = (isLocal && isCloudinaryConfigured()) ? 'cloudinary' : 'local';
+
+    let value = defaultProvider;
     try {
         const doc = await UploadSetting.findOne({ key: 'singleton' }).lean();
-        value = doc?.imageUploadProvider || 'local';
+        if (doc?.imageUploadProvider) {
+            value = doc.imageUploadProvider;
+        }
     } catch {
-        // DB unavailable -> fall back to local
+        // DB unavailable -> fall back to environment default
     }
     providerCache = { value, expiresAt: Date.now() + 15 * 1000 };
     return value;

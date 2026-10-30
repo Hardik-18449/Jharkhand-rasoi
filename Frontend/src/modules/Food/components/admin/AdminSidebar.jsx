@@ -180,38 +180,32 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
 
     return 0
   }
-  const [logoUrl, setLogoUrl] = useState(() => localStorage.getItem('admin_app_logo') || getCachedSettings()?.logo?.url || null)
-  const [companyName, setCompanyName] = useState(() => getCachedSettings()?.companyName || null)
+  const [logoUrl, setLogoUrl] = useState(() => {
+    const cached = getCachedSettings();
+    return cached?.logo?.url || "/logo.png";
+  });
+  const [companyName, setCompanyName] = useState(() => getCachedSettings()?.companyName || "Jharkhand Rasoi");
 
   // Load business settings logo
   useEffect(() => {
     const loadLogo = async () => {
       try {
-        const adminLogo = localStorage.getItem('admin_app_logo');
-        if (adminLogo) {
-          setLogoUrl(adminLogo);
-        } else {
-          // First check cache
-          let cached = getCachedSettings()
-          if (cached) {
-            if (cached.logo?.url) {
-              setLogoUrl(cached.logo.url)
-            }
-            if (cached.companyName) {
-              setCompanyName(cached.companyName)
-            }
-          }
+        const cached = getCachedSettings();
+        if (cached?.logo?.url) {
+          setLogoUrl(cached.logo.url);
+        }
+        if (cached?.companyName) {
+          setCompanyName(cached.companyName);
+        }
 
-          // Always try to load fresh data to ensure we have the latest
-          const settings = await loadBusinessSettings()
-          if (settings) {
-            if (settings.logo?.url) {
-              setLogoUrl(settings.logo.url)
-            }
-            if (settings.companyName) {
-              setCompanyName(settings.companyName)
-            }
-          }
+        const settings = await loadBusinessSettings();
+        if (settings?.logo?.url) {
+          setLogoUrl(settings.logo.url);
+        } else if (!cached?.logo?.url) {
+          setLogoUrl("/logo.png");
+        }
+        if (settings?.companyName) {
+          setCompanyName(settings.companyName);
         }
       } catch (error) {
         debugError('Error loading logo:', error)
@@ -219,39 +213,27 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
     }
 
     // Load immediately
-    loadLogo()
+    loadLogo();
 
-    // Listen for business settings updates
     const handleSettingsUpdate = () => {
-      const adminLogo = localStorage.getItem('admin_app_logo');
-      if (adminLogo) {
-        setLogoUrl(adminLogo);
+      const cached = getCachedSettings();
+      if (cached?.logo?.url) {
+        setLogoUrl(cached.logo.url);
       } else {
-        const cached = getCachedSettings()
-        if (cached) {
-          if (cached.logo?.url) {
-            setLogoUrl(cached.logo.url)
-          }
-          if (cached.companyName) {
-            setCompanyName(cached.companyName)
-          }
-        }
+        setLogoUrl("/logo.png");
       }
-    }
-
-    // Listen for themeLoaded
-    const handleThemeLoaded = () => {
-      const adminLogo = localStorage.getItem('admin_app_logo');
-      if (adminLogo) setLogoUrl(adminLogo);
+      if (cached?.companyName) {
+        setCompanyName(cached.companyName);
+      }
     };
 
-    window.addEventListener('businessSettingsUpdated', handleSettingsUpdate)
-    window.addEventListener('themeLoaded', handleThemeLoaded)
+    window.addEventListener('businessSettingsUpdated', handleSettingsUpdate);
+    window.addEventListener('themeLoaded', handleSettingsUpdate);
 
     return () => {
-      window.removeEventListener('businessSettingsUpdated', handleSettingsUpdate)
-      window.removeEventListener('themeLoaded', handleThemeLoaded)
-    }
+      window.removeEventListener('businessSettingsUpdated', handleSettingsUpdate);
+      window.removeEventListener('themeLoaded', handleSettingsUpdate);
+    };
   }, [])
 
   // Get initial states from consolidated admin_sidebar_state
@@ -723,43 +705,37 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
           <div className="flex items-center justify-between mb-3">
             {!isVisuallyCollapsed && (
               <div className="flex items-center gap-2 animate-[slideIn_0.3s_ease-out]">
-                <div className="w-24 h-12 rounded-lg flex items-center justify-center shadow-black/20">
-                  {logoUrl ? (
-                    <img
-                      src={logoUrl}
-                      alt={companyName || "Company"}
-                      className="w-24 h-10 object-contain"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                      }}
-                    />
-                  ) : companyName ? (
-                    <span className="text-xs font-semibold text-white px-2 truncate">
-                      {companyName}
-                    </span>
-                  ) : (
-                    <span className="text-sm font-bold text-white">T</span>
-                  )}
+                <div className="w-28 h-12 rounded-lg flex items-center justify-center shadow-black/20">
+                  <img
+                    src={logoUrl || "/logo.png"}
+                    alt={companyName || "Jharkhand Rasoi"}
+                    className="w-28 h-10 object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      if (!e.currentTarget.dataset.fallback) {
+                        e.currentTarget.dataset.fallback = "true";
+                        e.currentTarget.src = "/logo.png";
+                      }
+                    }}
+                  />
                 </div>
               </div>
             )}
             {isVisuallyCollapsed && (
               <div className="w-full flex items-center justify-center">
                 <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shadow-lg shadow-black/20 ring-1 ring-white/10">
-                  {logoUrl ? (
-                    <img
-                      src={logoUrl}
-                      alt={companyName || "Company"}
-                      className="w-10 h-10 object-contain"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                      }}
-                    />
-                  ) : (
-                    <span className="text-sm font-bold text-white">{(companyName || 'T').charAt(0).toUpperCase()}</span>
-                  )}
+                  <img
+                    src={logoUrl || "/logo.png"}
+                    alt={companyName || "Jharkhand Rasoi"}
+                    className="w-8 h-8 object-contain"
+                    loading="lazy"
+                    onError={(e) => {
+                      if (!e.currentTarget.dataset.fallback) {
+                        e.currentTarget.dataset.fallback = "true";
+                        e.currentTarget.src = "/logo.png";
+                      }
+                    }}
+                  />
                 </div>
               </div>
             )}

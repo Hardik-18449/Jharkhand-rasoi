@@ -12,10 +12,14 @@ dotenv.config({ path: backendEnvPath, override: false });
 
 const resolveMongoUri = () => {
     const mongoEnv = (process.env.MONGO_ENV || '').toLowerCase().trim();
-    if (mongoEnv === 'production' || mongoEnv === 'prod') {
+    const nodeEnv = (process.env.NODE_ENV || '').toLowerCase().trim();
+
+    // When on domain / production, use production MongoDB
+    if (mongoEnv === 'production' || mongoEnv === 'prod' || nodeEnv === 'production') {
         return process.env.MONGO_URI_PRODUCTION || process.env.MONGODB_URI;
     }
-    if (mongoEnv === 'local' || mongoEnv === 'dev') {
+    // When on localhost (development / local), use local MongoDB
+    if (mongoEnv === 'local' || mongoEnv === 'dev' || nodeEnv === 'development') {
         return process.env.MONGO_URI_LOCAL || 'mongodb://127.0.0.1:27017/tuggo';
     }
     return process.env.MONGO_URI || process.env.MONGODB_URI || process.env.MONGO_URI_LOCAL || 'mongodb://127.0.0.1:27017/tuggo';
