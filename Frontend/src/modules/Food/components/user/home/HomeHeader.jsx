@@ -29,13 +29,24 @@ export default function HomeHeader({
   savedAddressText,
   handleLocationClick,
   handleSearchFocus,
-  placeholderIndex,
+  placeholderIndex: externalPlaceholderIndex,
   placeholders,
   vegMode = false,
   handleVegModeChange,
   handleVoiceSearchClick,
   pushSearchDown = false
 }) {
+  const [internalPlaceholderIndex, setInternalPlaceholderIndex] = useState(0);
+  const placeholderIndex = externalPlaceholderIndex ?? internalPlaceholderIndex;
+
+  useEffect(() => {
+    if (externalPlaceholderIndex !== undefined) return;
+    if (!Array.isArray(placeholders) || placeholders.length <= 1) return;
+    const interval = setInterval(() => {
+      setInternalPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [externalPlaceholderIndex, placeholders?.length]);
   const [notifications, setNotifications] = useState(() => {
     const saved = localStorage.getItem('food_user_notifications');
     return saved ? JSON.parse(saved) : [];

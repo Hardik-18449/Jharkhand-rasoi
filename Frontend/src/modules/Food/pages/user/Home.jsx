@@ -559,12 +559,22 @@ export default function Home() {
       }
     };
 
-    window.addEventListener("scroll", updatePosition, true);
-    window.addEventListener("resize", updatePosition);
+    let ticking = false;
+    const throttledUpdate = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updatePosition();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", throttledUpdate, { passive: true });
+    window.addEventListener("resize", throttledUpdate);
 
     return () => {
-      window.removeEventListener("scroll", updatePosition, true);
-      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", throttledUpdate);
+      window.removeEventListener("resize", throttledUpdate);
     };
   }, [showVegModePopup]);
 
@@ -930,7 +940,6 @@ export default function Home() {
   // Mock points value - replace with actual points from context/store
   const userPoints = 99;
 
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [activeTab, setActiveTab] = useState("food");
   const [headerBgHeight, setHeaderBgHeight] = useState(0);
 
@@ -1931,14 +1940,7 @@ export default function Home() {
   // Removed GSAP animations - using CSS and ScrollReveal components instead for better performance
   // Auto-scroll removed - manual scroll only
 
-  // Animated placeholder cycling - same as RestaurantDetails highlight offer animation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
-    }, 2000); // Change placeholder every 2 seconds (same as RestaurantDetails)
-
-    return () => clearInterval(interval);
-  }, []); // placeholders is a constant, no need for dependency
+// Animated placeholder cycling moved inside HomeHeader to avoid root Home re-renders
 
   const handleRestaurantFavoriteToggle = useCallback(
     (event, restaurant, restaurantSlug, favorite) => {
@@ -2173,7 +2175,6 @@ export default function Home() {
               location={effectiveLocation}
               handleLocationClick={handleLocationClick}
               handleSearchFocus={handleSearchFocus}
-              placeholderIndex={placeholderIndex}
               placeholders={placeholders}
               vegMode={vegMode}
               handleVegModeChange={handleVegModeChange}

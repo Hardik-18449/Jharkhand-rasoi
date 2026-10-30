@@ -62,11 +62,8 @@
 
 
 .restaurant-theme button,
-.restaurant-theme [role="button"],
-.restaurant-theme .rounded-xl,
-.restaurant-theme .rounded-2xl,
-.restaurant-theme .rounded-3xl {
-  transition: all 0.2s ease;
+.restaurant-theme [role="button"] {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .restaurant-theme input:focus,

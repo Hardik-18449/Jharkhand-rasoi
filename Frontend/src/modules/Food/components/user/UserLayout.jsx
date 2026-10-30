@@ -142,7 +142,7 @@ export default function UserLayout() {
   })
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[#f5f5f5] dark:bg-[#0a0a0a] transition-colors duration-200 box-border overflow-x-clip">
+    <div className="min-h-screen min-h-[100dvh] bg-[#f5f5f5] dark:bg-[#0a0a0a] box-border overflow-x-clip">
       {!introFinished && (
         <AppIntroSplash onComplete={() => setIntroFinished(true)} />
       )}

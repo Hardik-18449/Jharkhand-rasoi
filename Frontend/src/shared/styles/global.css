@@ -202,7 +202,24 @@ html.admin-compact body {
 }
 
 
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 html, body {
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  touch-action: manipulation;
+  overscroll-behavior-y: none;
+}
+
+/* Ensure smooth momentum scrolling on all overflow scroll containers */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+.overflow-x-auto,
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
 }

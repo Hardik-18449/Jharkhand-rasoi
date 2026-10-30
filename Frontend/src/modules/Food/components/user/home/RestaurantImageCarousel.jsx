@@ -466,24 +466,46 @@ const RestaurantImageCarousel = React.memo(
       return discountedItems.slice(0, 5);
     }, [restaurant]);
 
+    const containerRef = useRef(null);
+    const [isInView, setIsInView] = useState(Boolean(priority));
+
     useEffect(() => {
-      if (!priority || bannerItems.length <= 1) return;
+      if (priority) {
+        setIsInView(true);
+        return;
+      }
+      const el = containerRef.current;
+      if (!el || typeof IntersectionObserver === 'undefined') {
+        setIsInView(true);
+        return;
+      }
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          setIsInView(entry.isIntersecting);
+        },
+        { rootMargin: '150px' }
+      );
+      observer.observe(el);
+      return () => observer.disconnect();
+    }, [priority]);
+
+    useEffect(() => {
+      if (!priority || !isInView || bannerItems.length <= 1) return;
       const interval = setInterval(() => {
         setCurrentItemIndex((prev) => (prev + 1) % bannerItems.length);
       }, 2000);
       return () => clearInterval(interval);
-    }, [priority, bannerItems.length]);
+    }, [priority, isInView, bannerItems.length]);
 
-    // Auto-slide independently from loading priority. This allows all Home
-    // restaurant cards to rotate without eager-loading every card image.
+    // Auto-slide only when in viewport to eliminate offscreen re-renders and scroll jank
     useEffect(() => {
-      if (!autoPlay || images.length <= 1) return;
+      if (!autoPlay || !isInView || images.length <= 1) return;
       const interval = setInterval(() => {
         setSlideDirection(1);
         setCurrentIndex((prev) => (prev + 1) % images.length);
       }, 7000);
       return () => clearInterval(interval);
-    }, [autoPlay, images.length]);
+    }, [autoPlay, isInView, images.length]);
 
     const [loadedBySrc, setLoadedBySrc] = useState({});
     const [, setAttemptedSrcs] = useState({});
@@ -595,6 +617,7 @@ const RestaurantImageCarousel = React.memo(
 
     return (
       <div
+        ref={containerRef}
         className={`relative ${className} w-full overflow-hidden ${roundedClass} flex-shrink-0 group`}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
