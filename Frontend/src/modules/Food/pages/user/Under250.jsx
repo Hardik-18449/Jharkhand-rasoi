@@ -1336,100 +1336,150 @@ export default function Under250() {
       {/* Content Section */}
       <div className="relative max-w-7xl mx-auto space-y-0 pb-6 md:pb-8 lg:pb-10">
 
-        <div className={`sticky z-30 transition-all duration-300 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-xl shadow-sm border-b border-gray-100 dark:border-gray-800 top-0 pt-2 sm:pt-3 md:pt-4 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12`}>
-          <section className="space-y-1 sm:space-y-1.5">
+        {/* Sticky Control Header: Categories & Filters Bar */}
+        <div className="sticky top-0 md:top-[116px] z-30 transition-all duration-300 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 py-3 space-y-3">
+          {/* Categories Horizontal Slider */}
           <div
-            className="flex gap-3 sm:gap-4 md:gap-5 lg:gap-6 overflow-x-auto md:overflow-x-visible overflow-y-visible scrollbar-hide scroll-smooth px-2 sm:px-3 pt-1 pb-1 sm:pt-2 sm:pb-2 md:pt-3 md:pb-3"
+            className="flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scrollbar-hide scroll-smooth py-1 px-0.5 items-start"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               touchAction: "pan-x pan-y pinch-zoom",
-              overflowY: "hidden",
             }}
           >
-            {/* All Button */}
-            <div className="flex-shrink-0 cursor-pointer" onClick={() => handleCategorySwitch(null)}>
+            {/* All Category Item */}
+            <div
+              className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1.5 group w-[68px] sm:w-[76px] md:w-[84px] select-none"
+              onClick={() => handleCategorySwitch(null)}
+            >
               <motion.div
-                className={`flex flex-col items-center justify-center gap-1 w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] md:w-[96px] md:h-[96px] rounded-[1rem] transition-all border ${!activeCategory ? 'bg-primary border-primary text-white shadow-md' : 'bg-white border-gray-100 text-gray-600 dark:bg-[#1a1a1a] dark:border-gray-800 dark:text-gray-300'}`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                className={`relative w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] md:w-[74px] md:h-[74px] rounded-full flex items-center justify-center transition-all duration-300 shadow-sm border-2 ${
+                  !activeCategory
+                    ? 'bg-[#FEC600] border-[#FEC600] ring-2 ring-[#FEC600]/40 shadow-md'
+                    : 'bg-white dark:bg-[#1a1a1a] border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
+                }`}
               >
-                <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 ${!activeCategory ? 'text-white' : 'text-gray-400'}`}>
-                  <UtensilsCrossed className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9" />
-                </div>
-                <span className={`text-[10px] sm:text-[11px] md:text-xs font-semibold text-center leading-tight ${!activeCategory ? 'text-white' : ''}`}>
-                  All
-                </span>
+                <UtensilsCrossed
+                  className={`w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 transition-colors ${
+                    !activeCategory
+                      ? 'text-black stroke-[2.5]'
+                      : 'text-gray-500 dark:text-gray-400 stroke-[2] group-hover:text-black dark:group-hover:text-white'
+                  }`}
+                />
               </motion.div>
+              <span
+                className={`text-[11px] sm:text-xs text-center leading-tight line-clamp-1 w-full px-0.5 transition-colors ${
+                  !activeCategory
+                    ? 'font-black text-black dark:text-[#FEC600]'
+                    : 'font-semibold text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white'
+                }`}
+              >
+                All
+              </span>
             </div>
+
+            {/* Skeleton Loading */}
             {loadingCategories ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={`skel-cat-${i}`} className="flex-shrink-0">
-                  <div className="flex flex-col items-center justify-center gap-1 w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] md:w-[96px] md:h-[96px] rounded-[1rem] border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a1a1a]">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                    <div className="h-3 w-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                  </div>
+              Array.from({ length: 7 }).map((_, i) => (
+                <div key={`skel-cat-${i}`} className="flex-shrink-0 flex flex-col items-center gap-1.5 w-[68px] sm:w-[76px] md:w-[84px]">
+                  <div className="w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] md:w-[74px] md:h-[74px] rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse border-2 border-transparent" />
+                  <div className="h-3 w-12 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
                 </div>
               ))
             ) : (
               categories.map((category, index) => {
                 const isActive = activeCategory === category.id
                 return (
-                  <div key={category.id} className="flex-shrink-0 cursor-pointer" onClick={() => handleCategorySwitch(isActive ? null : category.id)}>
-                      <motion.div
-                        className={`flex flex-col items-center justify-center gap-1 w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] md:w-[96px] md:h-[96px] rounded-[1rem] transition-all border ${isActive ? 'bg-primary border-primary text-white shadow-md' : 'bg-white border-gray-100 text-gray-600 dark:bg-[#1a1a1a] dark:border-gray-800 dark:text-gray-300'}`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full overflow-hidden mb-0.5 flex-shrink-0 flex items-center justify-center bg-white shadow-sm border border-gray-50">
-                          <OptimizedImage
-                            src={category.image}
-                            alt={category.name}
-                            className="w-full h-full object-cover scale-[1.15]"
-                            sizes="(max-width: 640px) 40px, (max-width: 768px) 44px, 48px"
-                            placeholder="blur"
-                          />
-                        </div>
-                        <span className={`text-[10px] sm:text-[11px] md:text-xs font-semibold text-center leading-tight px-1 ${isActive ? 'text-white' : ''}`}>
-                          {category.name.length > 9 ? `${category.name.slice(0, 9)}..` : category.name}
-                        </span>
-                      </motion.div>
+                  <div
+                    key={category.id}
+                    className="flex-shrink-0 cursor-pointer flex flex-col items-center gap-1.5 group w-[68px] sm:w-[76px] md:w-[84px] select-none"
+                    onClick={() => handleCategorySwitch(isActive ? null : category.id)}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`relative w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] md:w-[74px] md:h-[74px] rounded-full overflow-hidden transition-all duration-300 shadow-sm border-2 bg-white dark:bg-[#1a1a1a] ${
+                        isActive
+                          ? 'border-[#FEC600] ring-2 ring-[#FEC600]/40 shadow-md'
+                          : 'border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700'
+                      }`}
+                    >
+                      {/* Shining Glint Effect */}
+                      <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
+                        <div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-20deg] w-[150%] h-full animate-explore-shine"
+                          style={{ animationDuration: `${3 + (index % 4) * 0.5}s` }}
+                        />
+                      </div>
+
+                      <OptimizedImage
+                        src={category.image}
+                        alt={category.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        sizes="(max-width: 640px) 60px, (max-width: 768px) 68px, 74px"
+                        placeholder="blur"
+                      />
+                    </motion.div>
+                    <span
+                      className={`text-[11px] sm:text-xs text-center leading-tight line-clamp-1 w-full px-0.5 transition-colors ${
+                        isActive
+                          ? 'font-black text-black dark:text-[#FEC600]'
+                          : 'font-semibold text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white'
+                      }`}
+                      title={category.name}
+                    >
+                      {category.name}
+                    </span>
                   </div>
                 )
               })
             )}
           </div>
-        </section>
-        </div>
 
-        {/* Filters Section (Not Sticky) */}
-        <div className="px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 pt-1 md:pt-2">
-          <section className="py-2 sm:py-3 md:py-4">
-          <div className="flex items-center gap-2 md:gap-3">
-            <Button
-              variant="outline"
+          {/* Filters Bar: Sort, Time & Reset Chips */}
+          <div className="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-gray-800/60 overflow-x-auto scrollbar-hide">
+            <button
+              type="button"
               onClick={() => setShowSortPopup(true)}
-              className="h-8 sm:h-9 md:h-10 px-3 sm:px-4 md:px-5 rounded-md flex items-center gap-2 whitespace-nowrap flex-shrink-0 font-medium transition-all bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm md:text-base"
+              className={`h-8 sm:h-9 px-3.5 sm:px-4 rounded-full flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 text-xs sm:text-sm font-extrabold transition-all shadow-sm active:scale-95 border ${
+                selectedSort
+                  ? 'bg-[#FEC600] text-black border-[#FEC600] shadow-sm'
+                  : 'bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
             >
-              <ArrowDownUp className="h-4 w-4 md:h-5 md:w-5 rotate-90" />
-              <span className="text-sm md:text-base font-medium">
+              <ArrowDownUp className={`h-3.5 w-3.5 rotate-90 ${selectedSort ? 'text-black' : 'text-gray-700 dark:text-gray-300'}`} />
+              <span>
                 {selectedSort ? sortOptions.find(opt => opt.id === selectedSort)?.label : 'Sort'}
               </span>
-              <ChevronDown className="h-3 w-3 md:h-4 md:w-4" />
-            </Button>
-            <Button
-              variant="outline"
+              <ChevronDown className={`h-3 w-3 ${selectedSort ? 'text-black' : 'text-gray-500'}`} />
+            </button>
+
+            <button
+              type="button"
               onClick={() => setUnder30MinsFilter(!under30MinsFilter)}
-              className={`h-8 sm:h-9 md:h-10 px-3 sm:px-4 md:px-5 rounded-md flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 font-medium transition-all text-sm md:text-base ${under30MinsFilter
-                ? 'bg-primary text-white border border-primary hover:bg-secondary'
-                : 'bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300'
-                }`}
+              className={`h-8 sm:h-9 px-3.5 sm:px-4 rounded-full flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 text-xs sm:text-sm font-extrabold transition-all shadow-sm active:scale-95 border ${
+                under30MinsFilter
+                  ? 'bg-[#FEC600] text-black border-[#FEC600] shadow-sm'
+                  : 'bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
             >
-              <Timer className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
-              <span className="text-xs sm:text-sm md:text-base font-medium">Under 30 mins</span>
-            </Button>
+              <Timer className={`h-3.5 w-3.5 ${under30MinsFilter ? 'text-black' : 'text-gray-600 dark:text-gray-400'}`} />
+              <span>Under 30 mins</span>
+            </button>
+
+            {(selectedSort || under30MinsFilter || activeCategory) && (
+              <button
+                type="button"
+                onClick={handleClearAll}
+                className="h-8 sm:h-9 px-3 sm:px-3.5 rounded-full flex items-center gap-1 whitespace-nowrap flex-shrink-0 text-xs sm:text-sm font-bold transition-all border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 active:scale-95"
+              >
+                <X className="h-3.5 w-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
           </div>
-          </section>
         </div>
 
         {/* Restaurant Menu Sections */}
@@ -1582,7 +1632,7 @@ export default function Under250() {
                 <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Sort By</h2>
                 <button
                   onClick={handleClearAll}
-                  className="text-primary dark:text-[#b18da5] font-medium text-sm md:text-base"
+                  className="text-yellow-600 dark:text-[#FEC600] font-bold text-sm md:text-base hover:underline"
                 >
                   Clear all
                 </button>
@@ -1596,11 +1646,11 @@ export default function Under250() {
                       key={option.id || 'relevance'}
                       onClick={() => setDraftSelectedSort(option.id)}
                       className={`px-4 md:px-5 lg:px-6 py-3 md:py-4 rounded-xl border text-left transition-colors ${draftSelectedSort === option.id
-                        ? 'border-primary bg-[#fdfafc] dark:bg-primary/20'
-                        : 'border-gray-200 dark:border-gray-800 hover:border-primary'
+                        ? 'border-[#FEC600] bg-amber-50 dark:bg-[#FEC600]/10 ring-1 ring-[#FEC600]'
+                        : 'border-gray-200 dark:border-gray-800 hover:border-[#FEC600]'
                         }`}
                     >
-                      <span className={`text-sm md:text-base lg:text-lg font-medium ${draftSelectedSort === option.id ? 'text-primary dark:text-[#b18da5]' : 'text-gray-700 dark:text-gray-300'}`}>
+                      <span className={`text-sm md:text-base lg:text-lg font-bold ${draftSelectedSort === option.id ? 'text-black dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
                         {option.label}
                       </span>
                     </button>
@@ -1618,7 +1668,7 @@ export default function Under250() {
                 </button>
                 <button
                   onClick={handleApply}
-                  className="flex-1 py-3 md:py-4 font-semibold rounded-xl transition-colors text-sm md:text-base bg-primary text-white hover:bg-secondary"
+                  className="flex-1 py-3 md:py-4 font-extrabold rounded-xl transition-colors text-sm md:text-base bg-[#FEC600] text-black hover:bg-amber-400 shadow-sm"
                 >
                   Apply
                 </button>
@@ -1829,7 +1879,7 @@ export default function Under250() {
                   <Button
                     className={`flex-1 h-[44px] md:h-[50px] lg:h-[56px] rounded-lg md:rounded-xl font-semibold flex items-center justify-center gap-2 text-sm md:text-base lg:text-lg ${shouldShowGrayscale
                       ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-600 cursor-not-allowed opacity-50'
-                      : 'bg-primary hover:bg-secondary dark:bg-primary dark:hover:bg-secondary text-white'
+                      : 'bg-primary hover:bg-[#e5b300] dark:bg-primary text-black font-extrabold'
                       }`}
                     onClick={(e) => {
                       if (!shouldShowGrayscale) {
