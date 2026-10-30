@@ -351,6 +351,19 @@ const orderSchema = new mongoose.Schema(
         callAlert: {
             type: callAlertSchema,
             default: () => ({})
+        },
+        isPriority: {
+            type: Boolean,
+            default: false,
+            index: true
+        },
+        priorityLevel: {
+            type: Number,
+            default: 0
+        },
+        customerSubscription: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null
         }
     },
     {
@@ -363,6 +376,7 @@ orderSchema.index({ 'deliveryAddress.location': '2dsphere' });
 orderSchema.index({ lastRiderLocation: '2dsphere' });
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ restaurantId: 1, orderStatus: 1, createdAt: -1 });
+orderSchema.index({ restaurantId: 1, isPriority: -1, orderStatus: 1, createdAt: -1 });
 orderSchema.index({ 'dispatch.deliveryPartnerId': 1, orderStatus: 1 });
 orderSchema.index({ 'dispatch.status': 1, orderStatus: 1 });
 orderSchema.index({ orderStatus: 1, 'callAlert.primaryCallStatus': 1, createdAt: 1 });

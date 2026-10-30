@@ -21,6 +21,7 @@ import appConfigRoutes from '../core/appConfig/appConfig.routes.js';
 import promocodeRoutes from './promocodeRoutes.js';
 import { requireZone } from '../middlewares/zone.middleware.js';
 import envSettingRoutes from './admin/envSettingRoutes.js';
+import { subscriptionUserRouter, subscriptionAdminRouter } from '../modules/food/subscription/routes/subscription.routes.js';
 
 const router = express.Router();
 
@@ -63,6 +64,10 @@ router.get('/v1/food/admin/business-settings/public', businessSettingsController
 
 router.use('/v1/food/admin/env', envSettingRoutes);
 router.use('/v1/food/admin', authMiddleware, requireRoles('ADMIN', 'SUPER_ADMIN', 'SUB_ADMIN'), restaurantAdminRoutes);
+
+// Food Subscription Routes
+router.use('/v1/food/subscriptions', subscriptionUserRouter);
+router.use('/v1/food/admin/subscriptions', authMiddleware, requireRoles('ADMIN', 'SUPER_ADMIN', 'SUB_ADMIN'), subscriptionAdminRouter);
 router.use('/v1/food/user', authMiddleware, requireRoles('USER'), userRoutes);
 router.use('/v1/food/notifications', authMiddleware, requireRoles('USER', 'RESTAURANT', 'DELIVERY_PARTNER'), notificationRoutes);
 router.use('/v1/food/orders', authMiddleware, requireRoles('USER'), orderUserRoutes);

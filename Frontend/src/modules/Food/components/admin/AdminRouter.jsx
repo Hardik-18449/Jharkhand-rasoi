@@ -53,6 +53,7 @@ const Chattings = lazy(() => import("@food/pages/admin/Chattings"));
 const ContactMessages = lazy(() => import("@food/pages/admin/ContactMessages"));
 const SafetyEmergencyReports = lazy(() => import("@food/pages/admin/SafetyEmergencyReports"));
 // Customer Management
+const SubscriptionPlans = lazy(() => import("@food/pages/admin/subscription/SubscriptionPlans"));
 const Customers = lazy(() => import("@food/pages/admin/Customers"));
 const SupportTickets = lazy(() => import("@food/pages/admin/SupportTickets"));
 const AddFund = lazy(() => import("@food/pages/admin/wallet/AddFund"));
@@ -252,6 +253,7 @@ export default function AdminRouter() {
             <Route path="contact-messages" element={<ContactMessages />} />
             <Route path="safety-emergency-reports" element={<SafetyEmergencyReports />} />
             
+            <Route path="subscriptions" element={<SubscriptionPlans />} />
             <Route path="customers" element={<Customers />} />
             <Route path="support-tickets" element={<SupportTickets />} />
             <Route path="wallet/add-fund" element={<AddFund />} />

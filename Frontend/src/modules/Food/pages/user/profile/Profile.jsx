@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
+  Crown,
   ChevronRight,
   Wallet,
   Tag,
@@ -618,6 +619,43 @@ export default function Profile() {
                       <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                     </motion.div>
                   </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Link>
+
+          <Link to="/user/subscription" className="block">
+            <motion.div
+              whileHover={{ x: 4, scale: 1.01 }}
+              transition={{ duration: 0.2, type: "spring", stiffness: 300 }}>
+              <Card className="bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-yellow-500/10 py-0 rounded-xl shadow-sm border border-amber-300/60 dark:border-amber-500/30 cursor-pointer">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <motion.div
+                      className="bg-amber-500 text-white rounded-full p-2 shadow-sm"
+                      whileHover={{ rotate: 15, scale: 1.1 }}
+                      transition={{ duration: 0.3 }}>
+                      <Crown className="h-5 w-5" />
+                    </motion.div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-bold text-gray-900 dark:text-white">
+                          VIP Priority Pass
+                        </span>
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-black">
+                          Serve 1st
+                        </span>
+                      </div>
+                      <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                        Kitchen Priority • Free Delivery • VIP Perks
+                      </p>
+                    </div>
+                  </div>
+                  <motion.div
+                    whileHover={{ x: 4 }}
+                    transition={{ duration: 0.2 }}>
+                    <ChevronRight className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  </motion.div>
                 </CardContent>
               </Card>
             </motion.div>

@@ -316,7 +316,26 @@ export async function createOrder(userId, dto) {
       riderEarning,
   );
 
+  const customerUser = await FoodUser.findById(userId)
+    .select("name phone isSubscribed subscriptionPlanId subscriptionPlanName subscriptionBadge subscriptionPriority subscriptionExpiresAt")
+    .lean();
+
+  const isSubscribed = Boolean(
+    customerUser?.isSubscribed &&
+    customerUser?.subscriptionExpiresAt &&
+    new Date(customerUser.subscriptionExpiresAt) > new Date()
+  );
+
   const order = new FoodOrder({
+    isPriority: isSubscribed,
+    priorityLevel: isSubscribed ? (customerUser?.subscriptionPriority || 1) : 0,
+    customerSubscription: isSubscribed ? {
+      isSubscribed: true,
+      planId: customerUser?.subscriptionPlanId || null,
+      planName: customerUser?.subscriptionPlanName || 'VIP Member',
+      badgeText: customerUser?.subscriptionBadge || '⭐ VIP',
+      priorityLevel: customerUser?.subscriptionPriority || 1
+    } : null,
     userId: new mongoose.Types.ObjectId(userId),
     restaurantId: new mongoose.Types.ObjectId(dto.restaurantId),
     zoneId: dto.zoneId
@@ -1199,8 +1218,8 @@ export async function listOrdersRestaurant(restaurantId, query) {
   applyRestaurantOrderStatusFilter(filter, query.status);
   const [docs, total] = await Promise.all([
     FoodOrder.find(filter)
-      .populate("userId", "name phone email profileImage")
-      .sort({ createdAt: -1 })
+      .populate("userId", "name phone email profileImage isSubscribed subscriptionPlanName subscriptionBadge")
+      .sort({ isPriority: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .select('+pickupOtp')

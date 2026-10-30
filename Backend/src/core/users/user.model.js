@@ -157,6 +157,34 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: 'USER'
         },
+        // Premium VIP Subscription
+        isSubscribed: {
+            type: Boolean,
+            default: false,
+            index: true
+        },
+        subscriptionPlanId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'SubscriptionPlan',
+            default: null
+        },
+        subscriptionPlanName: {
+            type: String,
+            default: ''
+        },
+        subscriptionBadge: {
+            type: String,
+            default: ''
+        },
+        subscriptionPriority: {
+            type: Number,
+            default: 0
+        },
+        subscriptionExpiresAt: {
+            type: Date,
+            default: null,
+            index: true
+        },
         addresses: {
             type: [userAddressSchema],
             default: []
@@ -190,6 +218,6 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ phone: 1 }, { unique: true });
 userSchema.index({ 'addresses.location': '2dsphere' });
+userSchema.index({ isSubscribed: 1, subscriptionExpiresAt: -1 });
 
 export const FoodUser = mongoose.model('FoodUser', userSchema);
-

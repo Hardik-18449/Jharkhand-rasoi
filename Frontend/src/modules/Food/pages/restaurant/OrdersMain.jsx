@@ -110,6 +110,13 @@ const transformOrderForList = (order) => ({
   sortTimestamp: new Date(getAllOrdersTimestamp(order)).getTime(),
   scheduledAt: order.scheduledAt || null,
   restaurantNote: order.restaurantNote || null,
+  isPriority: Boolean(order.isPriority || order.customerSubscription?.isSubscribed),
+  priorityLevel: Number(order.priorityLevel || order.customerSubscription?.priorityLevel || 0),
+  customerSubscription: order.customerSubscription || (order.userId?.isSubscribed ? {
+    isSubscribed: true,
+    planName: order.userId?.subscriptionPlanName,
+    badgeText: order.userId?.subscriptionBadge || '⭐ VIP'
+  } : null),
 });
 
 // Completed Orders List Component
@@ -821,7 +828,14 @@ function NewOrders({ onSelectOrder }) {
 
   const orders = rawOrders
     .map(transformOrderForList)
-    .sort((a, b) => b.sortTimestamp - a.sortTimestamp);
+    .sort((a, b) => {
+      if (a.isPriority && !b.isPriority) return -1;
+      if (!a.isPriority && b.isPriority) return 1;
+      if (a.isPriority && b.isPriority && (b.priorityLevel || 0) !== (a.priorityLevel || 0)) {
+        return (b.priorityLevel || 0) - (a.priorityLevel || 0);
+      }
+      return b.sortTimestamp - a.sortTimestamp;
+    });
 
   if (loading) {
     return (
@@ -899,6 +913,11 @@ function AllOrders({ onSelectOrder, onCancel }) {
       return orderOverrides[key] ? { ...order, ...orderOverrides[key] } : order;
     })
     .sort((a, b) => {
+      if (a.isPriority && !b.isPriority) return -1;
+      if (!a.isPriority && b.isPriority) return 1;
+      if (a.isPriority && b.isPriority && (b.priorityLevel || 0) !== (a.priorityLevel || 0)) {
+        return (b.priorityLevel || 0) - (a.priorityLevel || 0);
+      }
       const priorityDiff =
         (allOrdersStatusPriority[a.status] ?? 999) -
         (allOrdersStatusPriority[b.status] ?? 999);
@@ -3574,6 +3593,9 @@ function OrderCard({
   pickupOtp = null,
   cancellationReason = null,
   rejectionReason = null,
+  isPriority = false,
+  priorityLevel = 0,
+  customerSubscription = null,
 }) {
   const normalizedStatus = String(status || "").toLowerCase();
   const isReady = normalizedStatus === "ready";
@@ -3590,14 +3612,29 @@ function OrderCard({
   }
 
   return (
-    <div className="restaurant-bento-card w-full p-3 mb-3 lg:mb-0 h-full relative overflow-hidden active:bg-slate-50 transition-colors">
+    <div className={`restaurant-bento-card w-full p-3 mb-3 lg:mb-0 h-full relative overflow-hidden active:bg-slate-50 transition-all ${
+        isPriority ? "border-2 border-amber-400 ring-2 ring-amber-200/60 shadow-md bg-amber-50/15" : ""
+      }`}>
       <div
-        className="absolute top-0 left-0 w-1 h-full"
-        style={{ backgroundColor: brandColor }}
+        className="absolute top-0 left-0 w-1.5 h-full"
+        style={{ backgroundColor: isPriority ? "#F59E0B" : brandColor }}
       />
+      {isPriority && (
+        <div className="mb-2 px-2.5 py-1 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 rounded-lg flex items-center justify-between text-black shadow-sm border border-amber-300">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs">⭐</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-900">
+              VIP PRIORITY • SERVE FIRST
+            </span>
+          </div>
+          <span className="text-[9px] font-black bg-black/20 px-2 py-0.5 rounded-full text-white">
+            {customerSubscription?.badgeText || customerSubscription?.planName || "VIP Member"}
+          </span>
+        </div>
+      )}
 
       <div
-        onClick={() => onSelect?.({ orderId, mongoId, status, customerName, type, tableOrToken, timePlaced, eta, itemsSummary, paymentMethod, scheduledAt, restaurantNote, pickupOtp, deliveryPartnerId, dispatchStatus, cancellationReason, rejectionReason })}
+        onClick={() => onSelect?.({ orderId, mongoId, status, customerName, type, tableOrToken, timePlaced, eta, itemsSummary, paymentMethod, scheduledAt, restaurantNote, pickupOtp, deliveryPartnerId, dispatchStatus, cancellationReason, rejectionReason, isPriority, priorityLevel, customerSubscription })}
         className="flex gap-3 items-start cursor-pointer pl-1">
 
         {/* Photo Container - Smaller for mobile */}

@@ -36,6 +36,7 @@ const SelectAddress = lazy(() => import("@food/pages/user/cart/SelectAddress"))
 const AddressSelectorPage = lazy(() => import("@food/pages/user/cart/AddressSelectorPage"))
 
 // Orders
+const SubscriptionPage = lazy(() => import("@food/pages/user/SubscriptionPage"))
 const Orders = lazy(() => import("@food/pages/user/orders/Orders"))
 const OrderTracking = lazy(() => import("@food/pages/user/orders/OrderTracking"))
 const OrderInvoice = lazy(() => import("@food/pages/user/orders/OrderInvoice"))
@@ -168,6 +169,8 @@ export default function UserRouter() {
           />
 
           {/* Offers */}
+          <Route path="subscription" element={<SubscriptionPage />} />
+          <Route path="vip" element={<SubscriptionPage />} />
           <Route path="offers" element={<Offers />} />
 
           {/* Gourmet */}

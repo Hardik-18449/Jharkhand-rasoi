@@ -231,6 +231,8 @@ export default function OrderDetails({ idProp, mongoIdProp, onClose }) {
             time: new Date(order.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
             restaurant: restaurantName,
             address: fullAddress,
+            isPriority: Boolean(order.isPriority || order.customerSubscription?.isSubscribed),
+            customerSubscription: order.customerSubscription,
             customer: {
               name: customerName,
               orderCount: order.userId?.orderCount || 1,
@@ -759,6 +761,24 @@ export default function OrderDetails({ idProp, mongoIdProp, onClose }) {
       <div className="px-4 py-4 space-y-4">
         {/* Order Summary Card */}
         <div className="bg-white rounded-lg p-4">
+          {orderData.isPriority && (
+            <div className="mb-4 p-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 rounded-xl text-white shadow-md border border-amber-300 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⭐</span>
+                <div>
+                  <div className="text-xs font-black uppercase tracking-wider text-black">
+                    VIP PRIORITY CUSTOMER • SERVE FIRST
+                  </div>
+                  <div className="text-[11px] text-amber-900 font-bold">
+                    Prepare, pack and hand over this order on highest kitchen priority.
+                  </div>
+                </div>
+              </div>
+              <span className="text-xs font-black bg-black/25 px-2.5 py-1 rounded-full text-white whitespace-nowrap">
+                {orderData.customerSubscription?.badgeText || orderData.customerSubscription?.planName || "⭐ VIP Member"}
+              </span>
+            </div>
+          )}
           {/* Status and Order ID Row */}
           <div className="flex items-start justify-between mb-3">
             <div className="flex flex-col items-end gap-1">

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, ChevronDown, Search, Mic, Bell, CheckCircle2, Tag, Gift, AlertCircle, Clock, BellOff, X, IndianRupee } from 'lucide-react';
+import { MapPin, ChevronDown, Search, Mic, Bell, CheckCircle2, Tag, Gift, AlertCircle, Clock, BellOff, Crown, X, IndianRupee } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -188,8 +188,16 @@ export default function HomeHeader({
           </div>
 
           {/* Right Actions: Bell */}
-          <div className="flex items-center gap-2.5">
- 
+          <div className="flex items-center gap-2">
+            <Link
+              to="/user/subscription"
+              className="h-8 px-2.5 flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black border border-amber-300 shadow-sm font-black text-[10px] tracking-tight hover:scale-105 active:scale-95 transition-all"
+              title="VIP Club"
+            >
+              <Crown className="h-3.5 w-3.5 fill-black" />
+              <span>VIP</span>
+            </Link>
+
             <Popover>
               <PopoverTrigger asChild>
                 <div className="h-8 w-8 relative flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/20 cursor-pointer active:scale-90 transition-all">

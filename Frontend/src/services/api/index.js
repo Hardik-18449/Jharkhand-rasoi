@@ -235,6 +235,14 @@ const withdrawalRequestId = (kind, amount) => `${kind}-${Number(amount) || 0}-${
 
 export const adminAPI = {
   saveFcmToken: saveAdminFcmTokenOnce,
+  // Subscription Plans Management
+  getSubscriptionPlans: () => adminClient.get("/food/admin/subscriptions/plans"),
+  createSubscriptionPlan: (data) => adminClient.post("/food/admin/subscriptions/plans", data),
+  getSubscriptionPlanById: (id) => adminClient.get(`/food/admin/subscriptions/plans/${id}`),
+  updateSubscriptionPlan: (id, data) => adminClient.put(`/food/admin/subscriptions/plans/${id}`, data),
+  toggleSubscriptionPlan: (id) => adminClient.patch(`/food/admin/subscriptions/plans/${id}/toggle`),
+  deleteSubscriptionPlan: (id) => adminClient.delete(`/food/admin/subscriptions/plans/${id}`),
+  getSubscribers: (params = {}) => adminClient.get("/food/admin/subscriptions/subscribers", { params }),
   // Sub Admins
   getSubAdmins: (params = {}) => adminClient.get("/food/admin/sub-admins", { params }),
   createSubAdmin: (body) => adminClient.post("/food/admin/sub-admins", body),
@@ -1786,6 +1794,11 @@ export const deliveryAPI = {
 };
 
 export const userAPI = {
+  // Subscriptions
+  getPublicSubscriptionPlans: () => userClient.get("/food/subscriptions/plans"),
+  getMySubscription: () => userClient.get("/food/subscriptions/my"),
+  subscribePlan: (data) => userClient.post("/food/subscriptions/subscribe", data),
+
   /** Get current user profile (Bearer USER). */
   getProfile: () =>
     getUserMeOnce().then((res) => {
