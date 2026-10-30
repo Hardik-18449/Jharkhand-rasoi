@@ -44,7 +44,7 @@ const readLegacyUnder250Filters = () => {
 
 const normalizeUnder250Filters = (parsed) => ({
   selectedSort: typeof parsed?.selectedSort === "string" ? parsed.selectedSort : null,
-  activeCategory: typeof parsed?.activeCategory === "string" ? parsed.activeCategory : null,
+  activeCategory: null, // Always default to "All" (null) so user is never locked to Pizza
   under30MinsFilter: parsed?.under30MinsFilter === true,
 })
 
@@ -1004,10 +1004,19 @@ export default function Under250() {
     }
   }, [showSortPopup, showItemDetail, showShareOptions])
 
+  // On initial mount, ensure any stale category from previous browsing is erased
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    try {
+      window.localStorage.removeItem(UNDER_250_FILTERS_STORAGE_KEY)
+      removeScopedValue(UNDER_250_FILTERS_SCOPE, UNDER_250_FILTERS_NAME, { storage: "session" })
+    } catch {}
+  }, [])
+
   useEffect(() => {
     if (typeof window === "undefined") return
 
-    if (!selectedSort && !activeCategory && !under30MinsFilter) {
+    if (!selectedSort && !under30MinsFilter) {
       window.localStorage.removeItem(UNDER_250_FILTERS_STORAGE_KEY)
       return
     }
@@ -1016,11 +1025,11 @@ export default function Under250() {
       UNDER_250_FILTERS_STORAGE_KEY,
       JSON.stringify({
         selectedSort,
-        activeCategory,
+        activeCategory: null, // Don't persist category so next visit always shows "All"
         under30MinsFilter,
       })
     )
-  }, [selectedSort, activeCategory, under30MinsFilter])
+  }, [selectedSort, under30MinsFilter])
 
   // Helper function to update item quantity in bothlocal state and cart
   const updateItemQuantity = (item, newQuantity, event = null, restaurantName = null) => {

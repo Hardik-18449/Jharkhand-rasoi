@@ -210,43 +210,39 @@ export default function DesktopNavbar({ showLogo = true }) {
                         </div>
 
                         {/* Center: Search Bar & Veg Mode */}
-                        <div className="flex-1 max-w-3xl mx-4 flex items-center gap-4">
-                            {/* Search Bar */}
-                            <div className="relative flex-1">
-                                <div className="relative bg-muted rounded-lg transition-all duration-300 focus-within:ring-2 focus-within:ring-primary focus-within:bg-background border border-transparent focus-within:border-primary/20">
-                                    <div className="flex items-center px-3 py-2">
-                                        <Search className="h-4 w-4 text-muted-foreground flex-shrink-0 mr-3" />
-                                        <Input
-                                            value={heroSearch}
-                                            onChange={(e) => {
-                                                const nextValue = e.target.value
-                                                setHeroSearch(nextValue)
-                                                setSearchValue(nextValue)
-                                            }}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter" && heroSearch.trim()) {
-                                                    navigate(`/food/search?q=${encodeURIComponent(heroSearch.trim())}`)
-                                                }
-                                            }}
-                                            className="h-6 p-0 border-0 bg-transparent text-sm font-medium placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0"
-                                            placeholder="Search for restaurants, food..."
-                                        />
-                                        {heroSearch && (
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-5 w-5 p-0 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full ml-1"
-                                                onClick={() => setHeroSearch("")}
-                                            >
-                                                <span className="sr-only">Clear</span>
-                                                <X className="h-3 w-3 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                </div>
+                        <div className="flex-1 max-w-2xl flex items-center gap-3 lg:gap-4">
+                            {/* Search Bar (Unified single-layer padding, no double nested padding) */}
+                            <div className="relative flex-1 group">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-black dark:group-focus-within:text-[#FEC600] transition-colors pointer-events-none" strokeWidth={2.5} />
+                                <input
+                                    type="text"
+                                    value={heroSearch}
+                                    onChange={(e) => {
+                                        const nextValue = e.target.value
+                                        setHeroSearch(nextValue)
+                                        setSearchValue(nextValue)
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && heroSearch.trim()) {
+                                            navigate(`/food/search?q=${encodeURIComponent(heroSearch.trim())}`)
+                                        }
+                                    }}
+                                    placeholder="Search for restaurants, food..."
+                                    className="w-full h-10 pl-10 pr-9 bg-gray-100/90 dark:bg-zinc-800/60 hover:bg-gray-100 dark:hover:bg-zinc-800 focus:bg-white dark:focus:bg-zinc-900 border border-gray-200/80 dark:border-zinc-700/80 focus:border-[#FEC600] focus:ring-2 focus:ring-[#FEC600]/25 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder:text-gray-400 transition-all outline-none"
+                                />
+                                {heroSearch && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setHeroSearch("")}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-full transition-colors"
+                                    >
+                                        <span className="sr-only">Clear</span>
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
+                                )}
                             </div>
 
-                            {/* VEG MODE Toggle - Moved here */}
+                            {/* VEG MODE Toggle */}
                             <div className="flex items-center gap-2 flex-shrink-0">
                                 <div className="flex flex-col items-end">
                                     <span className="text-[10px] font-bold text-gray-700 dark:text-gray-300 leading-none">VEG</span>
