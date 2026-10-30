@@ -250,15 +250,15 @@ export default function UnifiedOTPFastLogin() {
     <div className="relative h-screen h-[100dvh] max-h-screen w-full bg-white flex flex-col justify-between overflow-hidden select-none selection:bg-amber-400 selection:text-black font-sans">
       
       {/* ========================================================= */}
-      {/* TOP CURVED WAVE (Exact RedGo Curve, System Yellow Theme) */}
-      {/* Single Image: food_dish.png moving from LEFT then RIGHT */}
+      {/* TOP CURVED WAVE (Deep & Large Overlay Wave, Yellow Theme) */}
+      {/* Positioned as an underlay (z-0), never covers form        */}
       {/* ========================================================= */}
-      <div className="relative w-full h-[18vh] sm:h-[22vh] min-h-[110px] max-h-[175px] shrink-0 overflow-hidden pointer-events-none">
+      <div className="absolute top-0 inset-x-0 w-full h-[28vh] sm:h-[32vh] md:h-[36vh] min-h-[190px] max-h-[320px] overflow-hidden pointer-events-none z-0">
         
         {/* SVG Top Wave */}
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0">
           <svg
-            viewBox="0 0 1440 220"
+            viewBox="0 0 1440 280"
             className="w-full h-full object-cover"
             preserveAspectRatio="none"
             fill="none"
@@ -272,17 +272,17 @@ export default function UnifiedOTPFastLogin() {
               </linearGradient>
             </defs>
             <path
-              d="M0,0 L1440,0 L1440,110 Q720,150 0,200 Z"
+              d="M0,0 L1440,0 L1440,140 Q720,200 0,270 Z"
               fill="url(#jhTopWave)"
             />
           </svg>
         </div>
 
-        {/* Single Image: /food_dish.png (Goes from Left to Right and back) */}
+        {/* Single Image: /food_dish.png (Shifted down inside the deeper wave) */}
         <motion.div
           animate={{
             x: [0, 80, 0],
-            y: [0, -6, 0],
+            y: [0, -8, 0],
             rotate: [-2, 3, -2],
           }}
           transition={{
@@ -290,12 +290,12 @@ export default function UnifiedOTPFastLogin() {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute top-2 sm:top-3 md:top-5 left-4 sm:left-10 md:left-20 z-10 pointer-events-auto cursor-pointer"
+          className="absolute top-5 sm:top-8 md:top-12 lg:top-14 left-4 sm:left-10 md:left-20 lg:left-28 z-10 pointer-events-auto cursor-pointer"
         >
           <img
             src="/food_dish.png"
             alt="Delicious Noodle Bowl"
-            className="w-16 h-16 sm:w-22 sm:h-22 md:w-28 md:h-28 object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.18)] transition-transform duration-300 hover:scale-105"
+            className="w-20 h-20 sm:w-28 sm:h-28 md:w-34 md:h-34 lg:w-38 lg:h-38 object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.18)] transition-transform duration-300 hover:scale-105"
             onError={(e) => {
               e.target.onerror = null
               e.target.src = "/logo.png"
@@ -305,11 +305,11 @@ export default function UnifiedOTPFastLogin() {
       </div>
 
       {/* ========================================================= */}
-      {/* CENTER LOGIN FORM (Clean, Non-Scrollable, RedGo Aligned) */}
+      {/* CENTER LOGIN FORM (Enlarged Logo, Form on Top z-20)       */}
       {/* ========================================================= */}
       <div className="relative z-20 flex-1 flex flex-col items-center justify-center w-full max-w-[440px] sm:max-w-[480px] md:max-w-[500px] mx-auto px-6 py-2 text-center shrink-0">
         
-        {/* Brand Logo (Jharkhand Rasoi) */}
+        {/* Brand Logo (Enlarged & Prominent) */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -319,7 +319,7 @@ export default function UnifiedOTPFastLogin() {
           <img
             src="/logo.png"
             alt={`${companyName} Logo`}
-            className="h-16 sm:h-20 md:h-22 w-auto max-w-[240px] object-contain select-none"
+            className="h-20 sm:h-24 md:h-28 lg:h-32 w-auto max-w-[280px] sm:max-w-[320px] object-contain select-none transition-transform duration-300 hover:scale-105"
             onError={(e) => {
               e.target.onerror = null
               e.target.src = "/favicon.ico"
@@ -541,15 +541,15 @@ export default function UnifiedOTPFastLogin() {
       </div>
 
       {/* ========================================================= */}
-      {/* BOTTOM CURVED WAVE (Exact RedGo Curve, System Yellow Theme)*/}
-      {/* Single Image: food_dish_2.png moving in OPPOSITE direction */}
+      {/* BOTTOM CURVED WAVE (Deep & Large Overlay Wave, Yellow Theme)*/}
+      {/* Positioned as an underlay (z-0), never covers form        */}
       {/* ========================================================= */}
-      <div className="relative w-full h-[18vh] sm:h-[22vh] min-h-[110px] max-h-[175px] shrink-0 overflow-hidden pointer-events-none">
+      <div className="absolute bottom-0 inset-x-0 w-full h-[28vh] sm:h-[32vh] md:h-[36vh] min-h-[190px] max-h-[320px] overflow-hidden pointer-events-none z-0">
         
         {/* SVG Bottom Wave */}
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0">
           <svg
-            viewBox="0 0 1440 220"
+            viewBox="0 0 1440 280"
             className="w-full h-full object-cover"
             preserveAspectRatio="none"
             fill="none"
@@ -563,17 +563,17 @@ export default function UnifiedOTPFastLogin() {
               </linearGradient>
             </defs>
             <path
-              d="M0,220 L1440,220 L1440,70 Q720,180 0,205 Z"
+              d="M0,280 L1440,280 L1440,75 Q720,220 0,260 Z"
               fill="url(#jhBottomWave)"
             />
           </svg>
         </div>
 
-        {/* Single Image: /food_dish_2.png (Goes in OPPOSITE direction: Right to Left then back) */}
+        {/* Single Image: /food_dish_2.png (Shifted up inside the deeper wave, opposite motion) */}
         <motion.div
           animate={{
             x: [0, -80, 0],
-            y: [0, 6, 0],
+            y: [0, 8, 0],
             rotate: [2, -3, 2],
           }}
           transition={{
@@ -581,12 +581,12 @@ export default function UnifiedOTPFastLogin() {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute bottom-2 sm:bottom-3 md:bottom-5 right-4 sm:right-10 md:right-20 z-10 pointer-events-auto cursor-pointer"
+          className="absolute bottom-5 sm:bottom-8 md:bottom-12 lg:bottom-14 right-4 sm:right-10 md:right-20 lg:right-28 z-10 pointer-events-auto cursor-pointer"
         >
           <img
             src="/food_dish_2.png"
             alt="Gourmet Pasta Dish"
-            className="w-16 h-16 sm:w-22 sm:h-22 md:w-28 md:h-28 object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.18)] transition-transform duration-300 hover:scale-105"
+            className="w-20 h-20 sm:w-28 sm:h-28 md:w-34 md:h-34 lg:w-38 lg:h-38 object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.18)] transition-transform duration-300 hover:scale-105"
             onError={(e) => {
               e.target.onerror = null
               e.target.src = "/logo.png"
