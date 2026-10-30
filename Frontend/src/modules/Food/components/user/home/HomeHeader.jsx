@@ -254,12 +254,12 @@ export default function HomeHeader({
         </div>
       </div>
 
-      {/* Sticky Search Bar and Veg Toggle (Yellow Background to match Theme) */}
-      <div id="home-header-search-row" className={`md:hidden sticky top-0 z-[60] w-full px-3 pt-2 pb-3 transition-all duration-300 ${pushSearchDown ? 'mt-[252px] sm:mt-[258px]' : 'mt-1 sm:mt-2'} bg-gradient-to-r from-amber-400 via-[#FEC600] to-yellow-400 rounded-b-[24px] sm:rounded-b-[28px] shadow-lg border-b border-amber-300`}>
+      {/* Sticky Search Bar and Veg Toggle (Yellow Background, No Border Shadow) */}
+      <div id="home-header-search-row" className={`md:hidden sticky top-0 z-[60] w-full px-3 pt-2 pb-3 transition-all duration-300 ${pushSearchDown ? 'mt-[252px] sm:mt-[258px]' : 'mt-1 sm:mt-2'} bg-gradient-to-r from-amber-400 via-[#FEC600] to-yellow-400 rounded-b-[24px] sm:rounded-b-[28px]`}>
         <div className="flex items-center gap-2.5 w-full max-w-lg mx-auto pointer-events-auto">
-          {/* Search Bar */}
+          {/* Search Bar (Clean without border shadow) */}
           <div
-            className="relative bg-white dark:bg-[#1a1a1a] rounded-2xl flex items-center px-3.5 shadow-md border border-white/20 cursor-pointer active:scale-[0.98] transition-all duration-300 flex-1 h-11"
+            className="relative bg-white dark:bg-[#1a1a1a] rounded-2xl flex items-center px-3.5 cursor-pointer active:scale-[0.98] transition-all duration-300 flex-1 h-11"
             onClick={handleSearchFocus}
           >
             <Search className="h-[18px] w-[18px] text-primary mr-2 shrink-0" strokeWidth={2.5} />
@@ -291,16 +291,16 @@ export default function HomeHeader({
             </div>
           </div>
 
-          {/* Veg Toggle (Stacked Pill Switch) */}
+          {/* Veg Toggle (Clean without border shadow) */}
           <div 
-            className="flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-transform duration-300 shrink-0 px-2.5 bg-white dark:bg-[#1a1a1a] rounded-2xl py-1 shadow-md border border-white/20"
+            className="flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-transform duration-300 shrink-0 px-2.5 bg-white dark:bg-[#1a1a1a] rounded-2xl py-1"
             onClick={() => handleVegModeChange?.(!vegMode)}
           >
-            <div className="text-[9px] font-black leading-tight text-gray-700 dark:text-gray-200 tracking-wider text-center drop-shadow-sm">
+            <div className="text-[9px] font-black leading-tight text-gray-700 dark:text-gray-200 tracking-wider text-center drop-shadow-xs">
               VEG<br/>MODE
             </div>
             <div className={`mt-0.5 w-[30px] h-[16px] rounded-full relative transition-colors duration-300 border border-white/20 ${vegMode ? 'bg-green-600' : 'bg-[#bcc0c5]/50'}`}>
-              <div className={`absolute top-[1px] w-[12px] h-[12px] rounded-full bg-white shadow-sm transition-transform duration-300 ${vegMode ? 'translate-x-[15px]' : 'translate-x-[1px]'}`} />
+              <div className={`absolute top-[1px] w-[12px] h-[12px] rounded-full bg-white shadow-xs transition-transform duration-300 ${vegMode ? 'translate-x-[15px]' : 'translate-x-[1px]'}`} />
             </div>
           </div>
         </div>

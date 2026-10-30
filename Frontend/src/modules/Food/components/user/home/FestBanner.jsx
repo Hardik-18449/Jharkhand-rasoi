@@ -60,7 +60,7 @@ export default function FestBanner({ isVegMode, images = [], hideFoodImages = fa
     <motion.div
       initial={false}
       id="fest-banner-root"
-      className={`relative w-full px-4 pt-6 pb-8 sm:pb-10 overflow-hidden min-h-[160px] sm:min-h-[200px] transition-all duration-700 bg-gradient-to-r from-amber-400 via-[#FEC600] to-yellow-400 rounded-t-none rounded-b-[28px] sm:rounded-b-[36px] shadow-lg border-b border-amber-300 text-black`}
+      className={`relative w-full px-4 pt-6 pb-8 sm:pb-10 overflow-hidden min-h-[160px] sm:min-h-[200px] transition-all duration-700 bg-gradient-to-r from-amber-400 via-[#FEC600] to-yellow-400 rounded-t-none rounded-b-[28px] sm:rounded-b-[36px] text-black`}
     >
       {hasBgImages && (
         <div className="absolute inset-0 z-0 bg-slate-900">
