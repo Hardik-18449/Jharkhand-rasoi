@@ -15,6 +15,7 @@ import {
 import { isValidSocketOrigin, resolveSocketOrigin } from '@food/utils/socketOrigin';
 import { DeliveryNotificationContext } from '../context/DeliveryNotificationContext';
 import { subscribeDeliveryPartnerOffers } from '@food/realtimeTracking';
+import { useDeliveryStore } from '@/modules/DeliveryV2/store/useDeliveryStore';
 
 const shouldLogDeliverySocket = () => {
   if (typeof window === 'undefined') return import.meta.env.DEV;
@@ -69,6 +70,12 @@ const safeReadJson = (key) => {
 
 const isRiderOnline = () => {
   try {
+    if (typeof window !== 'undefined') {
+      const storeState = useDeliveryStore?.getState?.();
+      if (storeState && typeof storeState.isOnline === 'boolean') {
+        return storeState.isOnline;
+      }
+    }
     const raw = localStorage.getItem('delivery-v2-online-pref');
     if (raw) {
       const parsed = JSON.parse(raw);
@@ -572,7 +579,7 @@ export const useDeliveryNotifications = () => {
       const orderTargetId = detail?.orderMongoId || detail?.orderId;
       if (orderTargetId) {
         deliveryAPI.getOrderById(orderTargetId).then((res) => {
-          const raw = res?.data?.data || res?.data;
+          const raw = res?.data?.data?.order || res?.data?.data || res?.data?.order || res?.data;
           if (raw) {
             const normalized = normalizeIncomingOrder(raw);
             if (normalized && (normalized.orderId || normalized.orderMongoId)) {

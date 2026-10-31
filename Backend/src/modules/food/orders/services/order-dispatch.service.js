@@ -465,6 +465,11 @@ export async function tryAutoAssign(orderId, options = {}) {
         offeredAt,
         isResend: Boolean(options.isResend),
       });
+      io.to('all_delivery').emit('new_order', {
+        ...payload,
+        offeredAt,
+        isResend: Boolean(options.isResend),
+      });
       logger.info(`[PM2 LOG] [Socket.IO] Instantly emitted order ${order._id} to ${eligible.length} riders & all_delivery`);
     }
 
@@ -511,7 +516,8 @@ export async function tryAutoAssign(orderId, options = {}) {
             type: 'new_order',
             orderId: order._id.toString(),
             orderMongoId: order._id?.toString?.() || '',
-            link: `/delivery/orders/${order._id?.toString?.() || ''}`,
+            link: `/food/delivery/feed`,
+            targetUrl: `/food/delivery/feed`,
           },
         },
       ).then(fcmResults => {

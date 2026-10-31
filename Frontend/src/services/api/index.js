@@ -1656,6 +1656,7 @@ export const deliveryAPI = {
     };
   })(),
   /** GET /food/delivery/current - fallback for some UI hooks */
+  getOrderById: (orderId) => deliveryAPI.getOrderDetails(orderId),
   getCurrentDelivery: () => deliveryClient.get("/food/delivery/orders/current"),
   getActiveOrders: () => deliveryClient.get("/food/delivery/orders/active"),
   acceptOrder: (orderId, body = {}) =>

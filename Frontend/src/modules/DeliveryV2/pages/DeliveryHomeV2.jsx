@@ -974,6 +974,29 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
   }, []);
 
   useEffect(() => {
+    const handleOpenOrderModal = (event) => {
+      const targetId = event.detail?.orderId || event.detail?.orderMongoId;
+      if (targetId) {
+        setSelectedIncomingId(targetId);
+        const fetchFn = deliveryAPI.getOrderDetails || deliveryAPI.getOrderById;
+        if (typeof fetchFn === 'function') {
+          fetchFn(targetId).then((res) => {
+            const raw = res?.data?.data?.order || res?.data?.data || res?.data?.order || res?.data;
+            if (raw && (raw._id || raw.order_id || raw.orderId)) {
+              const enriched = normalizeIncomingOrder(raw);
+              setIncomingOrders((prev) => upsertIncomingOrderInQueue(prev, enriched));
+            }
+          }).catch(() => {});
+        }
+      }
+      setIsModalMinimized(false);
+      setCurrentTab('feed');
+    };
+    window.addEventListener('delivery-open-order-modal', handleOpenOrderModal);
+    return () => window.removeEventListener('delivery-open-order-modal', handleOpenOrderModal);
+  }, []);
+
+  useEffect(() => {
     if (newOrder === undefined || newOrder === null) return;
 
     const normalized = normalizeIncomingOrder(newOrder);
@@ -988,6 +1011,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       return;
     }
 
+    setIsModalMinimized(false);
     setIncomingOrders((prev) => {
       const wasInQueue = prev.some((item) => isSameOrder(item, normalized));
       const next = upsertIncomingOrderInQueue(prev, normalized);
@@ -1013,6 +1037,24 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
   const prevIncomingOrderRef = useRef(null);
   useEffect(() => {
     prevIncomingOrderRef.current = incomingOrder;
+  }, [incomingOrder]);
+
+  // Auto-enrich incoming order with full restaurant, items, and pricing details if partial
+  useEffect(() => {
+    if (!incomingOrder) return;
+    const mongoId = getOrderMongoId(incomingOrder);
+    if (mongoId && (!incomingOrder.restaurantId || !incomingOrder.items || !incomingOrder.pricing)) {
+      const fetchFn = deliveryAPI.getOrderDetails || deliveryAPI.getOrderById;
+      if (typeof fetchFn === 'function') {
+        fetchFn(mongoId).then((res) => {
+          const raw = res?.data?.data?.order || res?.data?.data || res?.data?.order || res?.data;
+          if (raw && (raw._id || raw.order_id || raw.orderId)) {
+            const enriched = normalizeIncomingOrder(raw);
+            setIncomingOrders((prev) => upsertIncomingOrderInQueue(prev, enriched));
+          }
+        }).catch(() => {});
+      }
+    }
   }, [incomingOrder]);
 
   useEffect(() => {
@@ -1534,7 +1576,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
 
         {/* â”€â”€â”€ LIVE STATUS / PROGRESS BADGE (MATCHED PRO) â”€â”€â”€ */}
         <AnimatePresence>
-          {currentTab === 'feed' && (
+          {(currentTab === 'feed' || Boolean(incomingOrder)) && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1767,7 +1809,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       </div>
 
       {/* OVERLAYS (Persistent if active) - Outside flex container to avoid clipping and z-index issues */}
-      {currentTab === 'feed' && (
+      {(currentTab === 'feed' || Boolean(incomingOrder)) && (
         <AnimatePresence>
           {!isModalMinimized && incomingOrder && orderCapacity.canAcceptMore !== false && (
             <NewOrderModal 

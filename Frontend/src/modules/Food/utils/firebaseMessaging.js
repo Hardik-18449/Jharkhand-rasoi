@@ -747,15 +747,53 @@ function showForegroundNotification(payload = {}, options = {}) {
         description: body,
         duration: isNewOrder ? 15000 : 6000,
         important: isNewOrder,
-        action: payload?.data?.targetUrl ? {
-          label: 'View',
-          onClick: () => window.location.href = payload.data.targetUrl
+        action: (payload?.data?.targetUrl || payload?.data?.link || isNewOrder) ? {
+          label: isNewOrder ? 'Accept' : 'View',
+          onClick: () => {
+            const targetUrl = payload?.data?.targetUrl || payload?.data?.link || '/food/delivery/feed';
+            const orderTargetId = payload?.data?.orderId || payload?.data?.orderMongoId;
+            if (typeof window !== "undefined" && window.location.pathname.includes('/delivery')) {
+              window.dispatchEvent(new CustomEvent('delivery-open-order-modal', {
+                detail: { orderId: orderTargetId, payload }
+              }));
+            } else if (targetUrl) {
+              window.location.href = targetUrl;
+            }
+          }
+        } : undefined,
+        action: (payload?.data?.targetUrl || payload?.data?.link || isNewOrder) ? {
+          label: isNewOrder ? 'Accept' : 'View',
+          onClick: () => {
+            const targetUrl = payload?.data?.targetUrl || payload?.data?.link || '/food/delivery/feed';
+            const orderTargetId = payload?.data?.orderId || payload?.data?.orderMongoId;
+            if (typeof window !== "undefined" && window.location.pathname.includes('/delivery')) {
+              window.dispatchEvent(new CustomEvent('delivery-open-order-modal', {
+                detail: { orderId: orderTargetId, payload }
+              }));
+            } else if (targetUrl) {
+              window.location.href = targetUrl;
+            }
+          }
         } : undefined
       });
     } else {
       toast(title, {
         duration: isNewOrder ? 15000 : 6000,
-        important: isNewOrder
+        important: isNewOrder,
+        action: (payload?.data?.targetUrl || payload?.data?.link || isNewOrder) ? {
+          label: isNewOrder ? 'Accept' : 'View',
+          onClick: () => {
+            const targetUrl = payload?.data?.targetUrl || payload?.data?.link || '/food/delivery/feed';
+            const orderTargetId = payload?.data?.orderId || payload?.data?.orderMongoId;
+            if (typeof window !== "undefined" && window.location.pathname.includes('/delivery')) {
+              window.dispatchEvent(new CustomEvent('delivery-open-order-modal', {
+                detail: { orderId: orderTargetId, payload }
+              }));
+            } else if (targetUrl) {
+              window.location.href = targetUrl;
+            }
+          }
+        } : undefined
       });
     }
   }
