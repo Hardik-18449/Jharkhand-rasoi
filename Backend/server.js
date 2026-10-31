@@ -58,29 +58,41 @@ const startServer = async () => {
         // 2. Create HTTP server from Express app
         const httpServer = http.createServer(app);
 
-        if (!config.redisEnabled) {
+        let redisConnected = false;
+        if (config.redisEnabled) {
+            logger.info('[Bootstrap] Redis is enabled for API server; connecting Redis client for socket emitter/queues');
+            try {
+                const client = await connectRedis();
+                if (client && client.isOpen) {
+                    initRedisEmitter(client);
+                    redisConnected = true;
+                    logger.info('[Bootstrap] Redis emitter setup successfully on API server');
+                } else {
+                    logger.warn('[Bootstrap] Redis connection failed; falling back to embedded Socket.IO');
+                }
+            } catch (err) {
+                logger.warn(`[Bootstrap] Redis connection error: ${err.message}; falling back to embedded Socket.IO`);
+            }
+        }
+
+        if (!redisConnected) {
             const { initSocket } = await import('./src/config/socket.js');
             await initSocket(httpServer);
             logger.info(`[Bootstrap] Embedded Socket.IO initialized on API server port ${config.port}`);
-        } else {
-            logger.info('[Bootstrap] Redis is enabled for API server; connecting Redis client for socket emitter/queues');
-            await connectRedis();
-            initRedisEmitter(getRedisClient());
-            logger.info('[Bootstrap] Redis emitter setup attempted from API server');
         }
 
         // Watchdog recovered stuck orders is moved to scheduler-server.js
 
         // 5. Conditionally initialize BullMQ queues.
-        // BullMQ requires Redis; skip queue bootstrap when Redis is disabled.
-        if (config.bullmqEnabled && config.redisEnabled) {
+        // BullMQ requires Redis; skip queue bootstrap when Redis is disabled or offline.
+        if (config.bullmqEnabled && config.redisEnabled && redisConnected) {
             try {
                 initializeQueues();
             } catch (err) {
                 logger.error(`BullMQ initialization error (server continues): ${err.message}`);
             }
-        } else if (config.bullmqEnabled && !config.redisEnabled) {
-            logger.warn('BullMQ is enabled but Redis is disabled. Queue initialization skipped.');
+        } else if (config.bullmqEnabled && (!config.redisEnabled || !redisConnected)) {
+            logger.warn('BullMQ is enabled but Redis is disabled or offline. Queue initialization skipped.');
         }
 
         // 6. Start the HTTP server

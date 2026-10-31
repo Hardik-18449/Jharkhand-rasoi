@@ -30,7 +30,11 @@ const startSocketServer = async () => {
 
         if (config.redisEnabled) {
             logger.info('[Bootstrap] Redis is enabled for dedicated socket server; connecting Redis client');
-            await connectRedis();
+            try {
+                await connectRedis();
+            } catch (err) {
+                logger.warn(`[Bootstrap] Redis connection error on socket server: ${err.message}`);
+            }
         } else {
             logger.warn('[Bootstrap] Redis is disabled for dedicated socket server; sockets will run in local in-memory mode only');
         }

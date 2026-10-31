@@ -15,7 +15,17 @@ export const createRedisClient = () => {
     }
 
     const client = createClient({
-        url: config.redisUrl
+        url: config.redisUrl,
+        socket: {
+            connectTimeout: 4000,
+            reconnectStrategy: (retries) => {
+                if (retries > 2) {
+                    logger.warn('[Redis] Max connection retries exceeded (2). Stopping reconnect loop.');
+                    return false;
+                }
+                return Math.min(retries * 500, 1500);
+            }
+        }
     });
 
     client.on('error', (err) => logger.error(`Redis Client Error: ${err.message}`));
@@ -28,6 +38,7 @@ export const createRedisClient = () => {
 
 /**
  * Connects to Redis if REDIS_ENABLED is true.
+ * Times out gracefully after 4s so the API server is never blocked from starting.
  * @returns {Promise<import('redis').RedisClientType|null>}
  */
 export const connectRedis = async () => {
@@ -44,12 +55,23 @@ export const connectRedis = async () => {
         }
 
         if (redisClient) {
-            await redisClient.connect();
+            const connectPromise = redisClient.connect();
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Redis connection timed out after 4000ms')), 4000)
+            );
+            await Promise.race([connectPromise, timeoutPromise]);
             logger.info('Successfully connected to Redis');
+            return redisClient;
         }
-        return redisClient;
+        return null;
     } catch (error) {
         logger.error(`Failed to connect to Redis: ${error.message}`);
+        if (redisClient) {
+            try {
+                await redisClient.disconnect();
+            } catch (_) {}
+            redisClient = null;
+        }
         return null;
     }
 };
