@@ -271,6 +271,9 @@ router.patch('/dining/requests/:id/reject', diningAdminController.rejectDiningRe
 
 // ----- Orders -----
 router.get('/orders', orderController.listOrdersAdminController);
+router.get('/orders/customer-lookup', orderController.lookupCustomerAdminController);
+router.post('/orders/calculate', orderController.calculateOrderAdminController);
+router.post('/orders/create-manual', orderController.createManualOrderAdminController);
 router.get('/orders/:orderId', orderController.getOrderByIdAdminController);
 router.patch('/orders/:orderId/status', orderController.updateOrderStatusAdminController);
 router.delete('/orders/:orderId', orderController.deleteOrderAdminController);

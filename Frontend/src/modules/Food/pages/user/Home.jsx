@@ -1985,7 +1985,7 @@ export default function Home() {
 
           <Button
             onClick={() => navigate('/food/user/address-selector')}
-            className="w-full max-w-[280px] bg-red-600 hover:bg-red-700 text-white font-bold h-14 rounded-2xl shadow-xl transition-transform active:scale-95 text-lg"
+            className="w-full max-w-[280px] bg-[#FEC600] hover:bg-yellow-400 text-black font-extrabold h-14 rounded-2xl shadow-xl transition-transform active:scale-95 text-lg"
           >
             Change Location
           </Button>
@@ -2238,7 +2238,7 @@ export default function Home() {
                         onClick={() => setSelectedCategory(category.name)}
                         className={`flex-shrink-0 flex flex-col items-center gap-1.5 group w-[76px] transition-transform ${isActive ? 'scale-105' : ''}`}
                       >
-                        <div className={`relative w-[68px] h-[68px] sm:w-[84px] sm:h-[84px] rounded-full overflow-hidden shadow-md border-2 ${isActive ? 'border-primary ring-2 ring-primary/30' : 'border-gray-100 dark:border-gray-800'} bg-white dark:bg-[#1a1a1a] group-active:scale-95 transition-all duration-300`}>
+                        <div className={`relative w-[68px] h-[68px] sm:w-[84px] sm:h-[84px] rounded-full overflow-hidden shadow-md border-2 ${isActive ? 'border-black dark:border-white ring-2 ring-black/25 dark:ring-white/25' : 'border-gray-100 dark:border-gray-800'} bg-white dark:bg-[#1a1a1a] group-active:scale-95 transition-all duration-300`}>
                           {/* Shining Glint Effect - GPU CSS */}
                           <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
                             <div
@@ -2253,7 +2253,7 @@ export default function Home() {
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                           />
                         </div>
-                        <span className={`text-[11px] font-extrabold text-center leading-tight line-clamp-1 w-full px-0.5 ${isActive ? 'text-primary' : 'text-gray-900 dark:text-gray-100'}`}>
+                        <span className={`text-[11px] font-extrabold text-center leading-tight line-clamp-1 w-full px-0.5 ${isActive ? 'text-black dark:text-white font-black' : 'text-gray-900 dark:text-gray-100'}`}>
                           {category.name}
                         </span>
                       </Link>
@@ -2772,11 +2772,11 @@ export default function Home() {
                           : "border-gray-200 dark:border-gray-800 hover:border-primary"
                           }`}>
                         <Timer
-                          className={`h-6 w-6 ${activeFilters.has("delivery-under-45") ? "text-primary" : "text-gray-600 dark:text-gray-400"}`}
+                          className={`h-6 w-6 ${activeFilters.has("delivery-under-45") ? "text-black dark:text-white" : "text-gray-600 dark:text-gray-400"}`}
                           strokeWidth={1.5}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("delivery-under-45") ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("delivery-under-45") ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                           Under 45 mins
                         </span>
                       </button>
@@ -2799,10 +2799,10 @@ export default function Home() {
                           : "border-gray-200 dark:border-gray-800 hover:border-primary"
                           }`}>
                         <Star
-                          className={`h-6 w-6 ${activeFilters.has("rating-35-plus") ? "text-primary fill-primary" : "text-gray-400 dark:text-gray-500"}`}
+                          className={`h-6 w-6 ${activeFilters.has("rating-35-plus") ? "text-black fill-black dark:text-white dark:fill-white" : "text-gray-400 dark:text-gray-500"}`}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("rating-35-plus") ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("rating-35-plus") ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                           Rated 3.5+
                         </span>
                       </button>
@@ -2813,10 +2813,10 @@ export default function Home() {
                           : "border-gray-200 dark:border-gray-800 hover:border-primary"
                           }`}>
                         <Star
-                          className={`h-6 w-6 ${activeFilters.has("rating-4-plus") ? "text-primary fill-primary" : "text-gray-400 dark:text-gray-500"}`}
+                          className={`h-6 w-6 ${activeFilters.has("rating-4-plus") ? "text-black fill-black dark:text-white dark:fill-white" : "text-gray-400 dark:text-gray-500"}`}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("rating-4-plus") ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("rating-4-plus") ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                           Rated 4.0+
                         </span>
                       </button>
@@ -2827,10 +2827,10 @@ export default function Home() {
                           : "border-gray-200 dark:border-gray-800 hover:border-primary"
                           }`}>
                         <Star
-                          className={`h-6 w-6 ${activeFilters.has("rating-45-plus") ? "text-primary fill-primary" : "text-gray-400 dark:text-gray-500"}`}
+                          className={`h-6 w-6 ${activeFilters.has("rating-45-plus") ? "text-black fill-black dark:text-white dark:fill-white" : "text-gray-400 dark:text-gray-500"}`}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("rating-45-plus") ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("rating-45-plus") ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                           Rated 4.5+
                         </span>
                       </button>
@@ -2853,11 +2853,11 @@ export default function Home() {
                           : "border-gray-200 dark:border-gray-800 hover:border-primary"
                           }`}>
                         <MapPin
-                          className={`h-6 w-6 ${activeFilters.has("distance-under-1km") ? "text-primary" : "text-gray-600 dark:text-gray-400"}`}
+                          className={`h-6 w-6 ${activeFilters.has("distance-under-1km") ? "text-black dark:text-white" : "text-gray-600 dark:text-gray-400"}`}
                           strokeWidth={1.5}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("distance-under-1km") ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("distance-under-1km") ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                           Under 1 km
                         </span>
                       </button>
@@ -2868,11 +2868,11 @@ export default function Home() {
                           : "border-gray-200 dark:border-gray-800 hover:border-primary"
                           }`}>
                         <MapPin
-                          className={`h-6 w-6 ${activeFilters.has("distance-under-2km") ? "text-primary" : "text-gray-600 dark:text-gray-400"}`}
+                          className={`h-6 w-6 ${activeFilters.has("distance-under-2km") ? "text-black dark:text-white" : "text-gray-600 dark:text-gray-400"}`}
                           strokeWidth={1.5}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("distance-under-2km") ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("distance-under-2km") ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                           Under 2 km
                         </span>
                       </button>
@@ -2895,7 +2895,7 @@ export default function Home() {
                           : "border-gray-200 dark:border-gray-800 hover:border-primary"
                           }`}>
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("price-under-200") ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("price-under-200") ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                           Under â‚¹200
                         </span>
                       </button>
@@ -2906,7 +2906,7 @@ export default function Home() {
                           : "border-gray-200 dark:border-gray-800 hover:border-primary"
                           }`}>
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("price-under-500") ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("price-under-500") ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                           Under â‚¹500
                         </span>
                       </button>

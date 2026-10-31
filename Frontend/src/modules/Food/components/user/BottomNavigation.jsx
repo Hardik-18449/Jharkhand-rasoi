@@ -58,12 +58,12 @@ export default function BottomNavigation() {
         <Link
           to="/food/user/"
           className={`flex flex-col items-center justify-center gap-1 w-[22%] py-2 rounded-[1.5rem] transition-all duration-300 ${isHome
-              ? "bg-[#ffeef2] dark:bg-primary/20 text-primary"
+              ? "bg-[#FEC600]/25 dark:bg-zinc-800 text-black dark:text-white"
               : "text-slate-500 dark:text-gray-400"
             }`}
         >
-          <HomeIcon className={`h-5 w-5 ${isHome ? "text-primary" : "text-slate-500 dark:text-gray-400"}`} strokeWidth={isHome ? 2.5 : 2} />
-          <span className={`text-[10px] sm:text-xs font-bold ${isHome ? "text-primary" : "text-slate-500 dark:text-gray-400 font-semibold"}`}>
+          <HomeIcon className={`h-5 w-5 ${isHome ? "text-black dark:text-white" : "text-slate-500 dark:text-gray-400"}`} strokeWidth={isHome ? 2.5 : 2} />
+          <span className={`text-[10px] sm:text-xs font-bold ${isHome ? "text-black dark:text-white font-black" : "text-slate-500 dark:text-gray-400 font-semibold"}`}>
             Home
           </span>
         </Link>
@@ -72,12 +72,12 @@ export default function BottomNavigation() {
         <Link
           to="/food/user/under-250"
           className={`flex flex-col items-center justify-center gap-1 w-[22%] py-2 rounded-[1.5rem] transition-all duration-300 ${isUnder250
-              ? "bg-[#ffeef2] dark:bg-primary/20 text-primary"
+              ? "bg-[#FEC600]/25 dark:bg-zinc-800 text-black dark:text-white"
               : "text-slate-500 dark:text-gray-400"
             }`}
         >
-          <Tag className={`h-5 w-5 ${isUnder250 ? "text-primary" : "text-slate-500 dark:text-gray-400"}`} strokeWidth={isUnder250 ? 2.5 : 2} />
-          <span className={`text-[10px] sm:text-xs font-bold ${isUnder250 ? "text-primary" : "text-slate-500 dark:text-gray-400 font-semibold"}`}>
+          <Tag className={`h-5 w-5 ${isUnder250 ? "text-black dark:text-white" : "text-slate-500 dark:text-gray-400"}`} strokeWidth={isUnder250 ? 2.5 : 2} />
+          <span className={`text-[10px] sm:text-xs font-bold ${isUnder250 ? "text-black dark:text-white font-black" : "text-slate-500 dark:text-gray-400 font-semibold"}`}>
             Under ₹{under250PriceLimit}
           </span>
         </Link>
@@ -86,12 +86,12 @@ export default function BottomNavigation() {
         <Link
           to="/food/user/orders"
           className={`flex flex-col items-center justify-center gap-1 w-[22%] py-2 rounded-[1.5rem] transition-all duration-300 ${isOrders
-              ? "bg-[#ffeef2] dark:bg-primary/20 text-primary"
+              ? "bg-[#FEC600]/25 dark:bg-zinc-800 text-black dark:text-white"
               : "text-slate-500 dark:text-gray-400"
             }`}
         >
-          <ShoppingBag className={`h-5 w-5 ${isOrders ? "text-primary" : "text-slate-500 dark:text-gray-400"}`} strokeWidth={isOrders ? 2.5 : 2} />
-          <span className={`text-[10px] sm:text-xs font-bold ${isOrders ? "text-primary" : "text-slate-500 dark:text-gray-400 font-semibold"}`}>
+          <ShoppingBag className={`h-5 w-5 ${isOrders ? "text-black dark:text-white" : "text-slate-500 dark:text-gray-400"}`} strokeWidth={isOrders ? 2.5 : 2} />
+          <span className={`text-[10px] sm:text-xs font-bold ${isOrders ? "text-black dark:text-white font-black" : "text-slate-500 dark:text-gray-400 font-semibold"}`}>
             Orders
           </span>
         </Link>
@@ -100,12 +100,12 @@ export default function BottomNavigation() {
         <Link
           to="/food/user/profile"
           className={`flex flex-col items-center justify-center gap-1 w-[22%] py-2 rounded-[1.5rem] transition-all duration-300 ${isProfile
-              ? "bg-[#ffeef2] dark:bg-primary/20 text-primary"
+              ? "bg-[#FEC600]/25 dark:bg-zinc-800 text-black dark:text-white"
               : "text-slate-500 dark:text-gray-400"
             }`}
         >
-          <User className={`h-5 w-5 ${isProfile ? "text-primary" : "text-slate-500 dark:text-gray-400"}`} strokeWidth={isProfile ? 2.5 : 2} />
-          <span className={`text-[10px] sm:text-xs font-bold ${isProfile ? "text-primary" : "text-slate-500 dark:text-gray-400 font-semibold"}`}>
+          <User className={`h-5 w-5 ${isProfile ? "text-black dark:text-white" : "text-slate-500 dark:text-gray-400"}`} strokeWidth={isProfile ? 2.5 : 2} />
+          <span className={`text-[10px] sm:text-xs font-bold ${isProfile ? "text-black dark:text-white font-black" : "text-slate-500 dark:text-gray-400 font-semibold"}`}>
             Profile
           </span>
         </Link>

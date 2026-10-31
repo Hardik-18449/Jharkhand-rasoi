@@ -61,7 +61,7 @@ export default function ExploreMoreSection({
                           height={200}
                         />
                       </div>
-                      <span className="text-[10px] sm:text-[11px] font-bold text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-white transition-colors text-center tracking-tight leading-tight uppercase px-1">
+                      <span className="text-[10px] sm:text-[11px] font-bold text-gray-500 dark:text-gray-400 group-hover:text-black dark:group-hover:text-white transition-colors text-center tracking-tight leading-tight uppercase px-1">
                         {item.label}
                       </span>
                     </div>

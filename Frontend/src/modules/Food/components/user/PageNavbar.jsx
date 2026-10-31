@@ -1072,7 +1072,7 @@ export default function PageNavbar({
               title="Wallet"
             >
               <div className={`h-full w-full rounded-full bg-transparent flex items-center justify-center shadow-md border border-gray-100/50 dark:border-white/10`}>
-                <Wallet className={`h-4.5 w-4.5 sm:h-5.5 sm:w-5.5 ${textColor === "white" ? "text-white" : "text-primary dark:text-[#a14b84]"}`} strokeWidth={3} />
+                <Wallet className={`h-4.5 w-4.5 sm:h-5.5 sm:w-5.5 ${textColor === "white" ? "text-white" : "text-black dark:text-white"}`} strokeWidth={3} />
               </div>
             </Button>
           </Link>
@@ -1085,11 +1085,11 @@ export default function PageNavbar({
               title="Cart"
             >
               <div className={`h-full w-full rounded-full bg-transparent flex items-center justify-center shadow-md border border-gray-100/50 dark:border-white/10`}>
-                <ShoppingCart className={`h-4.5 w-4.5 sm:h-5.5 sm:w-5.5 ${textColor === "white" ? "text-white" : "text-primary dark:text-[#a14b84]"}`} strokeWidth={3} />
+                <ShoppingCart className={`h-4.5 w-4.5 sm:h-5.5 sm:w-5.5 ${textColor === "white" ? "text-white" : "text-black dark:text-white"}`} strokeWidth={3} />
               </div>
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-4.5 h-4.5 bg-primary rounded-full flex items-center justify-center ring-2 ring-white">
-                  <span className="text-[10px] font-black text-white">{cartCount > 99 ? "99+" : cartCount}</span>
+                  <span className="text-[10px] font-black text-black">{cartCount > 99 ? "99+" : cartCount}</span>
                 </span>
               )}
             </Button>
@@ -1105,7 +1105,7 @@ export default function PageNavbar({
                 title="Profile"
               >
                 <div className={`h-full w-full rounded-full bg-transparent flex items-center justify-center shadow-md border border-gray-100/50 dark:border-white/10`}>
-                  <span className={`text-sm sm:text-base font-black ${textColor === "white" ? "text-white" : "text-primary dark:text-[#a14b84]"}`}>
+                  <span className={`text-sm sm:text-base font-black ${textColor === "white" ? "text-white" : "text-black dark:text-white"}`}>
                     A
                   </span>
                 </div>

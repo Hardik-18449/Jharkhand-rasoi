@@ -288,8 +288,8 @@ export default function DesktopNavbar({ showLogo = true }) {
                                 >
                                     <ShoppingCart className="!h-5 !w-5 lg:!h-6 lg:!w-6 text-gray-700 dark:text-gray-300" strokeWidth={2} />
                                     {cartCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center ring-2 ring-white dark:ring-gray-800">
-                                            <span className="text-xs font-bold text-white">{cartCount > 99 ? "99+" : cartCount}</span>
+                                        <span className="absolute -top-1 -right-1 w-6 h-6 bg-[#FEC600] rounded-full flex items-center justify-center ring-2 ring-white dark:ring-gray-800">
+                                            <span className="text-xs font-black text-black">{cartCount > 99 ? "99+" : cartCount}</span>
                                         </span>
                                     )}
                                 </Button>
@@ -309,8 +309,8 @@ export default function DesktopNavbar({ showLogo = true }) {
                             <Link
                                 to="/food/user/"
                                 className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isDelivery
-                                    ? "text-primary"
-                                    : "text-gray-600 dark:text-gray-400 hover:text-primary"
+                                    ? "text-black dark:text-white font-black"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
                                     }`}
                             >
                                 <span className="text-sm font-bold tracking-wide uppercase">Delivery</span>
@@ -329,8 +329,8 @@ export default function DesktopNavbar({ showLogo = true }) {
                             <Link
                                 to="/food/user/under-250"
                                 className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isUnder250
-                                    ? "text-primary"
-                                    : "text-gray-600 dark:text-gray-400 hover:text-primary"
+                                    ? "text-black dark:text-white font-black"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
                                     }`}
                             >
                                 <span className="text-sm font-bold tracking-wide uppercase">Under ₹{under250PriceLimit}</span>
@@ -350,8 +350,8 @@ export default function DesktopNavbar({ showLogo = true }) {
                                 <Link
                                     to="/food/user/dining"
                                     className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isDining
-                                        ? "text-primary"
-                                        : "text-gray-600 dark:text-gray-400 hover:text-primary"
+                                        ? "text-black dark:text-white font-black"
+                                        : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
                                         }`}
                                 >
                                     <span className="text-sm font-bold tracking-wide uppercase">Dining</span>
@@ -371,8 +371,8 @@ export default function DesktopNavbar({ showLogo = true }) {
                             <Link
                                 to="/food/user/profile"
                                 className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isProfile
-                                    ? "text-primary"
-                                    : "text-gray-600 dark:text-gray-400 hover:text-primary"
+                                    ? "text-black dark:text-white font-black"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
                                     }`}
                             >
                                 <span className="text-sm font-bold tracking-wide uppercase">Profile</span>

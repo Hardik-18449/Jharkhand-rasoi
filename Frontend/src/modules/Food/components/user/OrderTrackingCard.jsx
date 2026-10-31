@@ -11,7 +11,7 @@ const CookingAnimation = memo(() => (
       <motion.div animate={{ opacity: [0, 0.8, 0], y: [0, -8, -12], scale: [0.8, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity, delay: 1, ease: "easeOut" }} className="w-1.5 h-3 bg-orange-400/60 rounded-full blur-[1px]" />
     </div>
     <motion.div animate={{ rotate: [-2, 2, -2] }} transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }} className="relative z-10 mt-1">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary drop-shadow-sm">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black dark:text-white drop-shadow-sm">
         {/* Cooker Body */}
         <path d="M6 10h12v6a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4v-6z" />
         {/* Lid Rim */}
@@ -384,7 +384,7 @@ function OrderTrackingCardInner({ hasBottomNav = true }) {
           
           <button 
              onClick={(e) => { e.stopPropagation(); setDismissedKey(currentOrderKey); }}
-             className="absolute top-2 right-2 p-1.5 rounded-full bg-orange-50/80 text-orange-400 hover:text-#55254b hover:bg-orange-100/80 transition-colors z-20 shadow-sm"
+             className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 text-black dark:text-white hover:bg-gray-100 transition-colors z-20 shadow-sm"
           >
             <X className="w-3.5 h-3.5 pointer-events-none" />
           </button>
@@ -396,7 +396,7 @@ function OrderTrackingCardInner({ hasBottomNav = true }) {
               <p className="text-gray-900 font-bold text-base md:text-lg truncate tracking-tight">{restaurantName}</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <p className="text-gray-500 font-medium text-xs md:text-sm truncate">{statusText}</p>
-                <ChevronRight className="w-3.5 h-3.5 text-primary shrink-0 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="w-3.5 h-3.5 text-black dark:text-white shrink-0 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
 

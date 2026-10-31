@@ -13,6 +13,7 @@ import ViewOrderDialog from "@food/components/admin/orders/ViewOrderDialog"
 import SettingsDialog from "@food/components/admin/orders/SettingsDialog"
 import RefundModal from "@food/components/admin/orders/RefundModal"
 import AssignDeliveryModal from "@food/components/admin/AssignDeliveryModal"
+import CreateManualOrderModal from "@food/components/admin/orders/CreateManualOrderModal"
 import { useOrdersManagement } from "@food/components/admin/orders/useOrdersManagement"
 import { Loader2 } from "lucide-react"
 import { OrdersDashboardSkeleton } from "@food/components/ui/loading-skeletons"
@@ -53,6 +54,7 @@ export default function OrdersPage({ statusKey = "all" }) {
   const [selectedOrderForRefund, setSelectedOrderForRefund] = useState(null)
   const [assignDeliveryModalOpen, setAssignDeliveryModalOpen] = useState(false)
   const [selectedOrderForAssign, setSelectedOrderForAssign] = useState(null)
+  const [createPhoneOrderModalOpen, setCreatePhoneOrderModalOpen] = useState(false)
   const showLoadingSkeleton = useDelayedLoading(isLoading, { delay: 120, minDuration: 360 })
   const seenOrderIdsRef = useRef(new Set())
   const isFirstLoadRef = useRef(true)
@@ -1056,6 +1058,7 @@ export default function OrdersPage({ statusKey = "all" }) {
         activeFiltersCount={activeFiltersCount}
         onExport={handleExport}
         onSettingsClick={() => setIsSettingsOpen(true)}
+        onNewPhoneOrderClick={() => setCreatePhoneOrderModalOpen(true)}
       />
       <FilterPanel
         isOpen={isFilterOpen}
@@ -1085,6 +1088,13 @@ export default function OrdersPage({ statusKey = "all" }) {
         order={selectedOrderForRefund}
         onConfirm={handleRefundConfirm}
         isProcessing={processingRefund !== null}
+      />
+      <CreateManualOrderModal
+        isOpen={createPhoneOrderModalOpen}
+        onClose={() => setCreatePhoneOrderModalOpen(false)}
+        onOrderCreated={(newOrder) => {
+          fetchOrders({ silent: false, withRingCheck: false })
+        }}
       />
       <AssignDeliveryModal
         isOpen={assignDeliveryModalOpen}

@@ -88,23 +88,52 @@ export const detectZonePublicController = async (req, res, next) => {
         }
 
         const zones = await FoodZone.find({ isActive: true }).lean();
+        const servingZones = [];
         let radiusBlockedZone = null;
 
         for (const zone of zones) {
-            if (doesZoneServePoint(lat, lng, zone)) {
-                return res.status(200).json({
-                    success: true,
-                    message: 'Zone detected',
-                    data: { status: 'IN_SERVICE', zoneId: zone._id, zone }
-                });
-            }
+            const centerLat = toFinite(zone?.centerPoint?.latitude ?? zone?.centerPoint?.lat);
+            const centerLng = toFinite(zone?.centerPoint?.longitude ?? zone?.centerPoint?.lng);
+            const hasCenter = centerLat !== null && centerLng !== null && !(centerLat === 0 && centerLng === 0);
+            const distance = hasCenter ? getDistanceKm(lat, lng, centerLat, centerLng) : Infinity;
+            const radiusKm = getZoneRadiusKm(zone);
 
-            if (!radiusBlockedZone && zone?.isRadiusEnabled) {
-                const coords = Array.isArray(zone?.coordinates) ? zone.coordinates : [];
-                if (coords.length >= 3 && isPointInPolygon(lat, lng, coords) && !isPointWithinZoneRadius(lat, lng, zone)) {
-                    radiusBlockedZone = zone;
-                }
+            const inRadius = Boolean(zone?.isRadiusEnabled && hasCenter && radiusKm && distance <= radiusKm);
+            
+            const coords = Array.isArray(zone?.coordinates) ? zone.coordinates : [];
+            const inPolygon = coords.length >= 3 && isPointInPolygon(lat, lng, coords);
+
+            if (inRadius || inPolygon) {
+                servingZones.push({
+                    zone,
+                    inRadius,
+                    inPolygon,
+                    distance,
+                    radiusKm: radiusKm || 9999
+                });
+            } else if (!radiusBlockedZone && zone?.isRadiusEnabled && inPolygon && !inRadius) {
+                radiusBlockedZone = zone;
             }
+        }
+
+        if (servingZones.length > 0) {
+            // Priority:
+            // 1. inRadius match takes priority over loose polygon match
+            // 2. Closer distance to zone centerPoint
+            // 3. Tighter radius / boundary
+            servingZones.sort((a, b) => {
+                if (a.inRadius && !b.inRadius) return -1;
+                if (!a.inRadius && b.inRadius) return 1;
+                if (a.distance !== b.distance) return a.distance - b.distance;
+                return a.radiusKm - b.radiusKm;
+            });
+
+            const best = servingZones[0].zone;
+            return res.status(200).json({
+                success: true,
+                message: 'Zone detected',
+                data: { status: 'IN_SERVICE', zoneId: best._id, zone: best }
+            });
         }
 
         if (radiusBlockedZone) {

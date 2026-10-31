@@ -225,7 +225,7 @@ export default function HomeHeader({
                         const Icon = ICON_MAP[notif.icon] || Bell;
                         return (
                           <div key={notif.id} className="p-4 flex items-start gap-3 border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 transition-colors">
-                            <div className="mt-1 p-2 rounded-full bg-gray-100 text-primary">
+                            <div className="mt-1 p-2 rounded-full bg-gray-100 text-black dark:text-white">
                               <Icon className="h-4 w-4" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -262,7 +262,7 @@ export default function HomeHeader({
             className="relative bg-white dark:bg-[#1a1a1a] rounded-2xl flex items-center px-3.5 cursor-pointer active:scale-[0.98] transition-all duration-300 flex-1 h-11"
             onClick={handleSearchFocus}
           >
-            <Search className="h-[18px] w-[18px] text-primary mr-2 shrink-0" strokeWidth={2.5} />
+            <Search className="h-[18px] w-[18px] text-black dark:text-white mr-2 shrink-0" strokeWidth={2.5} />
             
             <div className="flex-1 overflow-hidden relative h-5">
               <AnimatePresence mode="wait">
@@ -282,7 +282,7 @@ export default function HomeHeader({
             <div className="flex items-center gap-2 pl-2">
               <div className="h-5 w-[1px] bg-gray-200" />
               <Mic 
-                className="h-5 w-5 text-primary" 
+                className="h-5 w-5 text-black dark:text-white cursor-pointer active:scale-95 transition-transform" 
                 onClick={(e) => {
                   e.stopPropagation();
                   handleVoiceSearchClick?.();

@@ -1,4 +1,4 @@
-import { Search, Filter, Download, ChevronDown, Settings } from "lucide-react"
+import { Search, Filter, Download, ChevronDown, Settings, PhoneCall } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +18,7 @@ export default function OrdersTopbar({
   activeFiltersCount,
   onExport,
   onSettingsClick,
+  onNewPhoneOrderClick,
 }) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
@@ -30,7 +31,19 @@ export default function OrdersTopbar({
             </span>
           </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* New Phone Order Button (Brand #FEC600, High Contrast Black Text) */}
+          {onNewPhoneOrderClick && (
+            <button
+              type="button"
+              onClick={onNewPhoneOrderClick}
+              className="px-4 py-2.5 text-sm font-extrabold rounded-lg bg-[#FEC600] hover:bg-[#e5b300] text-black shadow-sm flex items-center gap-2 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+            >
+              <PhoneCall className="w-4 h-4 stroke-[2.5]" />
+              <span>+ New Phone Order</span>
+            </button>
+          )}
+
           <div className="relative flex-1 sm:flex-initial">
             <input
               type="text"
@@ -68,29 +81,33 @@ export default function OrdersTopbar({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <button 
+
+          <button
             onClick={onFilterClick}
-            className={`px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all relative ${
-              activeFiltersCount > 0 ? "border-emerald-500 bg-emerald-50" : ""
+            className={`px-4 py-2.5 text-sm font-medium rounded-lg border flex items-center gap-2 transition-all ${
+              activeFiltersCount > 0
+                ? "border-slate-900 bg-slate-900 text-white"
+                : "border-slate-300 bg-white hover:bg-slate-50 text-slate-700"
             }`}
           >
             <Filter className="w-4 h-4" />
-            <span className="text-black font-bold">Filters</span>
+            <span>Filter</span>
             {activeFiltersCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
+              <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white text-slate-900 font-bold">
                 {activeFiltersCount}
               </span>
             )}
           </button>
-          <button 
+
+          <button
             onClick={onSettingsClick}
             className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+            title="Settings"
           >
-            <Settings className="w-5 h-5" />
+            <Settings className="w-4 h-4" />
           </button>
         </div>
       </div>
     </div>
   )
 }
-

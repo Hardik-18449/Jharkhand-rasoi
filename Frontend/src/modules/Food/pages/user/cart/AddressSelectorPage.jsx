@@ -840,16 +840,16 @@ export default function AddressSelectorPage() {
                 onClick={handleLocateCurrentPositionInForm}
                 className="bg-white text-black hover:bg-gray-100 shadow-xl border border-gray-200 rounded-full h-12 px-6"
               >
-                <Navigation className="h-4 w-4 mr-2 text-primary" /> Use My Location
+                <Navigation className="h-4 w-4 mr-2 text-black" /> Use My Location
               </Button>
             </div>
           </div>
 
           <div className="relative bg-white dark:bg-[#0a0a0a] rounded-t-[32px] -mt-8 z-10 p-4 space-y-6 shadow-[0_-12px_24px_-10px_rgba(0,0,0,0.1)]">
             <div className="bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 rounded-xl p-4 flex gap-3">
-              <MapPin className="h-5 w-5 text-primary mt-0.5" />
+              <MapPin className="h-5 w-5 text-black dark:text-white mt-0.5" />
               <div className="min-w-0">
-                <p className="text-xs font-bold text-primary dark:text-primary/80 uppercase mb-1">Pinnned Location</p>
+                <p className="text-xs font-bold text-black dark:text-white uppercase mb-1">Pinned Location</p>
                 <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{currentAddress || "Select a location on map"}</p>
               </div>
             </div>
@@ -926,7 +926,7 @@ export default function AddressSelectorPage() {
                     variant={addressFormData.label === l ? "default" : "outline"}
                     onClick={() => setAddressFormData({ ...addressFormData, label: l })}
                     className="flex-1"
-                    style={addressFormData.label === l ? { backgroundColor: '#dc2626', color: 'white' } : {}}
+                    style={addressFormData.label === l ? { backgroundColor: '#FEC600', color: '#000000', borderColor: '#FEC600', fontWeight: 'bold' } : {}}
                   >
                     {l}
                   </Button>
@@ -941,8 +941,8 @@ export default function AddressSelectorPage() {
           style={{ bottom: `${keyboardInset}px` }}
         >
           <Button
-            className="w-full h-12 text-white font-bold text-lg"
-            style={{ backgroundColor: '#dc2626' }}
+            className="w-full h-12 font-black text-lg text-black hover:bg-yellow-400 border-none"
+            style={{ backgroundColor: '#FEC600', color: '#000000' }}
             onClick={handleAddressFormSubmit}
             disabled={loadingAddress}
           >
@@ -969,10 +969,10 @@ export default function AddressSelectorPage() {
             className="w-full flex items-center gap-4 p-4 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-sm hover:shadow-md transition-all group"
           >
             <div className="h-10 w-10 rounded-full bg-[#7e386610] dark:bg-[#7e386620] flex items-center justify-center">
-              <Navigation className="h-5 w-5 text-primary" />
+              <Navigation className="h-5 w-5 text-black dark:text-white" />
             </div>
             <div className="text-left flex-1">
-              <p className="font-bold text-primary">Use Current Location</p>
+              <p className="font-bold text-black dark:text-white">Use Current Location</p>
               <p className="text-xs text-gray-500 line-clamp-1">{currentAddress || "Enable GPS for accuracy"}</p>
             </div>
             <ChevronRight className="h-5 w-5 text-gray-400" />
@@ -982,7 +982,7 @@ export default function AddressSelectorPage() {
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Saved Addresses</h2>
-            <Button variant="ghost" className="text-primary p-0 h-auto font-bold" onClick={handleAddAddressClick}>
+            <Button variant="ghost" className="text-black dark:text-white hover:text-black p-0 h-auto font-bold" onClick={handleAddAddressClick}>
               <Plus className="h-4 w-4 mr-1" /> Add New
             </Button>
           </div>

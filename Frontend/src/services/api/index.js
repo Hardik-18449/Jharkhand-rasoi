@@ -554,6 +554,12 @@ export const adminAPI = {
   /** Orders (admin) â€“ list, get by id, assign delivery partner */
   getOrders: (params = {}) =>
     adminClient.get("/food/admin/orders", { params: { limit: 50, page: 1, ...params } }),
+  lookupCustomer: (phone) =>
+    adminClient.get("/food/admin/orders/customer-lookup", { params: { phone } }),
+  calculateManualOrder: (data) =>
+    adminClient.post("/food/admin/orders/calculate", data),
+  createManualOrder: (data) =>
+    adminClient.post("/food/admin/orders/create-manual", data),
   getOrderById: (orderId) =>
     adminClient.get(`/food/admin/orders/${String(orderId)}`),
   acceptOrder: (orderId) =>

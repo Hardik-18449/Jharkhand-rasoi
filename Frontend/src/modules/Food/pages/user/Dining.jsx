@@ -538,7 +538,7 @@ export default function Dining() {
         >
           {/* Enhanced Search Bar (Matching Home Style) */}
           <div className="relative bg-gray-50 dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-gray-800 p-2 flex items-center shadow-inner group">
-            <Search className="h-4 w-4 text-primary ml-2 shrink-0" strokeWidth={2.5} />
+            <Search className="h-4 w-4 text-black dark:text-white ml-2 shrink-0" strokeWidth={2.5} />
             <div className="flex-1 px-3">
               <Input
                 value={heroSearch}
@@ -558,7 +558,7 @@ export default function Dining() {
             <div className="flex items-center gap-3 pr-2">
               <div className="h-4 w-[1px] bg-gray-200 dark:bg-gray-700" />
               <button className="flex items-center justify-center p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                <Mic className="h-4 w-4 text-primary" strokeWidth={2.5} />
+                <Mic className="h-4 w-4 text-black dark:text-white" strokeWidth={2.5} />
               </button>
             </div>
           </div>

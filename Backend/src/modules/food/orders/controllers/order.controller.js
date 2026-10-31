@@ -2,6 +2,8 @@ import { sendResponse } from '../../../../utils/response.js';
 import * as orderService from '../services/order.service.js';
 import * as foodOrderPaymentService from '../services/foodOrderPayment.service.js';
 import { checkRidersAvailabilityInZone } from '../services/order-dispatch.service.js';
+import { FoodOrder } from '../models/order.model.js';
+import { FoodUser } from '../../../../core/users/user.model.js';
 import {
     validateCalculateOrderDto,
     validateCreateOrderDto,
@@ -454,3 +456,165 @@ export async function resendDeliveryNotificationAdminController(req, res, next) 
     }
 }
 
+
+
+export async function lookupCustomerAdminController(req, res, next) {
+    try {
+        const phone = String(req.query?.phone || '').trim();
+        if (!phone || phone.length < 10) {
+            return sendResponse(res, 200, 'Invalid phone number', { exists: false });
+        }
+        const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+        const user = await FoodUser.findOne({
+            $or: [
+                { phone: cleanPhone },
+                { phone: `+91${cleanPhone}` },
+                { phone: `91${cleanPhone}` }
+            ]
+        }).select('_id name phone addresses savedAddresses').lean();
+
+        if (!user) {
+            return sendResponse(res, 200, 'Customer not found', { exists: false });
+        }
+
+        // Fetch recent delivery addresses from past orders
+        const recentOrders = await FoodOrder.find({ userId: user._id })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .select('deliveryAddress')
+            .lean();
+
+        const seen = new Set();
+        const recentAddresses = [];
+        for (const ord of (recentOrders || [])) {
+            const addr = ord?.deliveryAddress;
+            if (addr && addr.street) {
+                const key = `${addr.street}_${addr.additionalDetails || ''}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    recentAddresses.push(addr);
+                }
+            }
+        }
+
+        return sendResponse(res, 200, 'Customer found', {
+            exists: true,
+            customer: {
+                _id: user._id,
+                name: user.name || '',
+                phone: user.phone || cleanPhone,
+                savedAddresses: user.savedAddresses || user.addresses || [],
+                recentAddresses
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function calculateOrderAdminController(req, res, next) {
+    try {
+        const dto = validateCalculateOrderDto(req.body);
+        const result = await orderService.calculateOrder(null, dto);
+        return sendResponse(res, 200, 'Pricing calculated', result);
+    } catch (err) {
+        console.error('calculateOrderAdminController error:', err);
+        next(err);
+    }
+}
+
+export async function createManualOrderAdminController(req, res, next) {
+    try {
+        const body = req.body || {};
+        const customerName = String(body.customerName || body.address?.fullName || body.address?.name || '').trim();
+        const rawPhone = String(body.customerPhone || body.address?.phone || '').trim();
+        const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+
+        if (!customerName) {
+            return res.status(400).json({ success: false, message: 'Customer full name is required' });
+        }
+        if (!cleanPhone || cleanPhone.length !== 10) {
+            return res.status(400).json({ success: false, message: 'Valid 10-digit customer mobile number is required' });
+        }
+        if (!body.restaurantId) {
+            return res.status(400).json({ success: false, message: 'Please select a restaurant' });
+        }
+        if (!Array.isArray(body.items) || body.items.length === 0) {
+            return res.status(400).json({ success: false, message: 'At least one menu item is required' });
+        }
+        if (!body.address?.location?.coordinates || body.address.location.coordinates.length !== 2) {
+            return res.status(400).json({ success: false, message: 'Delivery location coordinates are required' });
+        }
+
+        // Find or create FoodUser
+        let user = await FoodUser.findOne({
+            $or: [
+                { phone: cleanPhone },
+                { phone: `+91${cleanPhone}` },
+                { phone: `91${cleanPhone}` }
+            ]
+        });
+
+        if (!user) {
+            user = await FoodUser.create({
+                name: customerName,
+                phone: cleanPhone,
+                role: 'USER',
+                isPhoneVerified: true,
+                status: 'active'
+            });
+        } else if (customerName && (!user.name || user.name.trim() === 'User' || user.name.trim() === '')) {
+            user.name = customerName;
+            await user.save();
+        }
+
+        // Calculate pricing
+        const pricingDto = {
+            items: body.items,
+            restaurantId: body.restaurantId,
+            deliveryAddress: {
+                location: body.address.location
+            }
+        };
+        const calculated = await orderService.calculateOrder(user._id, pricingDto);
+
+        const orderDto = {
+            restaurantId: body.restaurantId,
+            items: body.items,
+            customerName,
+            customerPhone: cleanPhone,
+            address: {
+                label: body.address.label || 'Home',
+                fullName: customerName,
+                name: customerName,
+                phone: cleanPhone,
+                street: body.address.street || 'Landmark Location',
+                additionalDetails: body.address.additionalDetails || '',
+                city: body.address.city || 'Indore',
+                state: body.address.state || 'Madhya Pradesh',
+                zipCode: body.address.zipCode || '',
+                location: body.address.location
+            },
+            pricing: {
+                subtotal: calculated.subtotal,
+                tax: calculated.tax || 0,
+                packagingFee: calculated.packagingFee || 0,
+                deliveryFee: calculated.deliveryFee || 0,
+                platformFee: calculated.platformFee || 0,
+                discount: calculated.discount || 0,
+                total: calculated.total,
+                currency: 'INR'
+            },
+            paymentMethod: 'cash', // Strictly Cash on Delivery
+            note: body.note ? `[Phone Order] ${body.note}` : '[Phone Order placed by Admin]',
+            restaurantNote: body.restaurantNote || '',
+            sendCutlery: body.sendCutlery !== false
+        };
+
+        const result = await orderService.createOrder(user._id, orderDto);
+        return sendResponse(res, 201, 'Phone order placed successfully', result);
+    } catch (err) {
+        console.error('createManualOrderAdminController error:', err);
+        next(err);
+    }
+}

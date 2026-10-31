@@ -170,7 +170,7 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <form onSubmit={handleSearchSubmit} className="flex items-center gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary dark:text-[#a05485] z-10" strokeWidth={2.5} />
+              <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black dark:text-white z-10" strokeWidth={2.5} />
               <Input
                 ref={inputRef}
                 value={searchValue}
@@ -221,7 +221,7 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
           }}
         >
           <h3 className="text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-            <Clock className="h-4 w-4 text-primary" />
+            <Clock className="h-4 w-4 text-black dark:text-gray-300" />
             Recent Searches
           </h3>
           <div className="flex gap-2 sm:gap-3 flex-wrap">
@@ -234,7 +234,7 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
                   animation: `scaleIn 0.3s ease-out ${0.1 + index * 0.02}s both`
                 }}
               >
-                <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-black dark:text-gray-300 flex-shrink-0" />
                 <span>{suggestion}</span>
               </button>
             ))}
