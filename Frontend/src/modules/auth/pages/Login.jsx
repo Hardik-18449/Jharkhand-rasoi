@@ -831,10 +831,10 @@ export default function UnifiedOTPFastLogin() {
         }}
       >
         <DialogContent
-          className="sm:max-w-[425px] rounded-3xl border-none p-0 overflow-hidden bg-white dark:bg-[#1a1a1a]"
+          className="w-[92vw] sm:w-[480px] max-w-[480px] rounded-3xl sm:rounded-[2rem] border-none p-0 overflow-hidden bg-white dark:bg-[#1a1a1a] shadow-2xl"
           showCloseButton={false}
         >
-          <div className="bg-gradient-to-br from-amber-400 via-[#FEC600] to-yellow-500 p-8 text-center relative">
+          <div className="bg-gradient-to-br from-amber-400 via-[#FEC600] to-yellow-500 px-6 py-6 sm:px-8 sm:py-7 text-center relative">
             <button
               onClick={handleEditNumber}
               className="absolute top-4 right-4 p-2 bg-black/10 hover:bg-black/20 backdrop-blur-md rounded-xl text-black transition-all active:scale-95 z-20 cursor-pointer"
@@ -847,22 +847,25 @@ export default function UnifiedOTPFastLogin() {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="w-20 h-20 bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border border-white/60 shadow-inner"
+              className="w-14 h-14 sm:w-16 sm:h-16 bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-3 border border-white/60 shadow-sm"
             >
-              <User className="w-10 h-10 text-black" />
+              <User className="w-7 h-7 sm:w-8 sm:h-8 text-black" />
             </motion.div>
-            <DialogTitle className="text-2xl font-black text-black mb-2">Almost there!</DialogTitle>
-            <DialogDescription className="text-black/80 font-medium">
+            <DialogTitle className="text-lg sm:text-xl font-extrabold text-black tracking-tight mb-1.5">Almost there!</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm text-black/85 font-medium max-w-xs mx-auto leading-relaxed">
               We'd love to know your name to personalize your experience.
             </DialogDescription>
           </div>
 
-          <form onSubmit={handleNameSubmit} className="p-8 pt-6 space-y-6">
-            <div className="space-y-4">
-              <Label htmlFor="name" className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">
+          <form onSubmit={handleNameSubmit} className="p-6 sm:p-8 pt-5 sm:pt-6 space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 ml-0.5">
                 Full Name
               </Label>
               <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-amber-500 transition-colors">
+                  <User className="w-5 h-5" />
+                </div>
                 <Input
                   id="name"
                   value={newName}
@@ -871,17 +874,17 @@ export default function UnifiedOTPFastLogin() {
                     setNewName(filteredValue)
                   }}
                   placeholder="Enter your name"
-                  className="pl-4 h-14 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-2xl focus:ring-2 focus:ring-[#FEC600] focus:border-[#FEC600] transition-all group-hover:border-[#FEC600]/40 font-medium"
+                  className="pl-11 pr-4 h-12 sm:h-13 bg-gray-50/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 text-sm sm:text-base font-medium transition-all focus:bg-white dark:focus:bg-gray-800 focus:border-[#FEC600] focus:ring-4 focus:ring-[#FEC600]/20 shadow-sm"
                   autoFocus
                 />
               </div>
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5 pt-1">
               <Button
                 type="submit"
                 disabled={isUpdatingName}
-                className="w-full h-14 bg-gradient-to-r from-amber-400 via-[#FEC600] to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-black rounded-2xl font-black text-lg shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                className="w-full h-12 sm:h-13 bg-gradient-to-r from-amber-400 via-[#FEC600] to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-black rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base shadow-md shadow-amber-500/20 transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
               >
                 {isUpdatingName ? (
                   <Loader2 className="h-5 w-5 animate-spin text-black" />
@@ -896,12 +899,12 @@ export default function UnifiedOTPFastLogin() {
                     setShowNameModal(false)
                     navigate("/food/user", { replace: true })
                   }}
-                  className="text-sm text-gray-400 hover:text-gray-600 transition-colors py-2 cursor-pointer font-medium"
+                  className="text-xs sm:text-sm text-gray-400 hover:text-gray-600 transition-colors py-1 cursor-pointer font-medium"
                 >
                   Skip for now
                 </button>
               ) : (
-                <p className="text-xs text-gray-400 text-center font-medium">Name is required to complete signup.</p>
+                <p className="text-[11px] sm:text-xs text-gray-400 text-center font-medium">Name is required to complete signup.</p>
               )}
             </div>
           </form>
