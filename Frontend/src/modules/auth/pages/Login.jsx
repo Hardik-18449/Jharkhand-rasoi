@@ -602,7 +602,7 @@ export default function UnifiedOTPFastLogin() {
           {/* Logo & Header */}
           <div className="mb-6 mt-1 text-center flex flex-col items-center">
             <img
-              src="/logo.png"
+              src="/brandlogo.png"
               alt={companyName}
               className="h-32 sm:h-36 md:h-40 w-auto object-contain drop-shadow-md transition-transform hover:scale-105 duration-300"
             />

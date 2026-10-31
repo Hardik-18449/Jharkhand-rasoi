@@ -233,7 +233,7 @@ export default function SignIn() {
             className="w-44 h-44 sm:w-48 sm:h-48 mb-5 relative flex items-center justify-center rounded-full overflow-hidden shadow-[0_12px_28px_rgba(0,0,0,0.08)] bg-white"
           >
             <img
-              src="/logo.png"
+              src="/brandlogo.png"
               alt="Jharkhand Rasoi Logo"
               className="w-full h-full object-cover scale-[1.04] select-none pointer-events-none transition-transform hover:scale-108 duration-300"
               onError={(e) => {

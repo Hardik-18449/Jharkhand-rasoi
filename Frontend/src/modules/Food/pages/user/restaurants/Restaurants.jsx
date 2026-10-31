@@ -45,7 +45,7 @@ const pickRestaurantImage = (restaurant) => {
 export default function Restaurants() {
   const { addFavorite, removeFavorite, isFavorite } = useProfile()
   const { location: userLocation, zoneId } = useAppLocation()
-  const logoUrl = useAppLogo('user_app') || "/logo.png"
+  const logoUrl = useAppLogo('user_app') || "/brandlogo.png"
   const [restaurants, setRestaurants] = useState([])
   const [loading, setLoading] = useState(true)
   const showRestaurantsSkeleton = useDelayedLoading(loading)
@@ -265,7 +265,7 @@ export default function Restaurants() {
                       alt="Jharkhand Rasoi"
                       className="h-full w-full object-contain"
                       onError={(e) => {
-                        e.currentTarget.src = "/logo.png";
+                        e.currentTarget.src = "/brandlogo.png";
                       }}
                     />
                   </div>

@@ -5,7 +5,7 @@ import { adminAPI } from "@food/api"
 import { setAuthData } from "@food/utils/auth"
 import { ShieldCheck, UserCog, Star, Heart, ArrowRight, Loader2, Mail, Lock, Eye, EyeOff, ShieldQuestion } from "lucide-react"
 import { Button } from "@food/components/ui/button"
-import logoNew from "@/assets/logo.png"
+import logoNew from "@/assets/brandlogo.png"
 import { toast } from "sonner"
 
 export default function AdminLogin() {

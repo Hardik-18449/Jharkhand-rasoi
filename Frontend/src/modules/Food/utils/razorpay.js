@@ -76,7 +76,7 @@ export const initRazorpayPayment = async (options) => {
       order_id: options.order_id,
       name: options.name || 'Jharkhand Rasoi',
       description: options.description || 'Order Payment',
-      image: options.image || `${window.location.origin}/logo.png`,
+      image: options.image || `${window.location.origin}/brandlogo.png`,
       prefill: {
         name: options.prefill?.name || '',
         email: options.prefill?.email || '',

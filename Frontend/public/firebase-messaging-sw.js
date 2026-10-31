@@ -106,7 +106,7 @@ async function handleColdStartPush(payload = {}) {
   // which previously suppressed the only system notification for the push.
   await self.registration.showNotification(title, {
     body,
-    icon: payload?.notification?.icon || "/logo.png?v=2",
+    icon: payload?.notification?.icon || "/brandlogo.png?v=2",
     image,
     tag: getNotificationKey(payload),
     renotify: true,
@@ -188,7 +188,7 @@ function loadFirebaseWebConfig() {
   
       self.registration.showNotification(title, {
         body,
-        icon: "/logo.png?v=2",
+        icon: "/brandlogo.png?v=2",
         image,
         tag: notificationKey,
         renotify: true,

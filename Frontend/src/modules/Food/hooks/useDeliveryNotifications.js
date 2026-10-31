@@ -341,7 +341,7 @@ export const useDeliveryNotifications = () => {
             requireInteraction: true,
             silent: false,
             vibrate: [200, 100, 200, 100, 300],
-            icon: '/logo.png?v=2',
+            icon: '/brandlogo.png?v=2',
             data: notificationOptions.data,
           });
           return;
@@ -353,7 +353,7 @@ export const useDeliveryNotifications = () => {
         tag: notificationOptions.tag,
         requireInteraction: true,
         silent: false,
-        icon: '/logo.png',
+        icon: '/brandlogo.png',
         data: notificationOptions.data,
       });
     } catch (error) {

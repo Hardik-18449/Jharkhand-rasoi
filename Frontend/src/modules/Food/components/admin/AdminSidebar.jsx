@@ -182,7 +182,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
   }
   const [logoUrl, setLogoUrl] = useState(() => {
     const cached = getCachedSettings();
-    return cached?.logo?.url || "/logo.png";
+    return cached?.logo?.url || "/brandlogo.png";
   });
   const [companyName, setCompanyName] = useState(() => getCachedSettings()?.companyName || "Jharkhand Rasoi");
 
@@ -202,7 +202,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
         if (settings?.logo?.url) {
           setLogoUrl(settings.logo.url);
         } else if (!cached?.logo?.url) {
-          setLogoUrl("/logo.png");
+          setLogoUrl("/brandlogo.png");
         }
         if (settings?.companyName) {
           setCompanyName(settings.companyName);
@@ -220,7 +220,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
       if (cached?.logo?.url) {
         setLogoUrl(cached.logo.url);
       } else {
-        setLogoUrl("/logo.png");
+        setLogoUrl("/brandlogo.png");
       }
       if (cached?.companyName) {
         setCompanyName(cached.companyName);
@@ -707,14 +707,14 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
               <div className="flex items-center gap-2 animate-[slideIn_0.3s_ease-out]">
                 <div className="w-28 h-12 rounded-lg flex items-center justify-center shadow-black/20">
                   <img
-                    src={logoUrl || "/logo.png"}
+                    src={logoUrl || "/brandlogo.png"}
                     alt={companyName || "Jharkhand Rasoi"}
                     className="w-28 h-10 object-contain"
                     loading="lazy"
                     onError={(e) => {
                       if (!e.currentTarget.dataset.fallback) {
                         e.currentTarget.dataset.fallback = "true";
-                        e.currentTarget.src = "/logo.png";
+                        e.currentTarget.src = "/brandlogo.png";
                       }
                     }}
                   />
@@ -725,14 +725,14 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
               <div className="w-full flex items-center justify-center">
                 <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shadow-lg shadow-black/20 ring-1 ring-white/10">
                   <img
-                    src={logoUrl || "/logo.png"}
+                    src={logoUrl || "/brandlogo.png"}
                     alt={companyName || "Jharkhand Rasoi"}
                     className="w-8 h-8 object-contain"
                     loading="lazy"
                     onError={(e) => {
                       if (!e.currentTarget.dataset.fallback) {
                         e.currentTarget.dataset.fallback = "true";
-                        e.currentTarget.src = "/logo.png";
+                        e.currentTarget.src = "/brandlogo.png";
                       }
                     }}
                   />

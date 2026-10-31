@@ -6,7 +6,7 @@ import { Button } from "@food/components/ui/button"
 import { toast } from "sonner"
 import { restaurantAPI } from "@food/api"
 import { useAppLogo } from "@food/hooks/useAppLogo"
-import logoNew from "@/assets/logo.png"
+import logoNew from "@/assets/brandlogo.png"
 
 const DEFAULT_COUNTRY_CODE = "+91"
 

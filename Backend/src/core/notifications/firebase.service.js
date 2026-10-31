@@ -215,7 +215,7 @@ const buildMessagePayload = (payload = {}, token) => {
         message.webpush.notification = {
             title: notification.title,
             body: notification.body,
-            icon: image || payload.icon || '/logo.png'
+            icon: image || payload.icon || '/brandlogo.png'
         };
 
         message.apns.payload.aps.alert = {

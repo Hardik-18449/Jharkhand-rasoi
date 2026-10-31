@@ -35,7 +35,7 @@ function RestaurantGrid({
   isFavorite,
   onToggleFavorite,
 }) {
-  const logoUrl = useAppLogo('user_app') || "/logo.png";
+  const logoUrl = useAppLogo('user_app') || "/brandlogo.png";
 
   if (restaurants.length === 0) {
     return null;
@@ -78,7 +78,7 @@ function RestaurantGrid({
                 alt="Jharkhand Rasoi"
                 className="h-full w-full object-contain"
                 onError={(e) => {
-                  e.currentTarget.src = "/logo.png";
+                  e.currentTarget.src = "/brandlogo.png";
                 }}
               />
             </div>
