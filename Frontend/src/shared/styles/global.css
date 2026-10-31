@@ -223,3 +223,79 @@ html, body {
 .overflow-y-auto {
   -webkit-overflow-scrolling: touch;
 }
+
+/* ==========================================================================
+   SYSTEM THEME ENFORCEMENT: Black text & icons across all apps & dashboards
+   System text and icons must be black (and white in dark mode),
+   including hover, focus, and active states.
+   ========================================================================== */
+.text-primary,
+button.text-primary,
+span.text-primary,
+p.text-primary,
+a.text-primary,
+label.text-primary,
+div.text-primary,
+h1.text-primary,
+h2.text-primary,
+h3.text-primary,
+h4.text-primary,
+h5.text-primary,
+h6.text-primary,
+svg.text-primary {
+  color: #000000 !important;
+}
+
+.dark .text-primary,
+.dark button.text-primary,
+.dark span.text-primary,
+.dark p.text-primary,
+.dark a.text-primary,
+.dark label.text-primary,
+.dark div.text-primary,
+.dark h1.text-primary,
+.dark h2.text-primary,
+.dark h3.text-primary,
+.dark h4.text-primary,
+.dark h5.text-primary,
+.dark h6.text-primary,
+.dark svg.text-primary {
+  color: #ffffff !important;
+}
+
+/* Hover, active, focus states - must also remain black */
+.hover\:text-primary:hover,
+.group:hover .group-hover\:text-primary,
+.focus\:text-primary:focus,
+.focus-within\:text-primary:focus-within,
+.active\:text-primary:active {
+  color: #000000 !important;
+}
+
+.dark .hover\:text-primary:hover,
+.dark .group:hover .group-hover\:text-primary,
+.dark .focus\:text-primary:focus,
+.dark .focus-within\:text-primary:focus-within,
+.dark .active\:text-primary:active {
+  color: #ffffff !important;
+}
+
+/* All filter Clear buttons, tabs, links and labels */
+button[class*="text-primary"],
+a[class*="text-primary"],
+span[class*="text-primary"] {
+  color: #000000 !important;
+}
+.dark button[class*="text-primary"],
+.dark a[class*="text-primary"],
+.dark span[class*="text-primary"] {
+  color: #ffffff !important;
+}
+
+/* System SVG icons */
+svg.stroke-primary {
+  stroke: #000000 !important;
+}
+.dark svg.stroke-primary {
+  stroke: #ffffff !important;
+}

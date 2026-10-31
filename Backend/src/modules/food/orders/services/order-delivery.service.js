@@ -415,6 +415,8 @@ export async function listOrdersAvailableDelivery(deliveryPartnerId, query) {
 
   const orderCapacity = await getDeliveryPartnerOrderCapacity(deliveryPartnerId);
   return {
+    docs: enriched,
+    items: enriched,
     ...buildPaginatedResult({ docs: enriched, total, page, limit }),
     cashLimit,
     orderCapacity,

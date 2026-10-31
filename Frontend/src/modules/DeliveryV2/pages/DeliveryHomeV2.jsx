@@ -1151,13 +1151,15 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
           availableResponse?.data?.data ||
           availableResponse?.data ||
           {};
-        const availableOrders = Array.isArray(availablePayload?.docs)
-          ? availablePayload.docs
-          : Array.isArray(availablePayload?.items)
-            ? availablePayload.items
-            : Array.isArray(availablePayload)
-              ? availablePayload
-              : [];
+        const availableOrders = Array.isArray(availablePayload?.data)
+          ? availablePayload.data
+          : Array.isArray(availablePayload?.docs)
+            ? availablePayload.docs
+            : Array.isArray(availablePayload?.items)
+              ? availablePayload.items
+              : Array.isArray(availablePayload)
+                ? availablePayload
+                : [];
 
         const nextCashLimitNotice =
           availablePayload?.cashLimit?.blocked ? availablePayload.cashLimit : null;

@@ -460,7 +460,7 @@ export default function DiningExplore50() {
                   setSortBy(null)
                   setSelectedCuisine(null)
                 }}
-                className="text-primary font-medium text-sm"
+                className="text-black dark:text-white hover:text-black dark:hover:text-white font-bold text-sm"
               >
                 Clear all
               </button>

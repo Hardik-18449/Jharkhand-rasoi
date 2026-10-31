@@ -461,7 +461,7 @@ export default function DiningExploreNear() {
                   setSortBy(null)
                   setSelectedCuisine(null)
                 }}
-                className="text-primary font-medium text-sm"
+                className="text-black dark:text-white hover:text-black dark:hover:text-white font-bold text-sm"
               >
                 Clear all
               </button>
@@ -485,7 +485,7 @@ export default function DiningExploreNear() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveFilterTab(tab.id)}
-                      className={`flex flex-col items-center gap-1 py-4 px-2 text-center relative transition-colors ${isActive ? 'bg-white text-primary' : 'text-gray-500 hover:bg-gray-100'
+                      className={`flex flex-col items-center gap-1 py-4 px-2 text-center relative transition-colors ${isActive ? 'bg-white text-black font-bold' : 'text-gray-500 hover:bg-gray-100'
                         }`}
                     >
                       {isActive && (

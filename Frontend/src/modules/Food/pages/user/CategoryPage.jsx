@@ -1697,7 +1697,7 @@ export default function CategoryPage() {
                         setSortBy(null)
                         setTimeout(() => setIsLoadingFilterResults(false), 500)
                       }}
-                      className="text-primary font-medium text-sm md:text-base hover:underline"
+                      className="text-black dark:text-white hover:text-black dark:hover:text-white font-bold text-sm md:text-base hover:underline"
                     >
                       Clear all
                     </button>
@@ -1728,11 +1728,11 @@ export default function CategoryPage() {
                                 section.scrollIntoView({ behavior: 'smooth', block: 'start' })
                               }
                             }}
-                            className={`flex flex-col items-center gap-1 py-4 px-2 text-center relative transition-colors ${isActive ? 'bg-white dark:bg-[#1a1a1a] text-primary' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            className={`flex flex-col items-center gap-1 py-4 px-2 text-center relative transition-colors ${isActive ? 'bg-white dark:bg-[#1a1a1a] text-black dark:text-white font-bold' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                               }`}
                           >
                             {isActive && (
-                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r" />
+                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-black dark:bg-white rounded-r" />
                             )}
                             <Icon className="h-5 w-5 md:h-6 md:w-6" strokeWidth={1.5} />
                             <span className="text-xs md:text-sm font-medium leading-tight">{tab.label}</span>
@@ -1766,7 +1766,7 @@ export default function CategoryPage() {
                                 : 'border-gray-200 dark:border-gray-700 hover:border-primary'
                                 }`}
                             >
-                              <span className={`text-sm md:text-base font-medium ${sortBy === option.id ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                              <span className={`text-sm md:text-base font-medium ${sortBy === option.id ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>
                                 {option.label}
                               </span>
                             </button>
@@ -1789,8 +1789,8 @@ export default function CategoryPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-primary'
                               }`}
                           >
-                            <Timer className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('under-30-mins') ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('under-30-mins') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Under 30 mins</span>
+                            <Timer className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('under-30-mins') ? 'text-black dark:text-white' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('under-30-mins') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Under 30 mins</span>
                           </button>
                           <button
                             onClick={() => toggleFilter('delivery-under-45')}
@@ -1799,8 +1799,8 @@ export default function CategoryPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-primary'
                               }`}
                           >
-                            <Timer className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('delivery-under-45') ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('delivery-under-45') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Under 45 mins</span>
+                            <Timer className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('delivery-under-45') ? 'text-black dark:text-white' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('delivery-under-45') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Under 45 mins</span>
                           </button>
                         </div>
                       </div>
@@ -1820,8 +1820,8 @@ export default function CategoryPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-primary'
                               }`}
                           >
-                            <Star className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('rating-35-plus') ? 'text-primary fill-primary' : 'text-gray-400 dark:text-gray-500'}`} />
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('rating-35-plus') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Rated 3.5+</span>
+                            <Star className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('rating-35-plus') ? 'text-black fill-black dark:text-white dark:fill-white' : 'text-gray-400 dark:text-gray-500'}`} />
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('rating-35-plus') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Rated 3.5+</span>
                           </button>
                           <button
                             onClick={() => toggleFilter('rating-4-plus')}
@@ -1830,8 +1830,8 @@ export default function CategoryPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-green-600'
                               }`}
                           >
-                            <Star className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('rating-4-plus') ? 'text-primary fill-primary' : 'text-gray-400 dark:text-gray-500'}`} />
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('rating-4-plus') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Rated 4.0+</span>
+                            <Star className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('rating-4-plus') ? 'text-black fill-black dark:text-white dark:fill-white' : 'text-gray-400 dark:text-gray-500'}`} />
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('rating-4-plus') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Rated 4.0+</span>
                           </button>
                           <button
                             onClick={() => toggleFilter('rating-45-plus')}
@@ -1840,8 +1840,8 @@ export default function CategoryPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-green-600'
                               }`}
                           >
-                            <Star className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('rating-45-plus') ? 'text-primary fill-primary' : 'text-gray-400 dark:text-gray-500'}`} />
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('rating-45-plus') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Rated 4.5+</span>
+                            <Star className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('rating-45-plus') ? 'text-black fill-black dark:text-white dark:fill-white' : 'text-gray-400 dark:text-gray-500'}`} />
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('rating-45-plus') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Rated 4.5+</span>
                           </button>
                         </div>
                       </div>
@@ -1861,8 +1861,8 @@ export default function CategoryPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-green-600'
                               }`}
                           >
-                            <MapPin className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('distance-under-1km') ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('distance-under-1km') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Under 1 km</span>
+                            <MapPin className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('distance-under-1km') ? 'text-black dark:text-white' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('distance-under-1km') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Under 1 km</span>
                           </button>
                           <button
                             onClick={() => toggleFilter('distance-under-2km')}
@@ -1871,8 +1871,8 @@ export default function CategoryPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-green-600'
                               }`}
                           >
-                            <MapPin className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('distance-under-2km') ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('distance-under-2km') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Under 2 km</span>
+                            <MapPin className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('distance-under-2km') ? 'text-black dark:text-white' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('distance-under-2km') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Under 2 km</span>
                           </button>
                         </div>
                       </div>
@@ -1892,7 +1892,7 @@ export default function CategoryPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-green-600'
                               }`}
                           >
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('price-under-200') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Under ₹200</span>
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('price-under-200') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Under ₹200</span>
                           </button>
                           <button
                             onClick={() => toggleFilter('under-250')}
@@ -1901,7 +1901,7 @@ export default function CategoryPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-green-600'
                               }`}
                           >
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('under-250') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Under ₹250</span>
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('under-250') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Under ₹250</span>
                           </button>
                           <button
                             onClick={() => toggleFilter('price-under-500')}
@@ -1910,7 +1910,7 @@ export default function CategoryPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-green-600'
                               }`}
                           >
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('price-under-500') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Under ₹500</span>
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('price-under-500') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Under ₹500</span>
                           </button>
                         </div>
                       </div>
@@ -1930,8 +1930,8 @@ export default function CategoryPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-green-600'
                               }`}
                           >
-                            <BadgePercent className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('flat-50-off') ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('flat-50-off') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Flat 50% OFF</span>
+                            <BadgePercent className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('flat-50-off') ? 'text-black dark:text-white' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('flat-50-off') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Flat 50% OFF</span>
                           </button>
                           <button
                             onClick={() => toggleFilter('price-match')}
@@ -1940,8 +1940,8 @@ export default function CategoryPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-green-600'
                               }`}
                           >
-                            <BadgePercent className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('price-match') ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('price-match') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Price Match</span>
+                            <BadgePercent className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('price-match') ? 'text-black dark:text-white' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('price-match') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Price Match</span>
                           </button>
                         </div>
                       </div>

@@ -2383,8 +2383,8 @@ export default function Home() {
                         <p className="text-sm font-semibold text-gray-900 dark:text-white truncate tracking-tight">
                           {restaurant.name}
                         </p>
-                        <p className="text-[10px] text-primary font-bold mt-1 flex items-center gap-1 uppercase tracking-wider">
-                          <Flame className="w-3.5 h-3.5 fill-primary" />
+                        <p className="text-[10px] text-black dark:text-white font-bold mt-1 flex items-center gap-1 uppercase tracking-wider">
+                          <Flame className="w-3.5 h-3.5 fill-black text-black dark:fill-white dark:text-white" />
                           Near & Fast
                         </p>
                       </div>
@@ -2424,7 +2424,7 @@ export default function Home() {
                     </div>
                     <Link
                       to="/food/user/gourmet"
-                      className="text-xs font-semibold text-primary hover:underline"
+                      className="text-xs font-semibold text-black dark:text-white hover:underline"
                     >
                       See all
                     </Link>
@@ -2653,7 +2653,7 @@ export default function Home() {
                     setSortBy(null);
                     setSelectedCuisine(null);
                   }}
-                  className="text-primary font-medium text-sm">
+                  className="text-black dark:text-white hover:text-black dark:hover:text-white font-bold text-sm">
                   Clear all
                 </button>
               </div>
@@ -2689,11 +2689,11 @@ export default function Home() {
                           }
                         }}
                         className={`flex flex-col items-center gap-1 py-4 px-2 text-center relative transition-colors ${isActive
-                          ? "bg-white dark:bg-[#1a1a1a] text-primary"
+                          ? "bg-white dark:bg-[#1a1a1a] text-black dark:text-white font-bold"
                           : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                           }`}>
                         {isActive && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r" />
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-black dark:bg-white rounded-r" />
                         )}
                         <Icon className="h-5 w-5" strokeWidth={1.5} />
                         <span className="text-xs font-medium leading-tight">
@@ -2733,7 +2733,7 @@ export default function Home() {
                             : "border-gray-200 dark:border-gray-800 hover:border-primary"
                             }`}>
                           <span
-                            className={`text-sm font-medium ${sortBy === option.id ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                            className={`text-sm font-medium ${sortBy === option.id ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                             {option.label}
                           </span>
                         </button>
@@ -2757,11 +2757,11 @@ export default function Home() {
                           : "border-gray-200 dark:border-gray-800 hover:border-primary"
                           }`}>
                         <Timer
-                          className={`h-6 w-6 ${activeFilters.has("delivery-under-30") ? "text-primary" : "text-gray-600 dark:text-gray-400"}`}
+                          className={`h-6 w-6 ${activeFilters.has("delivery-under-30") ? "text-black dark:text-white" : "text-gray-600 dark:text-gray-400"}`}
                           strokeWidth={1.5}
                         />
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("delivery-under-30") ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("delivery-under-30") ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                           Under 30 mins
                         </span>
                       </button>
@@ -2931,7 +2931,7 @@ export default function Home() {
                           : "border-gray-200 dark:border-gray-800 hover:border-primary"
                           }`}>
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("top-rated") ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("top-rated") ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                           Top Rated
                         </span>
                       </button>
@@ -2942,7 +2942,7 @@ export default function Home() {
                           : "border-gray-200 dark:border-gray-800 hover:border-primary"
                           }`}>
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("trusted") ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("trusted") ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                           Trusted by 1000+ users
                         </span>
                       </button>
@@ -2965,7 +2965,7 @@ export default function Home() {
                           : "border-gray-200 dark:border-gray-800 hover:border-primary"
                           }`}>
                         <span
-                          className={`text-sm font-medium ${activeFilters.has("has-offers") ? "text-primary" : "text-gray-700 dark:text-gray-300"}`}>
+                          className={`text-sm font-medium ${activeFilters.has("has-offers") ? "text-black dark:text-white font-bold" : "text-gray-700 dark:text-gray-300"}`}>
                           Restaurants with offers
                         </span>
                       </button>

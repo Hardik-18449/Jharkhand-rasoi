@@ -1228,6 +1228,19 @@ export async function approveRestaurant(req, res, next) {
         await invalidateCache('restaurant_detail:*');
         await invalidateCache('restaurant_menu:*');
         await invalidateCache('restaurant:*');
+
+        if (restaurant?.ownerEmail) {
+            (async () => {
+                try {
+                    const settings = await FoodBusinessSettings.findOne().lean();
+                    const pdfUrl = settings?.termsAndConditionsPdf?.url || null;
+                    await sendRestaurantOnboardingEmail(restaurant.ownerEmail, restaurant.restaurantName, pdfUrl);
+                } catch (err) {
+                    console.error('Error sending onboarding email on restaurant approval:', err);
+                }
+            })();
+        }
+
         res.status(200).json({
             success: true,
             message: 'Restaurant approved successfully',

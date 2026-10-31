@@ -1280,7 +1280,7 @@ export default function Dining() {
                   setSortBy(null)
                   setSelectedCuisine(null)
                 }}
-                className="text-primary font-medium text-sm md:text-base"
+                className="text-black dark:text-white hover:text-black dark:hover:text-white font-bold text-sm md:text-base"
               >
                 Clear all
               </button>
@@ -1304,11 +1304,11 @@ export default function Dining() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveFilterTab(tab.id)}
-                      className={`flex flex-col items-center gap-1 py-4 px-2 text-center relative transition-colors ${isActive ? 'bg-white dark:bg-[#1a1a1a] text-primary' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      className={`flex flex-col items-center gap-1 py-4 px-2 text-center relative transition-colors ${isActive ? 'bg-white dark:bg-[#1a1a1a] text-black dark:text-white font-bold' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                         }`}
                     >
                       {isActive && (
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r" />
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-black dark:bg-white rounded-r" />
                       )}
                       <Icon className="h-5 w-5 md:h-6 md:w-6" strokeWidth={1.5} />
                       <span className="text-xs md:text-sm font-medium leading-tight">{tab.label}</span>
@@ -1359,7 +1359,7 @@ export default function Dining() {
                           }`}
                       >
                         <Timer className={`h-6 w-6 ${activeFilters.has('delivery-under-30') ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
-                        <span className={`text-sm font-medium ${activeFilters.has('delivery-under-30') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Under 30 mins</span>
+                        <span className={`text-sm font-medium ${activeFilters.has('delivery-under-30') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Under 30 mins</span>
                       </button>
                       <button
                         onClick={() => toggleFilter('delivery-under-45')}
@@ -1455,7 +1455,7 @@ export default function Dining() {
                           : 'border-gray-200 dark:border-gray-700 hover:border-primary'
                           }`}
                       >
-                        <span className={`text-sm font-medium ${activeFilters.has('price-under-200') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Under ₹200</span>
+                        <span className={`text-sm font-medium ${activeFilters.has('price-under-200') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Under ₹200</span>
                       </button>
                       <button
                         onClick={() => toggleFilter('price-under-500')}
@@ -1464,7 +1464,7 @@ export default function Dining() {
                           : 'border-gray-200 dark:border-gray-700 hover:border-primary'
                           }`}
                       >
-                        <span className={`text-sm font-medium ${activeFilters.has('price-under-500') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>Under ₹500</span>
+                        <span className={`text-sm font-medium ${activeFilters.has('price-under-500') ? 'text-black dark:text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>Under ₹500</span>
                       </button>
                     </div>
                   </div>

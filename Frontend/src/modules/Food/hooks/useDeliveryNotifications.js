@@ -418,13 +418,15 @@ export const useDeliveryNotifications = () => {
             availableResult.value?.data ??
             {}
           : {};
-      const availableOrders = Array.isArray(availablePayload?.docs)
-        ? availablePayload.docs
-        : Array.isArray(availablePayload?.items)
-          ? availablePayload.items
-          : Array.isArray(availablePayload)
-            ? availablePayload
-            : [];
+      const availableOrders = Array.isArray(availablePayload?.data)
+        ? availablePayload.data
+        : Array.isArray(availablePayload?.docs)
+          ? availablePayload.docs
+          : Array.isArray(availablePayload?.items)
+            ? availablePayload.items
+            : Array.isArray(availablePayload)
+              ? availablePayload
+              : [];
 
       const recoverableOrder = availableOrders.find((order) => {
         const dispatchStatus = order?.dispatch?.status;
@@ -565,6 +567,22 @@ export const useDeliveryNotifications = () => {
       if (!isRiderOnline()) {
         debugLog('Ignored delivery FCM alert bridge because rider is offline');
         return;
+      }
+
+      const orderTargetId = detail?.orderMongoId || detail?.orderId;
+      if (orderTargetId) {
+        deliveryAPI.getOrderById(orderTargetId).then((res) => {
+          const raw = res?.data?.data || res?.data;
+          if (raw) {
+            const normalized = normalizeIncomingOrder(raw);
+            if (normalized && (normalized.orderId || normalized.orderMongoId)) {
+              setNewOrder(normalized);
+              handleIncomingOrderAlert(normalized);
+            }
+          }
+        }).catch((e) => {
+          debugWarn('Direct fetch of FCM order failed:', e);
+        });
       }
 
       const hintedOrder = normalizeIncomingOrder({

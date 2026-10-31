@@ -1381,7 +1381,7 @@ export default function Under250() {
               <span
                 className={`text-[11px] sm:text-xs text-center leading-tight line-clamp-1 w-full px-0.5 transition-colors ${
                   !activeCategory
-                    ? 'font-black text-black dark:text-[#FEC600]'
+                    ? 'font-black text-black dark:text-white'
                     : 'font-semibold text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white'
                 }`}
               >
@@ -1434,7 +1434,7 @@ export default function Under250() {
                     <span
                       className={`text-[11px] sm:text-xs text-center leading-tight line-clamp-1 w-full px-0.5 transition-colors ${
                         isActive
-                          ? 'font-black text-black dark:text-[#FEC600]'
+                          ? 'font-black text-black dark:text-white'
                           : 'font-semibold text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white'
                       }`}
                       title={category.name}
@@ -1641,7 +1641,7 @@ export default function Under250() {
                 <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Sort By</h2>
                 <button
                   onClick={handleClearAll}
-                  className="text-yellow-600 dark:text-[#FEC600] font-bold text-sm md:text-base hover:underline"
+                  className="text-black dark:text-white hover:text-black dark:hover:text-white font-bold text-sm md:text-base hover:underline"
                 >
                   Clear all
                 </button>

@@ -591,7 +591,7 @@ export default function CreateManualOrderModal({ isOpen, onClose, onOrderCreated
             <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-gray-200 dark:border-zinc-800 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                  <PhoneCall className="w-3.5 h-3.5 text-[#FEC600]" />
+                  <PhoneCall className="w-3.5 h-3.5 text-black dark:text-white" />
                   1. Customer Details
                 </span>
                 {customerLookupResult && (
@@ -667,7 +667,7 @@ export default function CreateManualOrderModal({ isOpen, onClose, onOrderCreated
             <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-gray-200 dark:border-zinc-800 shadow-sm space-y-3">
               <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-[#FEC600]" />
+                  <MapPin className="w-3.5 h-3.5 text-black dark:text-white" />
                   2. Landmark Search & Map Pin Drop
                 </span>
                 <span className="text-[11px] font-normal text-gray-500">
@@ -693,7 +693,7 @@ export default function CreateManualOrderModal({ isOpen, onClose, onOrderCreated
                 <div ref={mapContainerRef} className="w-full h-full" />
                 {isMapLoading && (
                   <div className="absolute inset-0 bg-white/80 dark:bg-zinc-900/80 flex flex-col items-center justify-center gap-2">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#FEC600]" />
+                    <Loader2 className="w-6 h-6 animate-spin text-black dark:text-white" />
                     <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
                       Loading Map...
                     </span>
@@ -712,7 +712,7 @@ export default function CreateManualOrderModal({ isOpen, onClose, onOrderCreated
                 )}
                 {/* Floating Map Tip */}
                 <div className="absolute bottom-2 left-2 z-10 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-bold text-white shadow pointer-events-none flex items-center gap-1.5">
-                  <Navigation className="w-3 h-3 text-[#FEC600]" />
+                  <Navigation className="w-3 h-3 text-black dark:text-white" />
                   Drag marker or click map to move delivery pin
                 </div>
               </div>
@@ -762,7 +762,7 @@ export default function CreateManualOrderModal({ isOpen, onClose, onOrderCreated
               {/* Card 3: Restaurant Selector */}
               <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-gray-200 dark:border-zinc-800 shadow-sm space-y-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-[#FEC600]" />
+                  <Building2 className="w-3.5 h-3.5 text-black dark:text-white" />
                   3. Select Restaurant
                 </span>
 
@@ -793,7 +793,7 @@ export default function CreateManualOrderModal({ isOpen, onClose, onOrderCreated
                 <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-gray-200 dark:border-zinc-800 shadow-sm space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                      <UtensilsCrossed className="w-3.5 h-3.5 text-[#FEC600]" />
+                      <UtensilsCrossed className="w-3.5 h-3.5 text-black dark:text-white" />
                       4. Menu & Dishes
                     </span>
                     <span className="text-xs font-bold text-gray-500">
@@ -837,7 +837,7 @@ export default function CreateManualOrderModal({ isOpen, onClose, onOrderCreated
                   <div className="max-h-[160px] overflow-y-auto space-y-1.5 pr-1 border-t border-b border-gray-100 dark:border-zinc-800 py-1.5">
                     {isLoadingMenu ? (
                       <div className="flex items-center justify-center py-6">
-                        <Loader2 className="w-5 h-5 animate-spin text-[#FEC600]" />
+                        <Loader2 className="w-5 h-5 animate-spin text-black dark:text-white" />
                       </div>
                     ) : filteredDishes.length === 0 ? (
                       <div className="text-center py-4 text-xs text-gray-400">
@@ -869,7 +869,7 @@ export default function CreateManualOrderModal({ isOpen, onClose, onOrderCreated
                                 <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
                                   {dish.name}
                                 </p>
-                                <p className="text-[11px] font-extrabold text-[#FEC600] dark:text-[#FEC600]">
+                                <p className="text-[11px] font-extrabold text-black dark:text-white dark:text-black dark:text-white">
                                   ₹{dish.price}
                                 </p>
                               </div>
@@ -978,7 +978,7 @@ export default function CreateManualOrderModal({ isOpen, onClose, onOrderCreated
                 </div>
                 <div className="flex justify-between text-sm font-black text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-zinc-700">
                   <span>Total Amount (COD):</span>
-                  <span className="text-base text-black dark:text-[#FEC600]">
+                  <span className="text-base text-black dark:text-black dark:text-white">
                     ₹{pricingBreakdown?.total ?? 0}
                   </span>
                 </div>
