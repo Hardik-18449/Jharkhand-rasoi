@@ -1293,14 +1293,14 @@ export default function Profile() {
               </Button>
               <Button
                 type="button"
-                className="flex-1 rounded-xl bg-secondary hover:bg-[#3c0f3d] text-white"
+                className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold shadow-sm"
                 onClick={() => {
                   setLogoutConfirmOpen(false);
                   handleLogout();
                 }}
                 disabled={isLoggingOut}
               >
-                Yes
+                {isLoggingOut ? "Logging out..." : "Yes"}
               </Button>
             </div>
           </div>

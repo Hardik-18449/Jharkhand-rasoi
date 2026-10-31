@@ -1148,7 +1148,7 @@ export default function ExploreMore() {
                     setLogoutConfirmOpen(false)
                   }}
                   disabled={isLoggingOut}
-                  className="rounded-2xl bg-primary px-4 py-3 text-sm font-bold text-white transition-all hover:bg-[#6a2f56] active:scale-95 disabled:opacity-50"
+                  className="rounded-2xl bg-red-600 hover:bg-red-700 px-4 py-3 text-sm font-bold text-white transition-all active:scale-95 disabled:opacity-50 shadow-sm"
                 >
                   {isLoggingOut ? "Logging out..." : "Yes"}
                 </button>
