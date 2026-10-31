@@ -69,10 +69,8 @@ export default function DeliverySettings() {
     setTimeout(() => setShowSuccessToast(false), 3500)
   }
 
-  // Smooth scroll
-  useEffect(() => {
-    useRestaurantLenis()
-  }, [])
+  // Native smooth scrolling within RestaurantLayout
+  useRestaurantLenis()
 
   const syncStatusLocally = (status) => {
     const value = Boolean(status)
