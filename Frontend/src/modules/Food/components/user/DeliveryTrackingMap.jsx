@@ -6,7 +6,7 @@ import {
   DirectionsService, 
   Polyline
 } from '@react-google-maps/api';
-import bikeLogo from '@food/assets/bikebrandlogo.png';
+import bikeLogo from '@food/assets/bikelogo.png';
 import useOrderLocationSubscription from '@food/hooks/useOrderLocationSubscription';
 import { useGoogleMapsApiKey } from '@food/utils/googleMapsApiKey';
 import { subscribeLocationUpdates } from '@food/utils/userSocketManager';
