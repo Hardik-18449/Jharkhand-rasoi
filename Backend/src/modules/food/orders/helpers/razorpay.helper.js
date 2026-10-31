@@ -167,3 +167,46 @@ export function verifyWebhookSignature(body, signature) {
         return false;
     }
 }
+
+/**
+ * Initiate a refund for a Razorpay payment.
+ * @param {string} paymentId - Payment ID to refund
+ * @param {number} amountRupees - Refund amount in rupees
+ * @param {object} options - Optional { receipt, reason, notes }
+ * @returns {Promise<{ success: boolean, refundId?: string, status?: string, error?: string }>}
+ */
+export async function initiateRazorpayRefund(paymentId, amountRupees, options = {}) {
+    const instance = getRazorpayInstance();
+    if (!instance) {
+        return { success: false, error: 'Razorpay is not configured' };
+    }
+    if (!paymentId) {
+        return { success: false, error: 'Payment ID is required for refund' };
+    }
+    try {
+        const amountPaise = Math.round(Number(amountRupees || 0) * 100);
+        const refundPayload = {};
+        if (amountPaise > 0) refundPayload.amount = amountPaise;
+        if (options.receipt) refundPayload.receipt = options.receipt;
+        if (options.notes || options.reason) {
+            refundPayload.notes = {
+                ...(options.notes || {}),
+                reason: options.reason || 'Order refund'
+            };
+        }
+
+        const refund = await instance.payments.refund(paymentId, refundPayload);
+        return {
+            success: true,
+            refundId: refund.id,
+            status: refund.status || 'processed',
+            raw: refund
+        };
+    } catch (err) {
+        console.error('Razorpay refund error for payment ' + paymentId + ':', err?.message || err);
+        return {
+            success: false,
+            error: err?.error?.description || err?.message || 'Refund failed'
+        };
+    }
+}
