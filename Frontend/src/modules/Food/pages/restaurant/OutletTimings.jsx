@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import Lenis from "lenis"
-import { ArrowLeft, ChevronUp, ChevronDown, Clock, Edit2 } from "lucide-react"
+import useRestaurantLenis from "@food/hooks/useRestaurantLenis"
+import { ArrowLeft, ChevronUp, ChevronDown, Clock, CheckCircle2, Store } from "lucide-react"
 import { Switch } from "@food/components/ui/switch"
 import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker"
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"
@@ -10,6 +10,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"
 import dayjs from "dayjs"
 import { useCompanyName } from "@food/hooks/useCompanyName"
 import { restaurantAPI } from "@food/api"
+
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -37,7 +38,7 @@ const formatTime12Hour = (time24) => {
   const [hours, minutes] = time24.split(":").map(Number)
   const period = hours >= 12 ? 'PM' : 'AM'
   const hours12 = hours % 12 || 12
-  const minutesStr = minutes.toString().padStart(2, '0')
+  const minutesStr = (minutes || 0).toString().padStart(2, '0')
   return `${hours12}:${minutesStr} ${period}`
 }
 
@@ -58,9 +59,14 @@ export default function OutletTimings() {
   const isInternalUpdate = useRef(false)
   const [days, setDays] = useState(getDefaultDays)
   const [loading, setLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastSavedTime, setLastSavedTime] = useState(null)
   const saveTimerRef = useRef(null)
 
-  // Load from backend on mount.
+  // Use native smooth scroll inside RestaurantLayout (no window scroll-jacking)
+  useRestaurantLenis()
+
+  // Load from backend on mount
   useEffect(() => {
     let mounted = true
     ;(async () => {
@@ -82,44 +88,28 @@ export default function OutletTimings() {
     }
   }, [])
 
-  // Save to backend whenever days change (debounced).
+  // Save to backend whenever days change (debounced)
   useEffect(() => {
     if (loading) return
     if (!isInternalUpdate.current) return // Only save if the user made a change
     
+    setIsSaving(true)
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     saveTimerRef.current = setTimeout(async () => {
       try {
         await restaurantAPI.saveOutletTimings(days)
         window.dispatchEvent(new Event("outletTimingsUpdated"))
+        setLastSavedTime(new Date())
       } catch (error) {
         debugError("Error saving outlet timings to backend:", error)
+      } finally {
+        setIsSaving(false)
       }
-    }, 500)
+    }, 600)
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
   }, [days, loading])
-
-  // Lenis smooth scrolling
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    })
-
-    function raf(time) {
-      lenis.raf(time)
-      requestAnimationFrame(raf)
-    }
-
-    requestAnimationFrame(raf)
-
-    return () => {
-      lenis.destroy()
-    }
-  }, [])
 
   const toggleDay = (day) => {
     setExpandedDay(expandedDay === day ? null : day)
@@ -128,14 +118,15 @@ export default function OutletTimings() {
   const toggleDayOpen = (day) => {
     isInternalUpdate.current = true
     setDays(prev => {
-      const newOpen = !prev[day].isOpen
+      const current = prev[day] || { isOpen: true, openingTime: "09:00", closingTime: "22:00" }
+      const newOpen = !current.isOpen
       return {
         ...prev,
         [day]: {
-          ...prev[day],
+          ...current,
           isOpen: newOpen,
-          openingTime: newOpen ? (prev[day].openingTime || "09:00") : "",
-          closingTime: newOpen ? (prev[day].closingTime || "22:00") : ""
+          openingTime: newOpen ? (current.openingTime || "09:00") : "",
+          closingTime: newOpen ? (current.closingTime || "22:00") : ""
         }
       }
     })
@@ -143,109 +134,170 @@ export default function OutletTimings() {
 
   const handleTimeChange = (day, timeType, newTime) => {
     if (!newTime) {
-      debugWarn('?? No time value received in handleTimeChange')
+      debugWarn('No time value received in handleTimeChange')
       return
     }
     
     isInternalUpdate.current = true
     const timeString = timeToString(newTime)
     
-    // Validate time string format
     if (!timeString || !timeString.includes(":")) {
-      debugWarn('?? Invalid time string generated:', timeString)
+      debugWarn('Invalid time string generated:', timeString)
       return
     }
     
-    debugLog(`?? Time changed for ${day} - ${timeType}: ${timeString}`)
+    debugLog(`Time changed for ${day} - ${timeType}: ${timeString}`)
     
     setDays(prev => ({
       ...prev,
       [day]: {
-        ...prev[day],
+        ...(prev[day] || {}),
         [timeType]: timeString
       }
     }))
   }
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate("/food/restaurant")
+    }
+  }
+
   const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+  const openCount = dayNames.filter(d => days[d]?.isOpen).length
 
   if (loading) {
     return (
-      <div className="min-h-full bg-white flex items-center justify-center">
-        <div className="text-sm text-gray-600">Loading outlet timings...</div>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-10 h-10 border-4 border-gray-200 border-t-primary rounded-full animate-spin mb-4" />
+        <p className="text-sm font-semibold text-gray-600">Loading outlet timings...</p>
       </div>
     )
   }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <div className="min-h-full bg-white overflow-x-hidden">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-50">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/food/restaurant/explore")}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-6 h-6 text-gray-900" />
-            </button>
-            <h1 className="text-lg font-bold text-gray-900">Outlet timings</h1>
+      <div className="w-full min-h-full bg-gray-50/60 pb-16">
+        {/* Responsive Page Header */}
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-xs">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                onClick={handleBack}
+                className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-700 hover:text-gray-900"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Outlet Timings</h1>
+                <p className="text-xs text-gray-500 hidden sm:block truncate">
+                  Configure operating hours for {companyName || "your restaurant"}
+                </p>
+              </div>
+            </div>
+
+            {/* Auto-save status indicator */}
+            <div className="flex items-center gap-2 shrink-0">
+              {isSaving ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  Saving...
+                </span>
+              ) : lastSavedTime ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  Saved
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-gray-500 bg-gray-100">
+                  Auto-sync active
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="px-4 py-6">
-          {/* Jharkhand Rasoi delivery Section Header */}
-          <div className="mb-6">
-            <div className="text-center mb-2">
-              <h2 className="text-base font-semibold text-blue-600">{companyName} delivery</h2>
+        {/* Content Container (Constrained width on Desktop, full width on Mobile) */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          {/* Status Overview Card */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Store className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-900">{companyName || "Outlet"} Operating Hours</h2>
+                <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                  Customers can only place orders during your active open hours
+                </p>
+              </div>
             </div>
-            <div className="h-0.5 bg-blue-600"></div>
+            <div className="flex items-center gap-2 self-start sm:self-center">
+              <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {openCount} / 7 Days Open
+              </span>
+            </div>
           </div>
 
-          {/* Day-wise Accordion */}
-          <div className="space-y-2">
+          {/* Day-wise Accordion Cards */}
+          <div className="space-y-3">
             {dayNames.map((day, index) => {
               const dayData = days[day] || { isOpen: true, openingTime: "09:00", closingTime: "22:00" }
               const isExpanded = expandedDay === day
 
               return (
-                <motion.div
+                <div
                   key={day}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.03 }}
-                  className="bg-white border border-gray-200 rounded-sm overflow-hidden"
+                  className={`bg-white border rounded-2xl overflow-hidden transition-all duration-200 shadow-xs ${
+                    isExpanded ? "border-gray-300 ring-1 ring-gray-200" : "border-gray-200 hover:border-gray-300"
+                  }`}
                 >
-                  {/* Day Header */}
+                  {/* Day Header Row */}
                   <div
-                    className={`w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-color transition-all ${isExpanded ? "bg-gray-100" : ""}`}
+                    className={`w-full flex items-center justify-between px-4 sm:px-6 py-4 cursor-pointer select-none transition-colors ${
+                      isExpanded ? "bg-gray-50/70" : "hover:bg-gray-50/40"
+                    }`}
+                    onClick={() => toggleDay(day)}
                   >
-                    <button
-                      onClick={() => toggleDay(day)}
-                      className="flex items-center gap-3 flex-1 text-left"
-                    >
-                      {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 text-gray-700" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-gray-700" />
-                      )}
-                      <span className="text-base font-medium text-gray-900">{day}</span>
-                    </button>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-gray-700">{dayData.isOpen ? "Open" : "Close"}</span>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <Switch
-                          checked={dayData.isOpen}
-                          onCheckedChange={() => toggleDayOpen(day)}
-                          className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-gray-300"
-                        />
+                    <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                      <div className="text-gray-500">
+                        {isExpanded ? (
+                          <ChevronUp className="w-5 h-5 text-gray-700" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-gray-400" />
+                        )}
                       </div>
+                      <div className="min-w-0">
+                        <span className="text-base font-bold text-gray-900 block truncate">{day}</span>
+                        <span className="text-xs text-gray-500 block truncate mt-0.5">
+                          {dayData.isOpen
+                            ? `${formatTime12Hour(dayData.openingTime)} – ${formatTime12Hour(dayData.closingTime)}`
+                            : "Closed all day"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0 ml-3" onClick={(e) => e.stopPropagation()}>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                        dayData.isOpen
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-gray-100 text-gray-500 border border-gray-200"
+                      }`}>
+                        {dayData.isOpen ? "Open" : "Closed"}
+                      </span>
+                      <Switch
+                        checked={dayData.isOpen}
+                        onCheckedChange={() => toggleDayOpen(day)}
+                        className="data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-gray-300"
+                        aria-label={`Toggle open status for ${day}`}
+                      />
                     </div>
                   </div>
 
-                  {/* Expanded Content */}
+                  {/* Expanded Content with 2-Column Responsive Grid on Desktop */}
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.div
@@ -253,55 +305,38 @@ export default function OutletTimings() {
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
+                        className="overflow-hidden border-t border-gray-100 bg-white"
                       >
-                        <div className="p-4 space-y-4 border-t border-gray-100">
+                        <div className="p-4 sm:p-6">
                           {dayData.isOpen ? (
-                            <>
-                              {/* Opening Time */}
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                                  <Clock className="w-4 h-4" />
-                                  Opening time
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                              {/* Opening Time Box */}
+                              <div className="bg-gray-50/80 rounded-xl p-4 border border-gray-200/80 space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-gray-700 flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-emerald-600" />
+                                  Opening Time
                                 </label>
-                                <div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50/60">
+                                <div className="bg-white rounded-lg border border-gray-200 px-3 py-1.5 shadow-2xs">
                                   <MobileTimePicker
                                     value={stringToTime(dayData.openingTime)}
                                     onChange={(newValue) => {
-                                      debugLog('?? Opening time picker onChange:', newValue)
-                                      if (newValue) {
-                                        handleTimeChange(day, "openingTime", newValue)
-                                      }
+                                      if (newValue) handleTimeChange(day, "openingTime", newValue)
                                     }}
                                     onAccept={(newValue) => {
-                                      debugLog('? Opening time picker onAccept:', newValue)
-                                      if (newValue) {
-                                        handleTimeChange(day, "openingTime", newValue)
-                                      }
+                                      if (newValue) handleTimeChange(day, "openingTime", newValue)
                                     }}
                                     slotProps={{
                                       textField: {
-                                        variant: "outlined",
+                                        variant: "standard",
                                         size: "small",
-                                        placeholder: "Select opening time",
+                                        InputProps: { disableUnderline: true },
                                         sx: {
-                                          "& .MuiOutlinedInput-root": {
-                                            height: "36px",
-                                            fontSize: "12px",
-                                            backgroundColor: "white",
-                                            "& fieldset": {
-                                              borderColor: "#e5e7eb",
-                                            },
-                                            "&:hover fieldset": {
-                                              borderColor: "#d1d5db",
-                                            },
-                                            "&.Mui-focused fieldset": {
-                                              borderColor: "#000",
-                                            },
-                                          },
+                                          width: "100%",
                                           "& .MuiInputBase-input": {
-                                            padding: "8px 12px",
-                                            fontSize: "12px",
+                                            fontSize: "15px",
+                                            fontWeight: "700",
+                                            color: "#111827",
+                                            padding: "6px 0",
                                           },
                                         },
                                       },
@@ -309,55 +344,38 @@ export default function OutletTimings() {
                                     format="hh:mm a"
                                   />
                                 </div>
-                                <p className="text-xs text-gray-500">
-                                  Current: {formatTime12Hour(dayData.openingTime)}
+                                <p className="text-[11px] text-gray-500 font-medium">
+                                  Currently: <span className="font-bold text-gray-800">{formatTime12Hour(dayData.openingTime)}</span>
                                 </p>
                               </div>
 
-                              {/* Closing Time */}
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                                  <Clock className="w-4 h-4" />
-                                  Closing time
+                              {/* Closing Time Box */}
+                              <div className="bg-gray-50/80 rounded-xl p-4 border border-gray-200/80 space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-gray-700 flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-amber-600" />
+                                  Closing Time
                                 </label>
-                                <div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50/60">
+                                <div className="bg-white rounded-lg border border-gray-200 px-3 py-1.5 shadow-2xs">
                                   <MobileTimePicker
                                     value={stringToTime(dayData.closingTime)}
                                     onChange={(newValue) => {
-                                      debugLog('?? Closing time picker onChange:', newValue)
-                                      if (newValue) {
-                                        handleTimeChange(day, "closingTime", newValue)
-                                      }
+                                      if (newValue) handleTimeChange(day, "closingTime", newValue)
                                     }}
                                     onAccept={(newValue) => {
-                                      debugLog('? Closing time picker onAccept:', newValue)
-                                      if (newValue) {
-                                        handleTimeChange(day, "closingTime", newValue)
-                                      }
+                                      if (newValue) handleTimeChange(day, "closingTime", newValue)
                                     }}
                                     slotProps={{
                                       textField: {
-                                        variant: "outlined",
+                                        variant: "standard",
                                         size: "small",
-                                        placeholder: "Select closing time",
+                                        InputProps: { disableUnderline: true },
                                         sx: {
-                                          "& .MuiOutlinedInput-root": {
-                                            height: "36px",
-                                            fontSize: "12px",
-                                            backgroundColor: "white",
-                                            "& fieldset": {
-                                              borderColor: "#e5e7eb",
-                                            },
-                                            "&:hover fieldset": {
-                                              borderColor: "#d1d5db",
-                                            },
-                                            "&.Mui-focused fieldset": {
-                                              borderColor: "#000",
-                                            },
-                                          },
+                                          width: "100%",
                                           "& .MuiInputBase-input": {
-                                            padding: "8px 12px",
-                                            fontSize: "12px",
+                                            fontSize: "15px",
+                                            fontWeight: "700",
+                                            color: "#111827",
+                                            padding: "6px 0",
                                           },
                                         },
                                       },
@@ -365,19 +383,28 @@ export default function OutletTimings() {
                                     format="hh:mm a"
                                   />
                                 </div>
-                                <p className="text-xs text-gray-500">
-                                  Current: {formatTime12Hour(dayData.closingTime)}
+                                <p className="text-[11px] text-gray-500 font-medium">
+                                  Currently: <span className="font-bold text-gray-800">{formatTime12Hour(dayData.closingTime)}</span>
                                 </p>
                               </div>
-                            </>
+                            </div>
                           ) : (
-                            <p className="text-sm text-gray-500 pl-6">This day is closed</p>
+                            <div className="py-6 px-4 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-center space-y-2">
+                              <p className="text-sm font-semibold text-gray-600">This outlet is marked as closed on {day}</p>
+                              <button
+                                type="button"
+                                onClick={() => toggleDayOpen(day)}
+                                className="px-4 py-1.5 rounded-lg text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+                              >
+                                Reopen {day}
+                              </button>
+                            </div>
                           )}
                         </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </motion.div>
+                </div>
               )
             })}
           </div>
@@ -386,4 +413,3 @@ export default function OutletTimings() {
     </LocalizationProvider>
   )
 }
-

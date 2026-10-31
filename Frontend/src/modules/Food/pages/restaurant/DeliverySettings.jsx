@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation"
 import { motion, AnimatePresence } from "framer-motion"
-import Lenis from "lenis"
+import useRestaurantLenis from "@food/hooks/useRestaurantLenis"
 import {
   ArrowLeft,
   Truck,
@@ -71,17 +71,7 @@ export default function DeliverySettings() {
 
   // Smooth scroll
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    })
-    function raf(time) {
-      lenis.raf(time)
-      requestAnimationFrame(raf)
-    }
-    requestAnimationFrame(raf)
-    return () => lenis.destroy()
+    useRestaurantLenis()
   }, [])
 
   const syncStatusLocally = (status) => {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation"
-import Lenis from "lenis"
+import useRestaurantLenis from "@food/hooks/useRestaurantLenis"
 import { ArrowLeft, ChevronDown } from "lucide-react"
 import BottomPopup from "@delivery/components/BottomPopup"
 import { restaurantAPI } from "@food/api"
@@ -110,25 +110,8 @@ export default function EditRestaurantAddress() {
     return () => window.removeEventListener("addressUpdated", handleAddressUpdate)
   }, [])
 
-  // Lenis smooth scrolling
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    })
-
-    function raf(time) {
-      lenis.raf(time)
-      requestAnimationFrame(raf)
-    }
-
-    requestAnimationFrame(raf)
-
-    return () => {
-      lenis.destroy()
-    }
-  }, [])
+  // Native smooth scrolling within RestaurantLayout
+  useRestaurantLenis()
 
   // Handle opening Google Maps app
   const handleViewOnMap = () => {
