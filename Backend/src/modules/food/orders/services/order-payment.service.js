@@ -1,3 +1,4 @@
+import { createInitialTransaction } from './foodTransaction.service.js';
 import { FoodOrder } from '../models/order.model.js';
 import { FoodTransaction } from '../models/foodTransaction.model.js';
 import {
@@ -95,7 +96,7 @@ export async function syncRazorpayQrPayment(orderDoc) {
   }
 
   const qr = payment.qr || {};
-  if (!qr.qrId || !isRazorpayConfigured()) return payment;
+  if (!qr.qrId || String(qr.qrId).startsWith('qr_test_') || !isRazorpayConfigured()) return payment;
 
   try {
     const [result, remoteQr] = await Promise.all([

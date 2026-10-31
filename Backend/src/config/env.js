@@ -25,6 +25,32 @@ const resolveMongoUri = () => {
     return process.env.MONGO_URI || process.env.MONGODB_URI || process.env.MONGO_URI_LOCAL || 'mongodb://127.0.0.1:27017/tuggo';
 };
 
+export const resolveRazorpayKeys = () => {
+    const mongoEnv = (process.env.MONGO_ENV || '').toLowerCase().trim();
+    const nodeEnv = (process.env.NODE_ENV || '').toLowerCase().trim();
+    const isProduction = mongoEnv === 'production' || mongoEnv === 'prod' || nodeEnv === 'production';
+
+    const liveKeyId = process.env.RAZORPAY_LIVE_KEY_ID || 'rzp_live_Tu71kQFx3AofXH';
+    const liveKeySecret = process.env.RAZORPAY_LIVE_KEY_SECRET || 'ixU3NeYyW5A6sXdzeC3GY090';
+
+    const testKeyId = process.env.RAZORPAY_TEST_KEY_ID || 'rzp_test_SbjooFQK8nvU6V';
+    const testKeySecret = process.env.RAZORPAY_TEST_KEY_SECRET || 'Av7Mz5DBxwD5C6sUGw66qAGE';
+
+    if (isProduction) {
+        return {
+            keyId: liveKeyId,
+            keySecret: liveKeySecret,
+            isLive: true,
+        };
+    }
+
+    return {
+        keyId: process.env.RAZORPAY_KEY_ID || testKeyId,
+        keySecret: process.env.RAZORPAY_KEY_SECRET || testKeySecret,
+        isLive: false,
+    };
+};
+
 export const config = {
     // Basic server config
     port: process.env.PORT || 5000,
@@ -105,8 +131,15 @@ export const config = {
     socketCorsOrigin: process.env.SOCKET_CORS_ORIGIN || '*',
 
     // Razorpay (payments)
-    razorpayKeyId: process.env.RAZORPAY_KEY_ID,
-    razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
+    get razorpayKeyId() {
+        return resolveRazorpayKeys().keyId;
+    },
+    get razorpayKeySecret() {
+        return resolveRazorpayKeys().keySecret;
+    },
+    get isRazorpayLive() {
+        return resolveRazorpayKeys().isLive;
+    },
     razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
 
     // Email (SMTP) – for admin forgot password OTP etc.

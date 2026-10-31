@@ -432,7 +432,7 @@ export const useDeliveryNotifications = () => {
         const dispatchStatus = order?.dispatch?.status;
         return (
           ['unassigned', 'assigned'].includes(dispatchStatus) &&
-          ['confirmed', 'preparing', 'ready_for_pickup'].includes(order?.orderStatus)
+          ['confirmed', 'accepted', 'preparing', 'ready', 'ready_for_pickup'].includes(String(order?.orderStatus || order?.status || '').toLowerCase())
         );
       });
 

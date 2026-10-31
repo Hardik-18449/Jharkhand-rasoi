@@ -712,8 +712,15 @@ export async function getOrderById(
     throw new ForbiddenError("Not your order");
   if (restaurantId && orderRestaurantId !== restaurantId.toString())
     throw new ForbiddenError("Not your restaurant order");
-  if (deliveryPartnerId && orderPartnerId !== deliveryPartnerId.toString())
-    throw new ForbiddenError("Not assigned to you");
+  if (deliveryPartnerId && orderPartnerId !== deliveryPartnerId.toString()) {
+    const isOffered = Array.isArray(order.dispatch?.offeredTo) && order.dispatch.offeredTo.some(
+      (o) => String(o?.partnerId?._id || o?.partnerId) === deliveryPartnerId.toString()
+    );
+    const isUnassigned = order.dispatch?.status === 'unassigned';
+    if (!isOffered && !isUnassigned) {
+      throw new ForbiddenError("Not assigned to you");
+    }
+  }
 
   if (deliveryPartnerId || restaurantId) {
     const sanitized = sanitizeOrderForExternal(order);

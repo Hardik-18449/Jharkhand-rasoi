@@ -132,7 +132,7 @@ export const NewOrderModal = ({ order, queuedOrders = [], onSelectOrder, onAccep
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-1000 bg-black/60 flex items-end justify-center p-0"
+      className="fixed inset-0 z-[1000] bg-black/60 flex items-end justify-center p-0"
     >
       <motion.div 
         initial={{ y: '100%' }}

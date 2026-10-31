@@ -318,7 +318,7 @@ export default function TableBookingConfirmation() {
                 <Button
                     onClick={handleBooking}
                     disabled={bookingInProgress}
-                    className="w-full h-14 bg-[#ef4444] hover:bg-red-600 text-white font-bold text-lg rounded-2xl shadow-xl shadow-red-200 transition-all active:scale-[0.98]"
+                    className="w-full h-14 bg-[#FEC600] hover:bg-yellow-400 text-black font-black text-lg rounded-2xl shadow-xl shadow-red-200 transition-all active:scale-[0.98]"
                 >
                     {bookingInProgress ? "Confirming..." : "Confirm your seat"}
                 </Button>

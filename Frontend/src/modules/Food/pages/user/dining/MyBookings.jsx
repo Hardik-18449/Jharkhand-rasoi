@@ -70,7 +70,7 @@ function ReviewModal({ booking, onClose, onSubmit }) {
                     <Button
                         onClick={handleSubmit}
                         disabled={submitting}
-                        className="w-full bg-red-500 hover:bg-red-600 text-white font-bold h-12 rounded-2xl shadow-lg shadow-red-200"
+                        className="w-full bg-[#FEC600] hover:bg-yellow-400 text-black font-black h-12 rounded-2xl shadow-lg shadow-red-200"
                     >
                         {submitting ? "Submitting..." : "Submit Review"}
                     </Button>

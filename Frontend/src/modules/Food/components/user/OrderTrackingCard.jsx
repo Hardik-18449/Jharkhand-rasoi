@@ -11,18 +11,18 @@ const CookingAnimation = memo(() => (
       <motion.div animate={{ opacity: [0, 0.8, 0], y: [0, -8, -12], scale: [0.8, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity, delay: 1, ease: "easeOut" }} className="w-1.5 h-3 bg-orange-400/60 rounded-full blur-[1px]" />
     </div>
     <motion.div animate={{ rotate: [-2, 2, -2] }} transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }} className="relative z-10 mt-1">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black dark:text-white drop-shadow-sm">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-black drop-shadow-sm">
         {/* Cooker Body */}
-        <path d="M6 10h12v6a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4v-6z" />
+        <path d="M6 10h12v6a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4v-6z" fill="#000000" fillOpacity="0.12" />
         {/* Lid Rim */}
-        <rect x="5" y="8" width="14" height="2" rx="1" />
+        <rect x="5" y="8" width="14" height="2" rx="1" fill="#000000" />
         {/* Pressure Whistle (Top) */}
-        <path d="M12 8V5" />
-        <path d="M11 5h2v2h-2z" fill="currentColor" />
+        <path d="M12 8V5" stroke="#000000" strokeWidth="2.2" />
+        <path d="M11 5h2v2h-2z" fill="#000000" />
         {/* Main Handle (Right) */}
-        <path d="M19 9l3-1v2l-3 1" fill="currentColor" strokeWidth="1" />
+        <path d="M19 9l3-1v2l-3 1" fill="#000000" stroke="#000000" strokeWidth="1.2" />
         {/* Sub Handle (Left) */}
-        <path d="M5 10H3v2h2" />
+        <path d="M5 10H3v2h2" stroke="#000000" strokeWidth="2.2" />
       </svg>
     </motion.div>
     {/* Flame below */}

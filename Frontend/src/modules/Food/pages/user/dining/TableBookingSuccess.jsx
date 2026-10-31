@@ -165,7 +165,7 @@ export default function TableBookingSuccess() {
             >
                 <Button
                     onClick={() => navigate("/food/user/bookings")}
-                    className="w-full h-14 bg-red-500 hover:bg-red-600 text-white font-bold text-lg rounded-2xl shadow-xl shadow-red-100 flex items-center justify-center gap-2"
+                    className="w-full h-14 bg-[#FEC600] hover:bg-yellow-400 text-black font-black text-lg rounded-2xl shadow-xl shadow-red-100 flex items-center justify-center gap-2"
                 >
                     <List className="w-5 h-5" />
                     View My Bookings

@@ -1769,7 +1769,56 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       {/* OVERLAYS (Persistent if active) - Outside flex container to avoid clipping and z-index issues */}
       {currentTab === 'feed' && (
         <AnimatePresence>
-          {!isModalMinimized && (
+          {!isModalMinimized && incomingOrder && orderCapacity.canAcceptMore !== false && (
+            <NewOrderModal 
+              key={getOrderMongoId(incomingOrder) || getOrderAcceptId(incomingOrder)}
+              order={incomingOrder}
+              queuedOrders={incomingOrders}
+              onSelectOrder={selectIncomingOrder}
+              onAccept={async (orderFromModal) => {
+                const acceptTarget = normalizeIncomingOrder(orderFromModal || incomingOrder);
+                const lockedId = lockedIncomingOrderIdRef.current;
+
+                if (
+                  lockedId &&
+                  acceptTarget &&
+                  !isSameOrder({ orderMongoId: lockedId, _id: lockedId }, acceptTarget)
+                ) {
+                  console.error(
+                    `[GhostAssignFix] BLOCKED: locked ${lockedId} but accept target is ${getOrderMongoId(acceptTarget) || getOrderAcceptId(acceptTarget)}`,
+                  );
+                  toast.error('Order changed while accepting. Please try again.', { duration: 4000 });
+                  return;
+                }
+
+                if (
+                  incomingOrder &&
+                  acceptTarget &&
+                  !isSameOrder(incomingOrder, acceptTarget)
+                ) {
+                  console.error('[GhostAssignFix] BLOCKED: modal order does not match visible popup.');
+                  toast.error('Order mismatch detected. Please try again.', { duration: 4000 });
+                  return;
+                }
+
+                try {
+                  await handleAcceptOffer(acceptTarget);
+                } catch (err) {
+                  const msg = String(err?.response?.data?.message || err?.message || '');
+                  const isTaken = msg.toLowerCase().includes('already accepted') || 
+                                  msg.toLowerCase().includes('another partner') ||
+                                  (err?.response?.status === 403);
+                  if (isTaken) {
+                    removeClaimedOrderFromQueue(acceptTarget, { notify: false });
+                  }
+                }
+              }}
+              onReject={() => handlePassOffer(incomingOrder)}
+              onMinimize={() => setIsModalMinimized(true)}
+            />
+          )}
+
+          {!isModalMinimized && !incomingOrder && (
             <motion.div
               key="modal-container"
               initial={{ y: '100%' }}
@@ -1779,54 +1828,6 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
               className="fixed inset-x-0 top-0 bottom-[92px] z-[300] pointer-events-none flex items-end"
             >
               <div className="w-full pointer-events-auto relative">
-                {incomingOrder && orderCapacity.canAcceptMore !== false && (
-                  <NewOrderModal 
-                    key={getOrderMongoId(incomingOrder) || getOrderAcceptId(incomingOrder)}
-                    order={incomingOrder}
-                    queuedOrders={incomingOrders}
-                    onSelectOrder={selectIncomingOrder}
-                    onAccept={async (orderFromModal) => {
-                      const acceptTarget = normalizeIncomingOrder(orderFromModal || incomingOrder);
-                      const lockedId = lockedIncomingOrderIdRef.current;
-
-                      if (
-                        lockedId &&
-                        acceptTarget &&
-                        !isSameOrder({ orderMongoId: lockedId, _id: lockedId }, acceptTarget)
-                      ) {
-                        console.error(
-                          `[GhostAssignFix] BLOCKED: locked ${lockedId} but accept target is ${getOrderMongoId(acceptTarget) || getOrderAcceptId(acceptTarget)}`,
-                        );
-                        toast.error('Order changed while accepting. Please try again.', { duration: 4000 });
-                        return;
-                      }
-
-                      if (
-                        incomingOrder &&
-                        acceptTarget &&
-                        !isSameOrder(incomingOrder, acceptTarget)
-                      ) {
-                        console.error('[GhostAssignFix] BLOCKED: modal order does not match visible popup.');
-                        toast.error('Order mismatch detected. Please try again.', { duration: 4000 });
-                        return;
-                      }
-
-                      try {
-                        await handleAcceptOffer(acceptTarget);
-                      } catch (err) {
-                        const msg = String(err?.response?.data?.message || err?.message || '');
-                        const isTaken = msg.toLowerCase().includes('already accepted') || 
-                                        msg.toLowerCase().includes('another partner') ||
-                                        (err?.response?.status === 403);
-                        if (isTaken) {
-                          removeClaimedOrderFromQueue(acceptTarget, { notify: false });
-                        }
-                      }
-                    }}
-                    onReject={() => handlePassOffer(incomingOrder)}
-                    onMinimize={() => setIsModalMinimized(true)}
-                  />
-                )}
                 {(tripStatus === 'PICKING_UP' || tripStatus === 'REACHED_PICKUP') && (
                   <PickupActionModal 
                     order={activeOrder} 

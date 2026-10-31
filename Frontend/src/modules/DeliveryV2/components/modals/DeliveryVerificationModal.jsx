@@ -472,7 +472,9 @@ const OtpModal = ({ order, onVerified, onClose }) => {
                         alt="Razorpay UPI payment QR"
                         className="h-full w-full object-contain"
                         style={{
-                          transform: 'scale(3.35) translateY(-4.5%)',
+                          transform: collectQr?.imageUrl?.includes('rzp.io')
+                            ? 'scale(3.35) translateY(-4.5%)'
+                            : 'none',
                           transformOrigin: 'center center',
                         }}
                       />
