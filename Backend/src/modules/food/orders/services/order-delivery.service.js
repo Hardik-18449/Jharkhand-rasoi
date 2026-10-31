@@ -957,7 +957,7 @@ export async function requestPickupOtp(orderId, deliveryPartnerId) {
 
   try {
     const restaurant = await mongoose.model('FoodRestaurant').findById(order.restaurantId).select('restaurantName').lean();
-    await notifyOwnersSafely(
+    void notifyOwnersSafely(
       [{ ownerType: 'RESTAURANT', ownerId: order.restaurantId }],
       {
         title: 'OTP Requested! 🔐',

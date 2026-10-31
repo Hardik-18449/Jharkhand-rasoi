@@ -1704,14 +1704,28 @@ export default function OrderTracking() {
 
         {customerDeliveryOtp && orderStatus !== 'delivered' && orderStatus !== 'cancelled' && orderStatus !== 'dead' && (
           <motion.div
-            className="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-4 shadow-sm border border-blue-100 dark:border-blue-900/30"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="w-full bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-400 dark:border-emerald-600/70 rounded-2xl p-5 sm:p-6 shadow-md flex flex-col items-center justify-center text-center"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.28 }}
           >
-            <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">Delivery OTP</p>
-            <p className="text-2xl font-extrabold text-blue-900 dark:text-blue-200 mt-1 tracking-widest">{customerDeliveryOtp}</p>
-            <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">Share this 4-digit OTP with your delivery partner at drop-off.</p>
+            <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center mb-3">
+              <ShieldCheck className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <p className="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest mb-1">
+              Delivery Handover OTP
+            </p>
+            <p className="text-[13px] text-gray-600 dark:text-gray-300 mb-4 font-medium max-w-sm">
+              Share this 4-digit code with your delivery partner at drop-off to complete delivery
+            </p>
+            <div className="w-full max-w-xs bg-white dark:bg-black/50 border-2 border-emerald-300 dark:border-emerald-700 rounded-2xl py-3.5 px-6 shadow-sm mb-3">
+              <p className="text-4xl sm:text-5xl font-black text-emerald-800 dark:text-emerald-300 tracking-[0.35em] font-mono select-all">
+                {customerDeliveryOtp}
+              </p>
+            </div>
+            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+              Only share this code when the rider arrives with your order.
+            </p>
           </motion.div>
         )}
 

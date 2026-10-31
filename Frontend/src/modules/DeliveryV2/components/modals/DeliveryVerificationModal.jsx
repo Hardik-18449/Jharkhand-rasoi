@@ -79,15 +79,29 @@ const OtpModal = ({ order, onVerified, onClose }) => {
   const orderId = order.order_id || order.orderId || order._id || 'ORD';
 
   const handleOtpChange = (index, value) => {
-    if (value && !/^\d+$/.test(value)) return;
+    const clean = value.replace(/\D/g, '');
     const newOtp = [...otp];
-    newOtp[index] = value.substring(value.length - 1);
+    newOtp[index] = clean.slice(-1);
     setOtp(newOtp);
-    if (value && index < 3) inputRefs[index + 1].current?.focus();
+    if (clean && index < 3) inputRefs[index + 1].current?.focus();
   };
 
   const handleKeyDown = (index, e) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) inputRefs[index - 1].current?.focus();
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4);
+    if (!pasted) return;
+    const digits = pasted.split('');
+    const newOtp = ['', '', '', ''];
+    digits.forEach((d, i) => {
+      newOtp[i] = d;
+    });
+    setOtp(newOtp);
+    const nextIdx = Math.min(digits.length, 3);
+    inputRefs[nextIdx]?.current?.focus();
   };
 
   const handleResendOtp = async () => {
@@ -158,41 +172,50 @@ const OtpModal = ({ order, onVerified, onClose }) => {
   const isAlreadyVerified = order?.deliveryVerification?.dropOtp?.verified;
 
   return (
-    <div className="fixed inset-0 z-[500] p-0 sm:p-4 flex items-end justify-center pointer-events-none">
+    <div className="fixed inset-0 z-[500] p-4 flex items-center justify-center pointer-events-none">
       <Backdrop onClose={onClose} />
       <motion.div
-        initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-        className="w-full max-w-md sm:max-w-lg bg-white rounded-t-3xl sm:rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.4)] p-4 sm:p-6 pb-8 sm:pb-12 pointer-events-auto max-h-[88vh] overflow-y-auto relative z-[501]"
-        style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}
+        initial={{ scale: 0.94, opacity: 0, y: 16 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.94, opacity: 0, y: 16 }}
+        transition={{ type: "spring", stiffness: 360, damping: 30 }}
+        className="w-full max-w-md bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl p-6 sm:p-8 pointer-events-auto max-h-[90vh] overflow-y-auto relative z-[501]"
       >
-          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isOtpVerified ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
-                <ShieldCheck className="w-7 h-7" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Handover Code</h2>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Step 1 of Verification</p>
-              </div>
+          <button
+            onClick={onClose}
+            className="absolute top-5 right-5 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 hover:text-gray-800 transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-3 ${isOtpVerified ? 'bg-green-100 text-green-600' : 'bg-emerald-50 text-emerald-700'}`}>
+              <ShieldCheck className="w-9 h-9" />
             </div>
-            <button onClick={onClose} className="p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+            <h2 className="text-2xl font-black text-gray-900">Handover OTP</h2>
+            <p className="text-xs text-gray-500 font-medium mt-1">Enter customer's 4-digit code to complete delivery</p>
           </div>
 
           <DeliveryInstructionsPanel note={order?.note} />
 
-          <div className="flex justify-center gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+          <div className="flex justify-center gap-2.5 sm:gap-3 mb-6">
             {otp.map((digit, i) => (
               <input
                 key={i}
                 ref={inputRefs[i]}
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={1}
                 disabled={isOtpVerified}
                 value={digit}
                 onChange={(e) => handleOtpChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
-                className={`w-12 sm:w-14 h-16 sm:h-18 bg-gray-50 border-2 rounded-2xl text-center text-2xl sm:text-3xl font-bold transition-all ${isOtpVerified ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 focus:border-green-600 text-gray-700'
-                  }`}
+                onPaste={i === 0 ? handlePaste : undefined}
+                className={`w-12 sm:w-14 h-16 sm:h-18 bg-gray-50 border-2 rounded-2xl text-center text-2xl sm:text-3xl font-black transition-all outline-none ${
+                  isOtpVerified ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 focus:border-green-600 text-gray-900'
+                }`}
               />
             ))}
           </div>
@@ -355,25 +378,31 @@ const OtpModal = ({ order, onVerified, onClose }) => {
 
   return (
     <>
-      <div className="fixed inset-0 z-[500] p-0 sm:p-4 flex items-end justify-center pointer-events-none">
+      <div className="fixed inset-0 z-[500] p-4 flex items-center justify-center pointer-events-none">
         <Backdrop onClose={onClose} />
         <motion.div
-          initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-          className="w-full max-w-md sm:max-w-lg bg-white rounded-t-3xl sm:rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.4)] p-4 sm:p-6 pb-8 sm:pb-12 pointer-events-auto max-h-[88vh] overflow-y-auto relative z-[501]"
-          style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}
+          initial={{ scale: 0.94, opacity: 0, y: 16 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.94, opacity: 0, y: 16 }}
+          transition={{ type: "spring", stiffness: 360, damping: 30 }}
+          className="w-full max-w-md sm:max-w-lg bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl p-6 sm:p-8 pointer-events-auto max-h-[90vh] overflow-y-auto relative z-[501]"
         >
-              <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isPaid ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
-                    <DollarSign className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">{isPaid ? "Payment Verified" : "Collect Payment"}</h2>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{isPaid ? "Ready to Complete" : "Payment Settlement"}</p>
-                  </div>
+              <button
+                onClick={onClose}
+                className="absolute top-5 right-5 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 hover:text-gray-800 transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3 mb-6">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isPaid ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+                  <DollarSign className="w-7 h-7" />
                 </div>
-                <button onClick={onClose} className="p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">{isPaid ? "Payment Verified" : "Collect Payment"}</h2>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{isPaid ? "Ready to Complete" : "Payment Settlement"}</p>
+                </div>
               </div>
 
               <DeliveryInstructionsPanel note={order?.note} />

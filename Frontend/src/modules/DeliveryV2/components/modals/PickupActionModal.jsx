@@ -215,10 +215,13 @@ export const PickupActionModal = ({
                   <>
                     <div className="mb-4 px-2">
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={4}
                         placeholder="Enter 4-digit Pickup OTP"
                         value={pickupOtp}
-                        onChange={e => setPickupOtp(e.target.value.slice(0, 4))}
+                        onChange={e => setPickupOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
                         className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-center text-lg font-black tracking-[0.25em] outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                       />
                     </div>

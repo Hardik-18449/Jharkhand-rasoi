@@ -299,3 +299,16 @@ svg.stroke-primary {
 .dark svg.stroke-primary {
   stroke: #ffffff !important;
 }
+
+
+/* Suppress number input spinners (up/down arrow steppers) across all browsers */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}

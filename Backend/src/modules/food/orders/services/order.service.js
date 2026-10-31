@@ -431,7 +431,7 @@ export async function createOrder(userId, dto) {
     const isAwaitingOnlinePayment =
       String(paymentMethod || "").toLowerCase() === "razorpay" &&
       String(payment?.status || "").toLowerCase() !== "paid";
-    await notifyOwnersSafely([{ ownerType: "USER", ownerId: userId }], {
+    void notifyOwnersSafely([{ ownerType: "USER", ownerId: userId }], {
       title: isAwaitingOnlinePayment
         ? "Complete Payment to Confirm Order"
         : "Order Confirmed! 🍔",
@@ -454,7 +454,7 @@ export async function createOrder(userId, dto) {
     // call notifyRestaurantNewOrder() AFTER payment is confirmed — preventing a
     // duplicate FCM push to the restaurant for the same order.
     if (!isAwaitingOnlinePayment) {
-      await notifyRestaurantNewOrder(order);
+      void notifyRestaurantNewOrder(order);
     }
   } catch {
     // Don't block order placement on socket failures.
@@ -1358,7 +1358,7 @@ export async function updateOrderStatusRestaurant(
       
     }
 
-    await notifyOwnersSafely(
+    void notifyOwnersSafely(
       notifyList,
       {
         title: title,
