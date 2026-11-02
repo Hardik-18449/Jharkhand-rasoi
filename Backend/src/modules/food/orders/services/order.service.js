@@ -1477,6 +1477,11 @@ export async function getActiveOrdersDelivery(deliveryPartnerId) {
   return deliveryService.getActiveOrdersDelivery(deliveryPartnerId);
 }
 
+export async function getDeliveredOrdersDelivery(deliveryPartnerId, query) {
+  return deliveryService.getDeliveredOrdersDelivery(deliveryPartnerId, query);
+}
+
+
 // ----- Delivery: available, accept, reject, status -----
 export async function listOrdersAvailableDelivery(deliveryPartnerId, query) {
   return deliveryService.listOrdersAvailableDelivery(deliveryPartnerId, query);

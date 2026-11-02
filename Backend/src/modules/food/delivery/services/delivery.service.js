@@ -636,22 +636,42 @@ export const getDeliveryPartnerTripHistory = async (deliveryPartnerId, query = {
     const match = { 'dispatch.deliveryPartnerId': partnerId };
 
     const sf = String(statusFilter || '').toLowerCase();
+    const isAllPeriod = String(period).toLowerCase() === 'all' || query.all === 'true' || query.allDates === 'true';
+
     if (sf === 'completed') {
         match.orderStatus = 'delivered';
-        match['deliveryState.deliveredAt'] = { $gte: start, $lte: end };
+        if (!isAllPeriod && start && end) {
+            match.$or = [
+                { 'deliveryState.deliveredAt': { $gte: start, $lte: end } },
+                { deliveredAt: { $gte: start, $lte: end } },
+                { completedAt: { $gte: start, $lte: end } },
+                { updatedAt: { $gte: start, $lte: end } },
+                { createdAt: { $gte: start, $lte: end } }
+            ];
+        }
     } else if (sf === 'cancelled') {
         match.orderStatus = { $regex: '^cancelled', $options: 'i' };
-        match.createdAt = { $gte: start, $lte: end };
+        if (!isAllPeriod && start && end) {
+            match.createdAt = { $gte: start, $lte: end };
+        }
     } else if (sf === 'pending') {
-        match.createdAt = { $gte: start, $lte: end };
-        // Pending = not delivered and not cancelled
+        if (!isAllPeriod && start && end) {
+            match.createdAt = { $gte: start, $lte: end };
+        }
         match.$and = [
             { orderStatus: { $ne: 'delivered' } },
             { orderStatus: { $not: { $regex: '^cancelled', $options: 'i' } } },
         ];
     } else {
-        // ALL TRIPS: show anything created in range, and compute earnings only for delivered orders.
-        match.createdAt = { $gte: start, $lte: end };
+        if (!isAllPeriod && start && end) {
+            match.$or = [
+                { 'deliveryState.deliveredAt': { $gte: start, $lte: end } },
+                { deliveredAt: { $gte: start, $lte: end } },
+                { completedAt: { $gte: start, $lte: end } },
+                { updatedAt: { $gte: start, $lte: end } },
+                { createdAt: { $gte: start, $lte: end } }
+            ];
+        }
     }
 
     const orders = await FoodOrder.find(match)

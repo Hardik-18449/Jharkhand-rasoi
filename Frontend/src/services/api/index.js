@@ -1659,6 +1659,7 @@ export const deliveryAPI = {
   getOrderById: (orderId) => deliveryAPI.getOrderDetails(orderId),
   getCurrentDelivery: () => deliveryClient.get("/food/delivery/orders/current"),
   getActiveOrders: () => deliveryClient.get("/food/delivery/orders/active"),
+  getDeliveredOrders: (params = {}) => deliveryClient.get("/food/delivery/orders/delivered", { params }),
   acceptOrder: (orderId, body = {}) =>
     deliveryClient.patch(
       `/food/delivery/orders/${String(orderId)}/accept`,

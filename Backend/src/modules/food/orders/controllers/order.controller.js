@@ -320,6 +320,17 @@ export async function getCurrentTripDeliveryController(req, res, next) {
     }
 }
 
+
+export async function getDeliveredOrdersDeliveryController(req, res, next) {
+    try {
+        const deliveryPartnerId = req.user?.userId;
+        const result = await orderService.getDeliveredOrdersDelivery(deliveryPartnerId, req.query);
+        return sendResponse(res, 200, 'Delivered orders retrieved', result);
+    } catch (err) {
+        next(err);
+    }
+}
+
 export async function getActiveOrdersDeliveryController(req, res, next) {
     try {
         const deliveryPartnerId = req.user?.userId;

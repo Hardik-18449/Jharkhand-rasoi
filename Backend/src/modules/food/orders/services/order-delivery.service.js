@@ -317,6 +317,51 @@ export async function getActiveOrdersDelivery(deliveryPartnerId) {
   return { activeOrders, capacity };
 }
 
+export async function getDeliveredOrdersDelivery(deliveryPartnerId, query = {}) {
+  if (!deliveryPartnerId) throw new ValidationError('Delivery partner ID required');
+  const partnerId = new mongoose.Types.ObjectId(deliveryPartnerId);
+  const limit = Math.min(Math.max(parseInt(query.limit, 10) || 50, 1), 200);
+
+  const orders = await FoodOrder.find({
+    'dispatch.deliveryPartnerId': partnerId,
+    orderStatus: 'delivered',
+  })
+    .populate({
+      path: 'restaurantId',
+      select: 'restaurantName name phone location addressLine1 area city state profileImage',
+    })
+    .populate({ path: 'userId', select: 'name phone' })
+    .sort({ 'deliveryState.deliveredAt': -1, deliveredAt: -1, completedAt: -1, updatedAt: -1, createdAt: -1 })
+    .limit(limit)
+    .lean();
+
+  const orderIds = orders.map((order) => order._id);
+  const transactions = orderIds.length
+    ? await FoodTransaction.find({ orderId: { $in: orderIds } }).lean()
+    : [];
+  const transactionByOrder = new Map(transactions.map((tx) => [String(tx.orderId), tx]));
+  const deliveredOrders = orders.map((order) => {
+    const out = sanitizeOrderForExternal(order);
+    const tx = transactionByOrder.get(String(order._id));
+    if (tx) {
+      out.paymentMethod = tx.payment?.method || tx.paymentMethod || out.paymentMethod;
+      out.payment = tx.payment || out.payment;
+      out.pricing = tx.pricing || out.pricing;
+      out.amounts = tx.amounts || out.amounts;
+      out.transactionStatus = tx.status || out.transactionStatus;
+      if (tx.status === 'captured' || String(order.payment?.status || '').toLowerCase() === 'paid') {
+        out.payment = { ...(out.payment || {}), status: 'paid' };
+        out.paymentStatus = 'paid';
+        out.isPaid = true;
+      }
+    }
+    return out;
+  });
+
+  return { deliveredOrders };
+}
+
+
 export async function listOrdersAvailableDelivery(deliveryPartnerId, query) {
   const { page, limit, skip } = buildPaginationOptions(query);
   const partnerCapacity = await getPartnerCashCapacity(deliveryPartnerId);
