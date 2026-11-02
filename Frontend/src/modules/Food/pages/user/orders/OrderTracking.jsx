@@ -16,6 +16,7 @@ import {
   X,
   Check,
   Shield,
+  ShieldCheck,
   Receipt,
   CircleSlash,
   Loader2,

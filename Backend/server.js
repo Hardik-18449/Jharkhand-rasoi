@@ -75,10 +75,12 @@ const startServer = async () => {
             }
         }
 
-        if (!redisConnected) {
+        try {
             const { initSocket } = await import('./src/config/socket.js');
             await initSocket(httpServer);
-            logger.info(`[Bootstrap] Embedded Socket.IO initialized on API server port ${config.port}`);
+            logger.info(`[Bootstrap] Socket.IO initialized on API server port ${config.port}`);
+        } catch (socketErr) {
+            logger.error(`[Bootstrap] Failed to initialize Socket.IO on API server: ${socketErr.message}`);
         }
 
         // Watchdog recovered stuck orders is moved to scheduler-server.js
