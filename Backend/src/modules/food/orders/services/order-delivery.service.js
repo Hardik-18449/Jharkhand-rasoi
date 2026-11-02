@@ -266,6 +266,8 @@ export async function getCurrentTripDelivery(deliveryPartnerId) {
     out.pricing = tx.pricing || out.pricing;
     out.amounts = tx.amounts || out.amounts;
     out.transactionStatus = tx.status || out.transactionStatus;
+out.riderEarning = Number(order.riderEarning || order.deliveryEarning || order.pricing?.deliveryFee || 30);
+out.earnings = out.riderEarning;
     if (tx.status === 'captured' || String(order.payment?.status || '').toLowerCase() === 'paid') {
       out.payment = { ...(out.payment || {}), status: 'paid' };
       out.paymentStatus = 'paid';
@@ -305,6 +307,8 @@ export async function getActiveOrdersDelivery(deliveryPartnerId) {
       out.pricing = tx.pricing || out.pricing;
       out.amounts = tx.amounts || out.amounts;
       out.transactionStatus = tx.status || out.transactionStatus;
+out.riderEarning = Number(order.riderEarning || order.deliveryEarning || order.pricing?.deliveryFee || 30);
+out.earnings = out.riderEarning;
       if (tx.status === 'captured' || String(order.payment?.status || '').toLowerCase() === 'paid') {
         out.payment = { ...(out.payment || {}), status: 'paid' };
         out.paymentStatus = 'paid';
@@ -349,6 +353,8 @@ export async function getDeliveredOrdersDelivery(deliveryPartnerId, query = {}) 
       out.pricing = tx.pricing || out.pricing;
       out.amounts = tx.amounts || out.amounts;
       out.transactionStatus = tx.status || out.transactionStatus;
+out.riderEarning = Number(order.riderEarning || order.deliveryEarning || order.pricing?.deliveryFee || 30);
+out.earnings = out.riderEarning;
       if (tx.status === 'captured' || String(order.payment?.status || '').toLowerCase() === 'paid') {
         out.payment = { ...(out.payment || {}), status: 'paid' };
         out.paymentStatus = 'paid';

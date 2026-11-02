@@ -83,35 +83,45 @@ async function getActiveCommissionRules() {
 // 🗑️ Moved to foodTransaction.service.js to centralize finance logic.
 
 
-async function getRiderEarning(distanceKm) {
+async function getRiderEarning(distanceKm, deliveryFee = 0) {
   const d = Number(distanceKm);
-  if (!Number.isFinite(d) || d <= 0) return 0;
   const rules = await getActiveCommissionRules();
-  if (!rules.length) return 0;
 
-  const sorted = [...rules].sort(
-    (a, b) => (a.minDistance || 0) - (b.minDistance || 0),
-  );
-  const baseRule = sorted.find((r) => Number(r.minDistance || 0) === 0) || null;
-  if (!baseRule) return 0;
-
-  let earning = Number(baseRule.basePayout || 0);
-
-  for (const r of sorted) {
-    const perKm = Number(r.commissionPerKm || 0);
-    if (!Number.isFinite(perKm) || perKm <= 0) continue;
-    const min = Number(r.minDistance || 0);
-    const max = r.maxDistance == null ? null : Number(r.maxDistance);
-    if (d <= min) continue;
-    const upper = max == null ? d : Math.min(d, max);
-    const kmInSlab = Math.max(0, upper - min);
-    if (kmInSlab > 0) {
-      earning += kmInSlab * perKm;
+  if (rules && rules.length > 0) {
+    const sorted = [...rules].sort(
+      (a, b) => (a.minDistance || 0) - (b.minDistance || 0),
+    );
+    const baseRule = sorted.find((r) => Number(r.minDistance || 0) === 0) || null;
+    if (baseRule) {
+      let earning = Number(baseRule.basePayout || 0);
+      const validDist = Number.isFinite(d) && d > 0 ? d : 0;
+      for (const r of sorted) {
+        const perKm = Number(r.commissionPerKm || 0);
+        if (!Number.isFinite(perKm) || perKm <= 0) continue;
+        const min = Number(r.minDistance || 0);
+        const max = r.maxDistance == null ? null : Number(r.maxDistance);
+        if (validDist <= min) continue;
+        const upper = max == null ? validDist : Math.min(validDist, max);
+        const kmInSlab = Math.max(0, upper - min);
+        if (kmInSlab > 0) {
+          earning += kmInSlab * perKm;
+        }
+      }
+      if (Number.isFinite(earning) && earning > 0) return Math.round(earning);
     }
   }
 
-  if (!Number.isFinite(earning) || earning <= 0) return 0;
-  return Math.round(earning);
+  // Fallback if no commission rules are configured in Admin yet:
+  // 1. Pass the customer's delivery fee to the rider if charged (e.g. ₹30, ₹40, ₹50)
+  const fee = Number(deliveryFee);
+  if (Number.isFinite(fee) && fee > 0) {
+    return Math.round(fee);
+  }
+
+  // 2. Standard baseline payout (Base ₹30 + ₹5/km)
+  const validDist = Number.isFinite(d) && d > 0 ? d : 1;
+  const fallbackEarning = 30 + Math.max(0, validDist - 1) * 5;
+  return Math.round(fallbackEarning);
 }
 
 /** Append-only food_order_payments row; never blocks main flow on failure */
@@ -284,7 +294,7 @@ export async function createOrder(userId, dto) {
     );
   }
 
-  let riderEarning = await getRiderEarning(distanceKm);
+  let riderEarning = await getRiderEarning(distanceKm, normalizedPricing.deliveryFee);
   
   // Apply delivery bonus from fee settings
   const feeSettings = await FoodFeeSettings.findOne({ isActive: true }).lean();

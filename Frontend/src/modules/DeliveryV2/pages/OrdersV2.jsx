@@ -269,7 +269,8 @@ export default function OrdersV2({
   const totalActive = incomingOrders.length + acceptedOrders.length;
 
   return (
-    <div className="min-h-full bg-gray-50 px-4 pb-28 pt-5">
+    <div className="min-h-full bg-gray-50 px-3 sm:px-4 pb-28 pt-4 sm:pt-5 delivery-scroll-container">
+      <div className="max-w-lg mx-auto w-full">
       {/* Header */}
       <div className="mb-4 flex items-end justify-between">
         <div>
@@ -747,6 +748,7 @@ export default function OrdersV2({
           </div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

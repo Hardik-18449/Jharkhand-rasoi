@@ -1484,7 +1484,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
         className="absolute top-0 inset-x-0 backdrop-blur-2xl shadow-2xl z-[200] safe-top pb-2 border-b border-white/10"
         style={{ backgroundColor: 'var(--dv-primary)' }}
       >
-        <div className="flex items-center justify-between px-4 py-2">
+        <div className="flex items-center justify-between px-4 py-2 max-w-lg mx-auto w-full">
           <div className="flex items-center gap-4">
              <div 
                 onClick={() => navigate('/food/delivery/profile')}
@@ -1684,7 +1684,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       />
 
       {/* â”€â”€â”€ 2. MAIN CONTENT â”€â”€â”€ */}
-      <div className={`flex-1 relative overflow-y-auto ${currentTab === 'history' || currentTab === 'profile' || currentTab === 'pocket' || currentTab === 'orders' ? 'pt-0' : 'pt-[120px]'} no-scrollbar`}>
+      <div className={`flex-1 relative overflow-y-auto ${currentTab === 'history' || currentTab === 'profile' || currentTab === 'pocket' || currentTab === 'orders' ? 'pt-0' : 'pt-[120px]'} delivery-scroll-container overscroll-contain`}>
          {currentTab === 'feed' ? (
            <div className="absolute inset-0 top-[-120px]">
              {isOnline ? (
@@ -2162,19 +2162,21 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       )}
 
       {/* â”€â”€â”€ 3. BOTTOM NAV (Fixed - Compact Pro) â”€â”€â”€ */}
-      <div className="bg-white border-t border-gray-100 px-8 py-3 pb-6 flex justify-between items-center z-[200] shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-         <button onClick={() => navigate('/food/delivery/feed')} className={`flex flex-col items-center gap-1 transition-all ${currentTab === 'feed' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-            <LayoutGrid className="w-6 h-6" /><span className="text-[11px] font-medium font-sans">Feed</span>
-         </button>
-         <button onClick={() => navigate('/food/delivery/pocket')} className={`flex flex-col items-center gap-1 transition-all ${currentTab === 'pocket' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-            <Wallet className="w-6 h-6" /><span className="text-[11px] font-medium font-sans">Pocket</span>
-         </button>
-         <button onClick={() => navigate('/food/delivery/orders')} className={`flex flex-col items-center gap-1 transition-all ${currentTab === 'orders' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-            <Package className="w-6 h-6" /><span className="text-[11px] font-medium font-sans">Orders</span>
-         </button>
-         <button onClick={() => navigate('/food/delivery/profile')} className={`flex flex-col items-center gap-1 transition-all ${currentTab === 'profile' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-            <UserIcon className="w-6 h-6" /><span className="text-[11px] font-medium font-sans">Profile</span>
-         </button>
+      <div className="bg-white border-t border-gray-100 px-6 sm:px-8 py-3 pb-6 z-[200] shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+         <div className="max-w-lg mx-auto w-full flex justify-between items-center">
+           <button onClick={() => navigate('/food/delivery/feed')} className={`flex flex-col items-center gap-1 transition-all touch-manipulation active:scale-95 ${currentTab === 'feed' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
+              <LayoutGrid className="w-5 h-5 sm:w-6 sm:h-6" /><span className="text-[10px] sm:text-[11px] font-medium font-sans">Feed</span>
+           </button>
+           <button onClick={() => navigate('/food/delivery/pocket')} className={`flex flex-col items-center gap-1 transition-all touch-manipulation active:scale-95 ${currentTab === 'pocket' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
+              <Wallet className="w-5 h-5 sm:w-6 sm:h-6" /><span className="text-[10px] sm:text-[11px] font-medium font-sans">Pocket</span>
+           </button>
+           <button onClick={() => navigate('/food/delivery/orders')} className={`flex flex-col items-center gap-1 transition-all touch-manipulation active:scale-95 ${currentTab === 'orders' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
+              <Package className="w-5 h-5 sm:w-6 sm:h-6" /><span className="text-[10px] sm:text-[11px] font-medium font-sans">Orders</span>
+           </button>
+           <button onClick={() => navigate('/food/delivery/profile')} className={`flex flex-col items-center gap-1 transition-all touch-manipulation active:scale-95 ${currentTab === 'profile' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
+              <UserIcon className="w-5 h-5 sm:w-6 sm:h-6" /><span className="text-[10px] sm:text-[11px] font-medium font-sans">Profile</span>
+           </button>
+         </div>
       </div>
     </div>
   );

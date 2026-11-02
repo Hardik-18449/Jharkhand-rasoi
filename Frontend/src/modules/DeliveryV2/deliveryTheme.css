@@ -235,3 +235,45 @@
     padding: 1.1rem !important;
   }
 }
+
+/* Visible, refined scrollbar for Delivery Rider App */
+.delivery-scroll-container,
+.delivery-v2-theme [class*="overflow-y-auto"] {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(148, 163, 184, 0.6) transparent !important;
+}
+
+.delivery-scroll-container::-webkit-scrollbar,
+.delivery-v2-theme [class*="overflow-y-auto"]::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+  display: block !important;
+}
+
+.delivery-scroll-container::-webkit-scrollbar-track,
+.delivery-v2-theme [class*="overflow-y-auto"]::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.delivery-scroll-container::-webkit-scrollbar-thumb,
+.delivery-v2-theme [class*="overflow-y-auto"]::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.6) !important;
+  border-radius: 9999px !important;
+}
+
+.delivery-scroll-container::-webkit-scrollbar-thumb:hover,
+.delivery-v2-theme [class*="overflow-y-auto"]::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 116, 139, 0.9) !important;
+}
+
+/* Touch manipulation for instant mobile tap responsiveness without delay */
+.delivery-v2-theme button,
+.delivery-v2-theme a,
+.delivery-v2-theme [role="button"],
+.delivery-v2-theme input,
+.delivery-v2-theme article {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
