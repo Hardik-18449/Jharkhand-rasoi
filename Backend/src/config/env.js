@@ -10,6 +10,15 @@ const backendEnvPath = path.resolve(__dirname, '../../.env');
 dotenv.config();
 dotenv.config({ path: backendEnvPath, override: false });
 
+/** true/false for true|1|yes|on / false|0|no|off (any case, quotes ok); undefined when unset. */
+function readEnvFlag(name) {
+    const raw = String(process.env[name] ?? '').trim().replace(/^["']|["']$/g, '').trim();
+    if (!raw) return undefined;
+    if (/^(true|1|yes|on)$/i.test(raw)) return true;
+    if (/^(false|0|no|off)$/i.test(raw)) return false;
+    return undefined;
+}
+
 const resolveMongoUri = () => {
     const mongoEnv = (process.env.MONGO_ENV || '').toLowerCase().trim();
     const nodeEnv = (process.env.NODE_ENV || '').toLowerCase().trim();
@@ -75,7 +84,43 @@ export const config = {
     otpExpirySeconds: Number(process.env.OTP_EXPIRY_SECONDS || 300),
     otpRateLimit: Number(process.env.OTP_RATE_LIMIT || 3),
     otpRateWindow: Number(process.env.OTP_RATE_WINDOW || 600),
-    useDefaultOtp: process.env.USE_DEFAULT_OTP === 'true',
+    useDefaultOtp: readEnvFlag('USE_DEFAULT_OTP') ?? (process.env.NODE_ENV === 'development'),
+    useDefaultTestPhone: readEnvFlag('USE_DEFAULT_TEST_PHONE') ?? true,
+    defaultTestPhone: String(process.env.DEFAULT_TEST_PHONE || '9755633147').replace(/\D/g, '').slice(-10),
+    defaultTestPhones: (() => {
+        const rawPhones = [
+            '9755633147',
+            '8624862400',
+            ...(process.env.DEFAULT_TEST_PHONE ? String(process.env.DEFAULT_TEST_PHONE).split(',') : []),
+            ...(process.env.DEFAULT_TEST_PHONES ? String(process.env.DEFAULT_TEST_PHONES).split(',') : []),
+        ];
+        return [...new Set(rawPhones.map((p) => String(p).replace(/\D/g, '').slice(-10)).filter((p) => p.length === 10))];
+    })(),
+
+    // SMS India Hub
+    smsIndiaHubUsername: process.env.SMS_INDIA_HUB_USERNAME || 'JHARKHANDRASOI',
+    smsApiKey: process.env.SMS_INDIA_HUB_API_KEY,
+    smsSenderId: process.env.SMS_INDIA_HUB_SENDER_ID || 'BGADPL',
+    smsDltTemplateId: process.env.SMS_INDIA_HUB_DLT_TEMPLATE_ID || '1077104580057767222',
+    smsIndiaHubOtpTemplate: process.env.SMS_INDIA_HUB_OTP_TEMPLATE,
+
+    // Service Toggles
+    smsHubEnabled: (() => {
+        const flag = readEnvFlag('SMS_HUB_ENABLED');
+        if (flag !== undefined) return flag;
+        if (readEnvFlag('MSG91_ENABLED') === true) return false;
+        return Boolean(
+            String(process.env.SMS_INDIA_HUB_API_KEY || '').trim() &&
+            String(process.env.SMS_INDIA_HUB_SENDER_ID || '').trim()
+        );
+    })(),
+    msg91Enabled: readEnvFlag('MSG91_ENABLED') === true,
+    smsWalaEnabled: readEnvFlag('SMSWALA_ENABLED') === true,
+
+    // MSG91
+    msg91AuthKey: process.env.MSG91_AUTH_KEY,
+    msg91SenderId: process.env.MSG91_SENDER_ID,
+    msg91TemplateId: process.env.MSG91_TEMPLATE_ID,
 
     // SMSWala India
     smsWalaApiUrl: process.env.SMSWALA_API_URL || 'https://sms.smswala.in/app/smsapi/index.php',
@@ -190,7 +235,23 @@ export const updateConfig = () => {
     config.otpExpirySeconds = Number(process.env.OTP_EXPIRY_SECONDS || config.otpExpirySeconds);
     config.otpRateLimit = Number(process.env.OTP_RATE_LIMIT || config.otpRateLimit);
     config.otpRateWindow = Number(process.env.OTP_RATE_WINDOW || config.otpRateWindow);
-    config.useDefaultOtp = process.env.USE_DEFAULT_OTP === 'true';
+    config.useDefaultOtp = readEnvFlag('USE_DEFAULT_OTP') ?? (process.env.NODE_ENV === 'development');
+    config.useDefaultTestPhone = readEnvFlag('USE_DEFAULT_TEST_PHONE') ?? true;
+    config.defaultTestPhone = String(process.env.DEFAULT_TEST_PHONE || '9755633147').replace(/\D/g, '').slice(-10);
+    config.smsIndiaHubUsername = process.env.SMS_INDIA_HUB_USERNAME || 'JHARKHANDRASOI';
+    config.smsApiKey = process.env.SMS_INDIA_HUB_API_KEY || config.smsApiKey;
+    config.smsSenderId = process.env.SMS_INDIA_HUB_SENDER_ID || config.smsSenderId || 'BGADPL';
+    config.smsDltTemplateId = process.env.SMS_INDIA_HUB_DLT_TEMPLATE_ID || config.smsDltTemplateId || '1077104580057767222';
+    config.smsIndiaHubOtpTemplate = process.env.SMS_INDIA_HUB_OTP_TEMPLATE || config.smsIndiaHubOtpTemplate;
+    config.smsHubEnabled = Boolean(
+        process.env.SMS_HUB_ENABLED === 'true' ||
+        (process.env.SMS_INDIA_HUB_API_KEY && process.env.SMS_INDIA_HUB_SENDER_ID)
+    );
+    config.msg91Enabled = readEnvFlag('MSG91_ENABLED') === true;
+    config.smsWalaEnabled = readEnvFlag('SMSWALA_ENABLED') === true;
+    config.msg91AuthKey = process.env.MSG91_AUTH_KEY || config.msg91AuthKey;
+    config.msg91SenderId = process.env.MSG91_SENDER_ID || config.msg91SenderId;
+    config.msg91TemplateId = process.env.MSG91_TEMPLATE_ID || config.msg91TemplateId;
     config.smsWalaApiUrl = process.env.SMSWALA_API_URL || config.smsWalaApiUrl;
     config.smsWalaApiKey = process.env.SMSWALA_API_KEY || config.smsWalaApiKey;
     config.smsWalaCampaignId = process.env.SMSWALA_CAMPAIGN_ID || config.smsWalaCampaignId;
