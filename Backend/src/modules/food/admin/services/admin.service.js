@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { ValidationError } from '../../../../core/auth/errors.js';
+import { invalidateCache } from '../../../../middleware/cache.js';
 import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
 import { buildRawDownloadUrlFromFileUrl, normalizeStoredUploadPath } from '../../../../services/upload.service.js';
 import { FoodDeliveryPartner } from '../../delivery/models/deliveryPartner.model.js';
@@ -3220,6 +3221,7 @@ export async function approveRestaurantAddon(addonId) {
         }
     }
 
+    try { await invalidateCache('restaurant_addons:*'); } catch (e) {}
     return updated || null;
 }
 
@@ -3264,6 +3266,7 @@ export async function rejectRestaurantAddon(addonId, reason) {
         }
     }
 
+    try { await invalidateCache('restaurant_addons:*'); } catch (e) {}
     return updated || null;
 }
 

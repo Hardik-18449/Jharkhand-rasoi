@@ -92,10 +92,10 @@ export const registerDeliveryPartner = async (payload, files) => {
         state,
         vehicleType,
         vehicleName,
-        vehicleNumber,
-        drivingLicenseNumber,
-        panNumber,
-        aadharNumber,
+        vehicleNumber: vehicleNumber && String(vehicleNumber).trim() ? String(vehicleNumber).trim().toUpperCase() : undefined,
+        drivingLicenseNumber: drivingLicenseNumber && String(drivingLicenseNumber).trim() ? String(drivingLicenseNumber).trim().toUpperCase() : undefined,
+        panNumber: panNumber && String(panNumber).trim() ? String(panNumber).trim().toUpperCase() : undefined,
+        aadharNumber: aadharNumber && String(aadharNumber).trim() ? String(aadharNumber).replace(/\\s/g, '') : undefined,
         status: 'pending',
         ...images
     });

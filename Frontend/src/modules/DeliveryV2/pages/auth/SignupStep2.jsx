@@ -143,7 +143,7 @@ const getFriendlyRegistrationError = (error) => {
 
   const lower = rawMessage.toLowerCase()
 
-  if (/E11000 duplicate key error/i.test(rawMessage) || lower.includes("already registered") || lower.includes("duplicate")) {
+  if (/E11000 duplicate key error/i.test(rawMessage) || lower.includes("already registered") || lower.includes("already exists") || lower.includes("duplicate")) {
     if (lower.includes("vehicle")) {
       return "This vehicle number is already registered. Please use a different vehicle number."
     }
@@ -453,14 +453,22 @@ export default function SignupStep2() {
       platform
     }
 
-    const isCompleteProfile = localStorage.getItem("deliveryNeedsRegistration") === "true"
-
     setIsSubmitting(true)
 
     try {
-      const response = isCompleteProfile
-        ? await deliveryAPI.register(payload)
-        : await deliveryAPI.completeProfile(payload)
+      // Step 2 is registration for a delivery partner
+      let response
+      try {
+        response = await deliveryAPI.register(payload)
+      } catch (regErr) {
+        // If partner already exists and is logged in, attempt profile update fallback
+        const hasAuthToken = Boolean(localStorage.getItem("deliveryAuthData"))
+        if (hasAuthToken && /already exists/i.test(regErr?.response?.data?.message || "")) {
+          response = await deliveryAPI.completeProfile(payload)
+        } else {
+          throw regErr
+        }
+      }
 
       if (response?.data?.success) {
         localStorage.removeItem("deliverySignupDetails")
