@@ -1,9 +1,10 @@
-import { Plus, Minus } from "lucide-react"
+import { Plus, Minus, ShoppingCart } from "lucide-react"
 import { Button } from "@food/components/ui/button"
 import { useCart } from "@food/context/CartContext"
 import { isModuleAuthenticated } from "@food/utils/auth"
 import { useNavigate, useLocation } from "react-router-dom"
 import { toast } from "sonner"
+
 
 export default function AddToCartButton({ item, className = "" }) {
   const { addToCart, isInCart, getCartItem, updateQuantity } = useCart()
@@ -16,9 +17,9 @@ export default function AddToCartButton({ item, className = "" }) {
     e.preventDefault()
     e.stopPropagation()
 
-    if (!isModuleAuthenticated('user')) {
+    if (!isModuleAuthenticated("user")) {
       toast.error("Please login to add items to cart")
-      navigate('/user/auth/login', { state: { from: location.pathname } })
+      navigate("/user/auth/login", { state: { from: location.pathname } })
       return
     }
 
@@ -39,13 +40,20 @@ export default function AddToCartButton({ item, className = "" }) {
 
   if (inCart) {
     return (
-      <div className={`flex items-center gap-2 ${className}`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+      <div
+        className={`flex items-center gap-2 ${className}`}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+        }}
+      >
         <div className="flex items-center gap-1 bg-primary text-white rounded-md shadow-sm">
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-6 text-white hover:bg-secondary hover:text-white"
             onClick={handleDecrease}
+            aria-label="Decrease quantity"
           >
             <Minus className="h-4 w-4" />
           </Button>
@@ -57,6 +65,7 @@ export default function AddToCartButton({ item, className = "" }) {
             size="icon"
             className="h-8 w-6 text-white hover:bg-secondary hover:text-white"
             onClick={handleIncrease}
+            aria-label="Increase quantity"
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -66,12 +75,13 @@ export default function AddToCartButton({ item, className = "" }) {
   }
 
   return (
-    <Button
-      size="sm"
-      onClick={handleAddToCart}
-      className="bg-primary hover:bg-secondary text-white font-bold shadow-md transition-all active:scale-95"
-    >
-      <ShoppingCartPlus className="h-4 w-4"  />
-    </Button>
-  )
+  <Button
+    size="sm"
+    onClick={handleAddToCart}
+    aria-label="Add to cart"
+    className={`bg-black hover:bg-neutral-800 text-white font-bold shadow-md transition-all active:scale-95 ${className}`}
+  >
+    <ShoppingCart className="h-4 w-4" strokeWidth={2.75} />
+  </Button>
+)
 }
