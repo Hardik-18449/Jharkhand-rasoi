@@ -70,6 +70,7 @@ export default function ItemDetailsPage() {
   const [itemDescription, setItemDescription] = useState("")
   const [foodType, setFoodType] = useState("Non-Veg")
   const [basePrice, setBasePrice] = useState("")
+  const [codPrice, setCodPrice] = useState("")
   const [variants, setVariants] = useState([])
   const [preparationTime, setPreparationTime] = useState("")
   const [gst, setGst] = useState("5.0")
@@ -126,7 +127,8 @@ export default function ItemDetailsPage() {
     setFoodType(item.foodType === "Veg" ? "Veg" : "Non-Veg")
     const itemVariants = getFoodVariants(item)
     setVariants(itemVariants.map(createVariantDraft))
-    setBasePrice(itemVariants.length === 0 ? item.price?.toString() || "" : "")
+    setBasePrice(itemVariants.length === 0 ? (item.prepaidPrice?.toString() || item.price?.toString() || "") : "")
+    setCodPrice(itemVariants.length === 0 && item.codPrice != null ? item.codPrice.toString() : "")
     setPreparationTime(item.preparationTime || "")
     setGst(item.gst?.toString() || "5.0")
     setIsRecommended(item.isRecommended || false)
@@ -1037,32 +1039,56 @@ export default function ItemDetailsPage() {
               {variants.length === 0 ? (
                 <>
                   <div className="relative">
-                    <label className="block text-xs text-gray-600 mb-1">Base price</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="relative">
-                      <input
-                        type="text"
-                        value={basePrice}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/[\u20B9\s,]/g, '').replace(/[^0-9.]/g, '')
-                          const parts = value.split('.')
-                          const cleanedValue = parts.length > 2
-                            ? parts[0] + '.' + parts.slice(1).join('')
-                            : value
-                          setBasePrice(cleanedValue)
-                        }}
-                        onFocus={(e) => {
-                          if (e.target.value.startsWith('\u20B9')) {
-                            e.target.value = e.target.value.replace(/[\u20B9\s]+/g, '')
-                          }
-                        }}
-                        placeholder="Enter price"
-                        className="w-full pl-8 pr-12 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-600">{"\u20B9"}</span>
-                      <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100">
-                        <EditIcon className="w-4 h-4 text-gray-500" />
-                      </button>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Online / Prepaid Price (₹) <span className="text-emerald-600 font-medium">(Cashless)</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={basePrice}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[₹\s,]/g, '').replace(/[^0-9.]/g, '')
+                            const parts = value.split('.')
+                            const cleanedValue = parts.length > 2
+                              ? parts[0] + '.' + parts.slice(1).join('')
+                              : value
+                            setBasePrice(cleanedValue)
+                          }}
+                          placeholder="e.g. 199"
+                          className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-600">{"₹"}</span>
+                      </div>
                     </div>
+
+                    <div className="relative">
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Cash on Delivery (COD) Price (₹) <span className="text-gray-400 font-normal">(Optional)</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={codPrice}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[₹\s,]/g, '').replace(/[^0-9.]/g, '')
+                            const parts = value.split('.')
+                            const cleanedValue = parts.length > 2
+                              ? parts[0] + '.' + parts.slice(1).join('')
+                              : value
+                            setCodPrice(cleanedValue)
+                          }}
+                          placeholder="Set higher COD price or leave empty"
+                          className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-600">{"₹"}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-gray-500">
+                    💡 Tip: Setting a slightly higher COD price incentivizes customers to pay online and promotes cashless ordering.
+                  </p>
                   </div>
 
 

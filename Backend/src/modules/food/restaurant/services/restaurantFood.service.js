@@ -97,9 +97,18 @@ const asyncPool = async (limit, items, iterator) => {
 
 const getCreateFoodPricing = (body = {}) => {
     const variants = normalizeFoodVariantsInput(extractRawFoodVariants(body));
+    const codPrice = body.codPrice !== undefined && body.codPrice !== null && body.codPrice !== ''
+        ? Number(body.codPrice)
+        : null;
+    const prepaidPrice = body.prepaidPrice !== undefined && body.prepaidPrice !== null && body.prepaidPrice !== ''
+        ? Number(body.prepaidPrice)
+        : null;
+
     if (variants.length > 0) {
         return {
             price: getFoodDisplayPrice({ variants }),
+            codPrice,
+            prepaidPrice,
             variants
         };
     }
@@ -108,6 +117,8 @@ const getCreateFoodPricing = (body = {}) => {
     if (!Number.isFinite(price) || price < 0) throw new ValidationError('Price is invalid');
     return {
         price,
+        codPrice,
+        prepaidPrice: prepaidPrice ?? price,
         variants: []
     };
 };
@@ -261,7 +272,7 @@ export async function createRestaurantFood(restaurantId, body = {}) {
     if (!name) throw new ValidationError('Item name is required');
     if (name.length > 200) throw new ValidationError('Item name is too long');
 
-    const { price, variants } = getCreateFoodPricing(body);
+    const { price, codPrice, prepaidPrice, variants } = getCreateFoodPricing(body);
 
     const description = toStr(body.description);
     const image = await ensureLocalImageUrl(body.image || body.imageUrl || body.photoUrl || body.photo);
@@ -278,6 +289,8 @@ export async function createRestaurantFood(restaurantId, body = {}) {
         name,
         description,
         price,
+        prepaidPrice: prepaidPrice ?? price,
+        codPrice: codPrice ?? null,
         priceOnOtherPlatforms: body.priceOnOtherPlatforms ? Number(body.priceOnOtherPlatforms) : null,
         otherPlatformGst: body.otherPlatformGst !== undefined && body.otherPlatformGst !== null
             ? Number(body.otherPlatformGst)
@@ -331,6 +344,8 @@ export async function updateRestaurantFood(restaurantId, foodId, body = {}) {
     if (body.description !== undefined) update.description = toStr(body.description);
     if (body.image !== undefined) update.image = toStr(body.image);
     if (body.priceOnOtherPlatforms !== undefined) update.priceOnOtherPlatforms = body.priceOnOtherPlatforms ? Number(body.priceOnOtherPlatforms) : null;
+    if (body.codPrice !== undefined) update.codPrice = body.codPrice !== null && body.codPrice !== "" ? Number(body.codPrice) : null;
+    if (body.prepaidPrice !== undefined) update.prepaidPrice = body.prepaidPrice !== null && body.prepaidPrice !== "" ? Number(body.prepaidPrice) : null;
     if (body.otherPlatformGst !== undefined) {
         update.otherPlatformGst = body.otherPlatformGst !== null && body.otherPlatformGst !== ''
             ? Number(body.otherPlatformGst)
@@ -539,6 +554,8 @@ export async function listRestaurantFoods(restaurantId, query = {}) {
         name: f.name,
         description: f.description || '',
         price: getFoodDisplayPrice(f),
+        prepaidPrice: f.prepaidPrice != null ? Number(f.prepaidPrice) : getFoodDisplayPrice(f),
+        codPrice: f.codPrice != null ? Number(f.codPrice) : null,
         image: resolveStoredUploadPath(f.image || ''),
         foodType: f.foodType || 'Non-Veg',
         isAvailable: f.isAvailable !== false,

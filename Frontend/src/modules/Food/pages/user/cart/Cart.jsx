@@ -918,7 +918,8 @@ export default function Cart() {
           items,
           restaurantId: resolvedRestaurantId,
           deliveryAddress: defaultAddress,
-          couponCode: resolvedCouponCode
+          couponCode: resolvedCouponCode,
+          paymentMethod: selectedPaymentMethod
         })
 
         if (response?.data?.success && response?.data?.data?.pricing) {
@@ -1032,8 +1033,30 @@ export default function Cart() {
     }
   }, [])
 
-  // Use backend pricing if available, otherwise fallback to database fee settings
-  const subtotal = pricing?.subtotal || cart.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0)
+    const isCodSelected = selectedPaymentMethod === "cash";
+  const getItemEffectivePrice = (item) => {
+    if (isCodSelected && item.codPrice != null && Number(item.codPrice) > 0) {
+      return Number(item.codPrice);
+    }
+    if (!isCodSelected && item.prepaidPrice != null && Number(item.prepaidPrice) > 0) {
+      return Number(item.prepaidPrice);
+    }
+    return Number(item.price) || 0;
+  };
+
+  const cashlessSavings = useMemo(() => {
+    return cart.reduce((sum, item) => {
+      const codP = (item.codPrice != null && Number(item.codPrice) > 0) ? Number(item.codPrice) : null;
+      const preP = (item.prepaidPrice != null && Number(item.prepaidPrice) > 0) ? Number(item.prepaidPrice) : Number(item.price) || 0;
+      if (codP && codP > preP) {
+        return sum + (codP - preP) * (item.quantity || 1);
+      }
+      return sum;
+    }, 0);
+  }, [cart]);
+
+// Use backend pricing if available, otherwise fallback to database fee settings
+  const subtotal = pricing?.subtotal || cart.reduce((sum, item) => sum + getItemEffectivePrice(item) * (item.quantity || 1), 0)
   const orderDistanceKm = useMemo(() => {
     const rCoords = restaurantData?.location?.coordinates
     const dCoords = defaultAddress?.location?.coordinates
@@ -1602,7 +1625,9 @@ export default function Cart() {
       const orderItems = cart.map(item => ({
         itemId: item.itemId || item.id,
         name: item.name,
-        price: item.price,
+        price: getItemEffectivePrice(item),
+        codPrice: item.codPrice != null ? Number(item.codPrice) : undefined,
+        prepaidPrice: item.prepaidPrice != null ? Number(item.prepaidPrice) : undefined,
         originalPrice: item.originalPrice ?? item.price,
         variantId: item.variantId || undefined,
         variantName: item.variantName || undefined,
@@ -2893,6 +2918,29 @@ export default function Cart() {
                       <span className="text-gray-600 dark:text-gray-400">Item Total</span>
                       <span className="text-gray-800 dark:text-gray-200 font-medium">{RUPEE_SYMBOL}{subtotal.toFixed(2)}</span>
                     </div>
+
+                    {cashlessSavings > 0 && !isCodSelected && (
+                      <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1.5 rounded-lg border border-emerald-200/50">
+                        <span className="flex items-center gap-1">
+                          <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                          Cashless Online Discount
+                        </span>
+                        <span>-{RUPEE_SYMBOL}{cashlessSavings.toFixed(2)}</span>
+                      </div>
+                    )}
+
+                    {cashlessSavings > 0 && isCodSelected && (
+                      <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between">
+                        <span>💡 Save {RUPEE_SYMBOL}{cashlessSavings.toFixed(0)} with Cashless Payment</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPaymentMethod("razorpay")}
+                          className="font-bold underline text-primary"
+                        >
+                          Pay Online
+                        </button>
+                      </div>
+                    )}
 
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">Delivery Fee</span>

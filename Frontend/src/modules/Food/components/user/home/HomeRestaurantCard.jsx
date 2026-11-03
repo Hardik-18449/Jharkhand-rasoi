@@ -260,6 +260,13 @@ function HomeRestaurantCard({
             {/* Restaurant info */}
             <div className="flex items-start justify-between gap-3 px-4 pt-4">
               <div className="min-w-0 flex-1">
+                {(restaurant.isFranchise || restaurant.restaurantType === "franchise") && (
+                  <div className="mb-1">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                      ★ Franchise
+                    </span>
+                  </div>
+                )}
                 {headlineOffer && (
                   <p className="mb-0.5 text-[13px] font-extrabold uppercase tracking-wide text-primary line-clamp-1">
                     {headlineOffer}

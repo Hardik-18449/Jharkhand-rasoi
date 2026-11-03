@@ -214,8 +214,22 @@ export async function createOrder(userId, dto) {
     }
   }
 
-  // Ensure pricing is present and consistent.
-  const computedSubtotal = (dto.items || []).reduce((sum, item) => {
+    const isCashOrder = String(dto.payment?.method || dto.paymentMethod || '').toLowerCase() === 'cash' || String(dto.payment?.method || dto.paymentMethod || '').toLowerCase() === 'cod';
+  const resolvedItems = (dto.items || []).map((item) => {
+    let price = Number(item?.price);
+    if (isCashOrder && item?.codPrice != null && Number(item.codPrice) > 0) {
+      price = Number(item.codPrice);
+    } else if (!isCashOrder && item?.prepaidPrice != null && Number(item.prepaidPrice) > 0) {
+      price = Number(item.prepaidPrice);
+    }
+    return {
+      ...item,
+      price
+    };
+  });
+
+// Ensure pricing is present and consistent.
+  const computedSubtotal = resolvedItems.reduce((sum, item) => {
     const price = Number(item?.price);
     const qty = Number(item?.quantity);
     if (!Number.isFinite(price) || !Number.isFinite(qty)) return sum;
@@ -351,7 +365,7 @@ export async function createOrder(userId, dto) {
     zoneId: dto.zoneId
       ? new mongoose.Types.ObjectId(dto.zoneId)
       : restaurant.zoneId,
-    items: dto.items,
+    items: resolvedItems,
     deliveryAddress,
     customerName: dto.customerName || deliveryAddress.fullName || "",
     customerPhone: dto.customerPhone || deliveryAddress.phone || "",

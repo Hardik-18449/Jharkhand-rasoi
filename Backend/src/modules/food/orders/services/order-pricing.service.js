@@ -46,15 +46,16 @@ export async function calculateOrderPricing(userId, dto) {
   let subtotal = 0;
   let eligibleSubtotalForCoupon = 0;
 
+  const isCodOrder = String(dto.paymentMethod || '').toLowerCase() === 'cash' || String(dto.paymentMethod || '').toLowerCase() === 'cod';
   items.forEach((it) => {
     let price = Number(it.price) || 0;
+    if (isCodOrder && it.codPrice != null && Number(it.codPrice) > 0) {
+      price = Number(it.codPrice);
+    } else if (!isCodOrder && it.prepaidPrice != null && Number(it.prepaidPrice) > 0) {
+      price = Number(it.prepaidPrice);
+    }
     const qty = Number(it.quantity) || 1;
     let hasItemDiscount = false;
-    
-    // The frontend already sends the discounted price in it.price.
-    // If we need to calculate itemDiscountTotal, we should rely on originalPrice sent by frontend,
-    // but since it's not sent, we skip re-applying the discount to avoid double discounting.
-    // In a future secure update, backend should fetch item prices from DB and apply discounts here.
     
     subtotal += price * qty;
     if (!hasItemDiscount) {

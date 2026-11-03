@@ -2566,9 +2566,18 @@ export async function getRestaurantAnalytics(restaurantId) {
 
 export async function getRestaurantMenuById(id) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
+    try {
+        const { getRestaurantMenu } = await import('../../restaurant/services/restaurantMenu.service.js');
+        const menu = await getRestaurantMenu(id);
+        if (menu && Array.isArray(menu.sections) && menu.sections.length > 0) {
+            return menu;
+        }
+    } catch (e) {
+        logger.warn(`Failed to dynamically generate menu for restaurant ${id}: ${e?.message || e}`);
+    }
     const doc = await FoodRestaurant.findById(id).select('menu').lean();
     if (!doc) return null;
-    return doc.menu || { sections: [] };
+    return doc.menu || { sections: [], categories: [] };
 }
 
 export async function updateRestaurantMenuById(id, menu) {

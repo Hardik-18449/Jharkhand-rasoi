@@ -9,6 +9,8 @@ const orderItemSchema = new mongoose.Schema(
         variantPrice: { type: Number, min: 0, default: 0 },
         price: { type: Number, required: true, min: 0 },
         originalPrice: { type: Number, min: 0, default: null },
+        codPrice: { type: Number, min: 0, default: null },
+        prepaidPrice: { type: Number, min: 0, default: null },
         quantity: { type: Number, required: true, min: 1 },
         isVeg: { type: Boolean, default: true },
         image: { type: String, default: '' },

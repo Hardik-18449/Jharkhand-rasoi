@@ -3,7 +3,9 @@ import mongoose from 'mongoose';
 const foodVariantSchema = new mongoose.Schema(
     {
         name: { type: String, required: true, trim: true },
-        price: { type: Number, required: true, min: 0 }
+        price: { type: Number, required: true, min: 0 },
+        prepaidPrice: { type: Number, default: null, min: 0 },
+        codPrice: { type: Number, default: null, min: 0 }
     },
     { _id: true }
 );
@@ -16,6 +18,8 @@ const foodSchema = new mongoose.Schema(
         name: { type: String, required: true, trim: true, index: true },
         description: { type: String, trim: true, default: '' },
         price: { type: Number, required: true, min: 0 },
+        prepaidPrice: { type: Number, default: null, min: 0 },
+        codPrice: { type: Number, default: null, min: 0 },
         priceOnOtherPlatforms: { type: Number, default: null, min: 0 },
         otherPlatformGst: { type: Number, default: null, min: 0, max: 100 },
         variants: { type: [foodVariantSchema], default: [] },

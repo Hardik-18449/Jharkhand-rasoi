@@ -6,6 +6,7 @@ import axios from "axios";
 import apiClient, { userClient, restaurantClient, deliveryClient, adminClient } from "./axios.js";
 import { API_ENDPOINTS, API_BASE_URL } from "./config.js";
 import { getUploadErrorMessage } from '../../shared/utils/uploadErrors.js';
+import { compressImage } from '../../shared/utils/imageCompressor.js';
 import * as authService from "./auth.js";
 import { getModuleFcmToken, getModuleRefreshToken } from "@food/utils/auth";
 
@@ -2017,13 +2018,33 @@ export const uploadAPI = {
    * @param {File|Blob} file
    * @param {{ folder?: string }} options
    */
-  uploadMedia: (file, options = {}) => {
+  uploadMedia: async (file, options = {}) => {
     if (!file) {
       return Promise.reject(new Error("File is required for upload"));
     }
 
+    let fileToUpload = file;
+    const isImage = (file.type && file.type.startsWith('image/')) || 
+      (typeof file.name === 'string' && /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name));
+
+    if (isImage && typeof window !== "undefined") {
+      try {
+        const compressed = await compressImage(file, {
+          maxDimension: 1200,
+          quality: 0.8,
+          targetMaxBytes: 800 * 1024,
+          filenamePrefix: options.folder ? `up-${String(options.folder).replace(/[^a-zA-Z0-9]/g, '-')}` : 'img'
+        });
+        if (compressed?.file) {
+          fileToUpload = compressed.file;
+        }
+      } catch (compErr) {
+        console.warn("Client-side image compression fallback to original:", compErr);
+      }
+    }
+
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", fileToUpload);
     if (options.folder) {
       formData.append("folder", options.folder);
     }

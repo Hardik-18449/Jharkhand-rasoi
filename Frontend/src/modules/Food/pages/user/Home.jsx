@@ -93,6 +93,7 @@ import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailabil
 import HomeHeader from "@food/components/user/home/HomeHeader";
 import HeroBanner from "@food/components/user/home/HeroBanner";
 import RestaurantGrid from "@food/components/user/home/RestaurantGrid";
+import NearbyDishesSection from "@food/components/user/home/NearbyDishesSection";
 import ExploreMoreSection from "@food/components/user/home/ExploreMoreSection";
 import RestaurantImageCarousel from "@food/components/user/home/RestaurantImageCarousel";
 import QuickSection from "@food/components/user/home/QuickSection";
@@ -1368,6 +1369,13 @@ export default function Home() {
                 return aDist - bDist;
               }
 
+              // Franchise priority: franchise restaurants appear first
+              const aFranchise = (a.isFranchise || a.restaurantType === 'franchise') ? 0 : 1;
+              const bFranchise = (b.isFranchise || b.restaurantType === 'franchise') ? 0 : 1;
+              if (aFranchise !== bFranchise) {
+                return aFranchise - bFranchise;
+              }
+
               // Default: sort by zoneRank first, then by distance
               const aRank = a.zoneRank !== null && a.zoneRank !== undefined ? a.zoneRank : Infinity;
               const bRank = b.zoneRank !== null && b.zoneRank !== undefined ? b.zoneRank : Infinity;
@@ -2600,7 +2608,13 @@ export default function Home() {
             />
           )}
         </section>
-              </motion.div>
+
+        {/* Nearby Dishes 1-by-1 Section */}
+        <NearbyDishesSection
+          zoneId={effectiveZoneId}
+          backendOrigin={BACKEND_ORIGIN}
+        />
+</motion.div>
             ) : (
               <motion.div
                 key="quick-content"

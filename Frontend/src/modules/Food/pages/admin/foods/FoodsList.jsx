@@ -280,6 +280,7 @@ export default function FoodsList() {
       categoryName: String(food.categoryName || ""),
       name: String(food.name || ""),
       price: String(food.price || ""),
+      codPrice: food.codPrice != null ? String(food.codPrice) : "",
       variants: getFoodVariants(food).map(createVariantDraft),
       description: String(food.description || ""),
       image: String(food.image || ""),
@@ -906,20 +907,33 @@ export default function FoodsList() {
                   className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Base Price</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={foodForm.price}
-                  onChange={(e) => setFoodForm((prev) => ({ ...prev, price: e.target.value }))}
-                  disabled={(foodForm.variants || []).length > 0}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white disabled:bg-slate-100 disabled:text-slate-400"
-                />
-                {(foodForm.variants || []).length > 0 ? (
-                  <p className="mt-1 text-xs text-slate-500">Variants are active, so customers will see the lowest variant price as the starting price.</p>
-                ) : null}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Prepaid / Base Price (₹)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={foodForm.price}
+                    onChange={(e) => setFoodForm((prev) => ({ ...prev, price: e.target.value }))}
+                    disabled={(foodForm.variants || []).length > 0}
+                    placeholder="Online price"
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white disabled:bg-slate-100 disabled:text-slate-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">COD Price (₹) <span className="text-xs text-slate-400 font-normal">(Optional)</span></label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={foodForm.codPrice || ""}
+                    onChange={(e) => setFoodForm((prev) => ({ ...prev, codPrice: e.target.value }))}
+                    disabled={(foodForm.variants || []).length > 0}
+                    placeholder="Higher COD price"
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white disabled:bg-slate-100 disabled:text-slate-400"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Food Type</label>

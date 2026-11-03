@@ -1537,6 +1537,7 @@ export const listApprovedRestaurants = async (query = {}) => {
         isAcceptingOrders: 1,
         status: 1,
         pureVegRestaurant: 1,
+        restaurantType: 1,
         createdAt: 1,
         location: 1,
         openingTime: 1,
@@ -1573,14 +1574,14 @@ export const listApprovedRestaurants = async (query = {}) => {
         }
 
         const sortStage = (() => {
-            if (sortBy === 'rating' || sortBy === 'rating-high') return { $sort: { computedZoneRank: 1, rating: -1, distanceMeters: 1 } };
-            if (sortBy === 'rating-low') return { $sort: { computedZoneRank: 1, rating: 1, distanceMeters: 1 } };
-            if (sortBy === 'price-low') return { $sort: { computedZoneRank: 1, featuredPrice: 1, distanceMeters: 1 } };
-            if (sortBy === 'price-high') return { $sort: { computedZoneRank: 1, featuredPrice: -1, distanceMeters: 1 } };
-            if (sortBy === 'newest') return { $sort: { computedZoneRank: 1, createdAt: -1 } };
-            if (sortBy === 'deliveryTime') return { $sort: { computedZoneRank: 1, estimatedDeliveryTimeMinutes: 1, distanceMeters: 1 } };
+            if (sortBy === 'rating' || sortBy === 'rating-high') return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, rating: -1, distanceMeters: 1 } };
+            if (sortBy === 'rating-low') return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, rating: 1, distanceMeters: 1 } };
+            if (sortBy === 'price-low') return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, featuredPrice: 1, distanceMeters: 1 } };
+            if (sortBy === 'price-high') return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, featuredPrice: -1, distanceMeters: 1 } };
+            if (sortBy === 'newest') return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, createdAt: -1 } };
+            if (sortBy === 'deliveryTime') return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, estimatedDeliveryTimeMinutes: 1, distanceMeters: 1 } };
             // nearest (default)
-            return { $sort: { computedZoneRank: 1, distanceMeters: 1 } };
+            return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, distanceMeters: 1 } };
         })();
 
         const lookupStages = [
@@ -1611,7 +1612,8 @@ export const listApprovedRestaurants = async (query = {}) => {
             {
                 $addFields: {
                     distanceInKm: { $round: [{ $divide: ['$distanceMeters', 1000] }, 2] },
-                    computedZoneRank: { $ifNull: ['$zoneRank', 999] }
+                    computedZoneRank: { $ifNull: ['$zoneRank', 999] },
+                    isFranchisePriority: { $cond: [{ $eq: ['$restaurantType', 'franchise'] }, 0, 1] }
                 }
             },
             sortStage
@@ -1690,6 +1692,8 @@ export const listApprovedRestaurants = async (query = {}) => {
             return {
                 ...r,
                 isBanned,
+                restaurantType: r.restaurantType || "independent",
+                isFranchise: r.restaurantType === "franchise",
                 restaurantId: r._id,
                 id: r._id,
                 name: r.restaurantName || '',
@@ -1713,12 +1717,12 @@ export const listApprovedRestaurants = async (query = {}) => {
 
     // Non-geo path: normal query + sort converted to aggregate for computedZoneRank
     const sort = (() => {
-        if (sortBy === 'rating' || sortBy === 'rating-high') return { $sort: { computedZoneRank: 1, rating: -1, createdAt: -1 } };
-        if (sortBy === 'rating-low') return { $sort: { computedZoneRank: 1, rating: 1, createdAt: -1 } };
-        if (sortBy === 'price-low') return { $sort: { computedZoneRank: 1, featuredPrice: 1, createdAt: -1 } };
-        if (sortBy === 'price-high') return { $sort: { computedZoneRank: 1, featuredPrice: -1, createdAt: -1 } };
-        if (sortBy === 'deliveryTime') return { $sort: { computedZoneRank: 1, estimatedDeliveryTimeMinutes: 1, createdAt: -1 } };
-        return { $sort: { computedZoneRank: 1, createdAt: -1 } };
+        if (sortBy === 'rating' || sortBy === 'rating-high') return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, rating: -1, createdAt: -1 } };
+        if (sortBy === 'rating-low') return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, rating: 1, createdAt: -1 } };
+        if (sortBy === 'price-low') return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, featuredPrice: 1, createdAt: -1 } };
+        if (sortBy === 'price-high') return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, featuredPrice: -1, createdAt: -1 } };
+        if (sortBy === 'deliveryTime') return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, estimatedDeliveryTimeMinutes: 1, createdAt: -1 } };
+        return { $sort: { isFranchisePriority: 1, computedZoneRank: 1, createdAt: -1 } };
     })();
 
     const lookupStages = [
@@ -1749,7 +1753,7 @@ export const listApprovedRestaurants = async (query = {}) => {
     const basePipeline = [
         { $match: finalFilter },
         ...lookupStages,
-        { $addFields: { computedZoneRank: { $ifNull: ['$zoneRank', 999] } } },
+        { $addFields: { computedZoneRank: { $ifNull: ['$zoneRank', 999] }, isFranchisePriority: { $cond: [{ $eq: ['$restaurantType', 'franchise'] }, 0, 1] } } },
         sort
     ];
 
