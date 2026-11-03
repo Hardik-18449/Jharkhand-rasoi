@@ -20,6 +20,8 @@ const createFoodForm = () => ({
   categoryName: "",
   name: "",
   price: "",
+  codPrice: "",
+  prepaidPrice: "",
   variants: [],
   description: "",
   image: "",
@@ -140,6 +142,8 @@ export default function FoodsList() {
               categoryId: String(f.categoryId || ""),
               categoryName: f.categoryName || "",
               price: getFoodDisplayPrice(f),
+              prepaidPrice: f.prepaidPrice != null ? Number(f.prepaidPrice) : getFoodDisplayPrice(f),
+              codPrice: f.codPrice != null ? Number(f.codPrice) : null,
               variants: getFoodVariants(f),
               foodType: f.foodType || "Non-Veg",
               approvalStatus: f.approvalStatus || "approved",
@@ -417,6 +421,8 @@ export default function FoodsList() {
         categoryName: String(foodForm.categoryName || "").trim(),
         name: foodForm.name.trim(),
         price: hasVariants ? undefined : parsedPrice,
+        prepaidPrice: hasVariants ? undefined : parsedPrice,
+        codPrice: hasVariants ? undefined : (foodForm.codPrice && Number.isFinite(Number(foodForm.codPrice)) ? Number(foodForm.codPrice) : null),
         variants: normalizedVariants.map((variant) => ({
           ...(variant.id && !variant.id.startsWith("variant-") ? { _id: variant.id } : {}),
           name: variant.name,
@@ -605,6 +611,9 @@ export default function FoodsList() {
                 <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
                   Category
                 </th>
+                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  Price
+                </th>
                 <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">
                   Action
                 </th>
@@ -613,7 +622,7 @@ export default function FoodsList() {
             <tbody className="bg-white divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
+                  <td colSpan={7} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-2" />
                       <p className="text-sm text-slate-500">Loading foods...</p>
@@ -622,7 +631,7 @@ export default function FoodsList() {
                 </tr>
               ) : filteredFoods.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
+                  <td colSpan={7} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
                       <p className="text-sm text-slate-500">No food items match your search or restaurant filter</p>
@@ -665,6 +674,19 @@ export default function FoodsList() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <span className="text-sm font-medium text-slate-800">{food.categoryName || "-"}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-slate-900">
+                          ₹{food.prepaidPrice != null ? food.prepaidPrice : food.price}
+                          <span className="text-[10px] font-normal text-emerald-600 ml-1">(Prepaid)</span>
+                        </span>
+                        {food.codPrice != null && (
+                          <span className="text-xs text-amber-700 font-medium">
+                            ₹{food.codPrice} <span className="text-[10px] font-normal text-slate-500">(COD)</span>
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -779,7 +801,8 @@ export default function FoodsList() {
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm bg-slate-50 border border-slate-200 rounded-lg p-4">
                 <p><span className="font-semibold text-slate-700">Restaurant:</span> <span className="text-slate-900">{selectedFood.restaurantName || "-"}</span></p>
-                <p><span className="font-semibold text-slate-700">Price:</span> <span className="text-slate-900">{selectedFood.variants?.length ? `Starting from \u20B9${selectedFood.price}` : `\u20B9${selectedFood.price}`}</span></p>
+                <p><span className="font-semibold text-slate-700">Prepaid:</span> <span className="text-slate-900">{selectedFood.variants?.length ? `Starting from \u20B9${selectedFood.price}` : `\u20B9${selectedFood.prepaidPrice != null ? selectedFood.prepaidPrice : selectedFood.price}`}</span></p>
+                <p><span className="font-semibold text-slate-700">COD Price:</span> <span className="text-slate-900">{selectedFood.codPrice != null ? `\u20B9${selectedFood.codPrice}` : 'Same as Prepaid'}</span></p>
                 <p><span className="font-semibold text-slate-700">Category:</span> <span className="text-slate-900">{selectedFood.categoryName || "-"}</span></p>
                 <p><span className="font-semibold text-slate-700">Food Type:</span> <span className="text-slate-900">{selectedFood.foodType || "-"}</span></p>
                 <p><span className="font-semibold text-slate-700">Approval:</span> <span className="text-slate-900 capitalize">{selectedFood.approvalStatus || "-"}</span></p>

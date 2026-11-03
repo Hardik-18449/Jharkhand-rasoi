@@ -36,9 +36,14 @@ export const normalizeFoodVariantsInput = (value = [], options = {}) => {
                 throw new ValidationError(`${priceLabel} must be greater than 0`);
             }
 
+            const codPrice = entry?.codPrice != null && entry?.codPrice !== '' ? Number(entry.codPrice) : null;
+            const prepaidPrice = entry?.prepaidPrice != null && entry?.prepaidPrice !== '' ? Number(entry.prepaidPrice) : price;
+
             const variant = {
                 name,
-                price
+                price,
+                codPrice: Number.isFinite(codPrice) ? codPrice : null,
+                prepaidPrice: Number.isFinite(prepaidPrice) ? prepaidPrice : price
             };
 
             const variantId = entry?._id || entry?.id;
@@ -65,11 +70,16 @@ export const serializeFoodVariants = (value = []) =>
             if (!name || !Number.isFinite(price) || price <= 0) return null;
 
             const variantId = entry?._id || entry?.id;
+            const codPrice = entry?.codPrice != null && entry?.codPrice !== '' ? Number(entry.codPrice) : null;
+            const prepaidPrice = entry?.prepaidPrice != null && entry?.prepaidPrice !== '' ? Number(entry.prepaidPrice) : price;
+
             return {
                 id: variantId ? String(variantId) : '',
                 _id: variantId ? String(variantId) : '',
                 name,
-                price
+                price,
+                codPrice: Number.isFinite(codPrice) ? codPrice : null,
+                prepaidPrice: Number.isFinite(prepaidPrice) ? prepaidPrice : price
             };
         })
         .filter(Boolean);

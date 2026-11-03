@@ -469,6 +469,25 @@ export async function notifyRestaurantNewOrder(orderDoc) {
         },
       },
     );
+    try {
+      const { createInboxNotifications } = await import('../../../../core/notifications/notification.service.js');
+      await createInboxNotifications({
+        notifications: [{
+          ownerType: 'RESTAURANT',
+          ownerId: orderDoc.restaurantId,
+          title: 'New order received',
+          message: `Order #${orderDoc.order_id || orderDoc._id} is waiting for review.`,
+          link: `/restaurant/orders/${orderDoc._id?.toString?.() || ""}`,
+          category: 'order',
+          metadata: {
+            orderId: orderDoc._id.toString(),
+            orderIdentifier: orderDoc.order_id || orderDoc._id.toString(),
+          },
+        }],
+      });
+    } catch (inboxErr) {
+      logger.warn(`Failed to create inbox notification for restaurant: ${inboxErr?.message || inboxErr}`);
+    };
     const { scheduleRestaurantResponseDelayAlert } = await import('../../admin/services/restaurantDelayAlert.service.js');
     await scheduleRestaurantResponseDelayAlert(orderDoc);
   } catch {

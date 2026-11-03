@@ -7,6 +7,7 @@ import { RestaurantLayoutProvider, useRestaurantLayout } from "./RestaurantLayou
 import { RestaurantNotificationProvider } from "@food/context/RestaurantNotificationContext"
 import { getRestaurantLayoutOptions, getRestaurantHeaderOptions } from "@food/utils/restaurantLayoutConfig"
 import { cn } from "@food/utils/utils"
+import { registerWebPushForCurrentModule } from "@food/utils/firebaseMessaging"
 
 export default function RestaurantLayout() {
   const { pathname } = useLocation()
@@ -21,6 +22,12 @@ export default function RestaurantLayout() {
   useEffect(() => {
     setSidebarOpen(false)
   }, [pathname])
+
+  useEffect(() => {
+    registerWebPushForCurrentModule("/food/restaurant").catch((err) => {
+      console.warn("Failed to register restaurant web push:", err);
+    });
+  }, []);
 
   useEffect(() => {
     try {

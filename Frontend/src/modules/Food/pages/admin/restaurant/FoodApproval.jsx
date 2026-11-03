@@ -383,7 +383,12 @@ export default function FoodApproval() {
                             </span>
                           </td>
                           <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 font-semibold">
-                            {request.price !== null && request.price !== undefined ? `Rs ${request.price}` : '-'}
+                            <div>
+                              <span>{request.prepaidPrice != null ? `₹${request.prepaidPrice}` : (request.price != null ? `₹${request.price}` : '-')}</span>
+                              {request.codPrice != null && (
+                                <span className="block text-xs font-normal text-amber-700">COD: ₹{request.codPrice}</span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
                             {request.requestedAt ? new Date(request.requestedAt).toLocaleDateString() : '-'}
@@ -464,9 +469,15 @@ export default function FoodApproval() {
                         <p className="text-sm text-gray-700">{selectedRequest.category || '-'}</p>
                     </div>
                     <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Price</label>
-                        <p className="text-sm font-bold text-green-600">{selectedRequest.price !== null && selectedRequest.price !== undefined ? `₹${selectedRequest.price}` : '-'}</p>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Prepaid Price</label>
+                        <p className="text-sm font-bold text-green-600">{selectedRequest.prepaidPrice != null ? `₹${selectedRequest.prepaidPrice}` : (selectedRequest.price != null ? `₹${selectedRequest.price}` : '-')}</p>
                     </div>
+                    {selectedRequest.codPrice != null && (
+                      <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">COD Price</label>
+                          <p className="text-sm font-bold text-amber-700">{selectedRequest.codPrice != null ? `₹${selectedRequest.codPrice}` : '-'}</p>
+                      </div>
+                    )}
                     <div>
                         <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status</label>
                         <p className="text-sm text-gray-700 capitalize font-medium">{selectedRequest.approvalStatus || 'pending'}</p>

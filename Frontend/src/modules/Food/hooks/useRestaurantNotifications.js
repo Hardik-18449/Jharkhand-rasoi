@@ -7,6 +7,7 @@ import alertSound from '@food/assets/audio/restaurant-order-ring.wav';
 import { dispatchNotificationInboxRefresh } from '@food/hooks/useNotificationInbox';
 import { RestaurantNotificationContext } from '../context/RestaurantNotificationContext';
 import { isModuleAuthenticated } from '@food/utils/auth';
+import { toast } from 'sonner';
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -841,6 +842,46 @@ export const useRestaurantNotifications = () => {
     socketRef.current.on('admin_notification', (payload) => {
       debugLog('?? Admin broadcast received:', payload);
       dispatchNotificationInboxRefresh();
+    });
+
+    socketRef.current.on('food_approval_status', (data) => {
+      debugLog('Food approval status received:', data);
+      dispatchNotificationInboxRefresh();
+      if (data?.status === 'approved') {
+        toast.success(data.message || `Dish "${data.name}" has been approved!`);
+      } else if (data?.status === 'rejected') {
+        toast.error(data.message || `Dish "${data.name}" was rejected.`);
+      }
+      playNotificationSound();
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden' && supportsBrowserNotifications() && Notification.permission === 'granted') {
+        try {
+          new Notification(data?.status === 'approved' ? 'Dish Approved! 🍲' : 'Dish Rejected ❌', {
+            body: data.message || `Dish "${data.name}" status updated.`,
+            icon: '/brandlogo.png',
+          });
+        } catch {
+          // ignore
+        }
+      }
+    });
+
+    socketRef.current.on('notification', (payload) => {
+      debugLog('General notification received:', payload);
+      dispatchNotificationInboxRefresh();
+      if (payload?.title && payload?.body) {
+        toast.info(`${payload.title}: ${payload.body}`);
+      }
+      playNotificationSound();
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden' && supportsBrowserNotifications() && Notification.permission === 'granted') {
+        try {
+          new Notification(payload.title || 'Notification', {
+            body: payload.body || '',
+            icon: '/brandlogo.png',
+          });
+        } catch {
+          // ignore
+        }
+      }
     });
 
     // Load notification sound

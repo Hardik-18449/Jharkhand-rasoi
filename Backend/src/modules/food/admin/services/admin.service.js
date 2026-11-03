@@ -3325,6 +3325,8 @@ export async function getFoods(query) {
         name: f.name,
         description: f.description || '',
         price: getFoodDisplayPrice(f),
+        prepaidPrice: f.prepaidPrice != null ? Number(f.prepaidPrice) : getFoodDisplayPrice(f),
+        codPrice: f.codPrice != null ? Number(f.codPrice) : null,
         variants: serializeFoodVariants(f.variants),
         variations: serializeFoodVariants(f.variants),
         image: f.image || '',
@@ -3380,10 +3382,15 @@ const resolveAdminFoodCategory = async ({ categoryId, categoryName, foodType, pu
 
 const getAdminFoodCreatePricing = (body = {}) => {
     const variants = normalizeFoodVariantsInput(extractRawFoodVariants(body));
+    const codPrice = body.codPrice != null && body.codPrice !== '' ? Number(body.codPrice) : null;
+    const prepaidPrice = body.prepaidPrice != null && body.prepaidPrice !== '' ? Number(body.prepaidPrice) : null;
+
     if (variants.length > 0) {
         return {
             price: getFoodDisplayPrice({ variants }),
-            variants
+            variants,
+            codPrice,
+            prepaidPrice
         };
     }
 
@@ -3391,6 +3398,8 @@ const getAdminFoodCreatePricing = (body = {}) => {
     if (!Number.isFinite(price) || price <= 0) throw new ValidationError('Price must be greater than 0');
     return {
         price,
+        codPrice,
+        prepaidPrice: prepaidPrice ?? price,
         variants: []
     };
 };
@@ -3426,6 +3435,13 @@ const getAdminFoodUpdatedPricing = (existing = {}, body = {}) => {
         update.price = price;
     }
 
+    if (body.codPrice !== undefined) {
+        update.codPrice = body.codPrice != null && body.codPrice !== '' ? Number(body.codPrice) : null;
+    }
+    if (body.prepaidPrice !== undefined) {
+        update.prepaidPrice = body.prepaidPrice != null && body.prepaidPrice !== '' ? Number(body.prepaidPrice) : null;
+    }
+
     return update;
 };
 
@@ -3446,7 +3462,7 @@ export async function createFood(body) {
     if (restaurant.pureVegRestaurant === true && foodType !== 'Veg') {
         throw new ValidationError('Pure veg restaurants can only use veg foods');
     }
-    const { price, variants } = getAdminFoodCreatePricing(body);
+    const { price, codPrice, prepaidPrice, variants } = getAdminFoodCreatePricing(body);
 
     let categoryName = typeof body.categoryName === 'string' ? body.categoryName.trim() : '';
     if (!categoryName && typeof body.category === 'string') categoryName = body.category.trim();
@@ -3464,6 +3480,8 @@ export async function createFood(body) {
         name,
         description: typeof body.description === 'string' ? body.description.trim() : '',
         price,
+        prepaidPrice: prepaidPrice ?? price,
+        codPrice: codPrice ?? null,
         priceOnOtherPlatforms: body.priceOnOtherPlatforms ? Number(body.priceOnOtherPlatforms) : null,
         otherPlatformGst: body.otherPlatformGst !== undefined && body.otherPlatformGst !== null
             ? Number(body.otherPlatformGst)
@@ -3498,6 +3516,10 @@ export async function updateFood(id, body) {
     const pricingUpdate = getAdminFoodUpdatedPricing(doc.toObject(), body);
     if (pricingUpdate.price !== undefined) doc.price = pricingUpdate.price;
     if (pricingUpdate.variants !== undefined) doc.variants = pricingUpdate.variants;
+    if (pricingUpdate.codPrice !== undefined) doc.codPrice = pricingUpdate.codPrice;
+    if (pricingUpdate.prepaidPrice !== undefined) doc.prepaidPrice = pricingUpdate.prepaidPrice;
+    if (body.codPrice !== undefined) doc.codPrice = body.codPrice != null && body.codPrice !== '' ? Number(body.codPrice) : null;
+    if (body.prepaidPrice !== undefined) doc.prepaidPrice = body.prepaidPrice != null && body.prepaidPrice !== '' ? Number(body.prepaidPrice) : null;
     if (body.priceOnOtherPlatforms !== undefined) doc.priceOnOtherPlatforms = body.priceOnOtherPlatforms ? Number(body.priceOnOtherPlatforms) : null;
     if (body.otherPlatformGst !== undefined) {
         doc.otherPlatformGst = body.otherPlatformGst !== null && body.otherPlatformGst !== ''

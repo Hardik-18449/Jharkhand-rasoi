@@ -33,7 +33,7 @@ export async function listPendingFoodApprovals(query = {}) {
         .sort({ requestedAt: -1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .select('restaurantId categoryName name price variants image foodType approvalStatus requestedAt createdAt')
+        .select('restaurantId categoryName name price prepaidPrice codPrice variants image foodType approvalStatus requestedAt createdAt')
         .lean();
 
     const addonList = await FoodAddon.find({ approvalStatus: 'pending' })
@@ -66,6 +66,8 @@ export async function listPendingFoodApprovals(query = {}) {
         subsectionName: '',
         approvalStatus: f.approvalStatus || 'pending',
         price: getFoodDisplayPrice(f),
+        prepaidPrice: f.prepaidPrice != null ? Number(f.prepaidPrice) : getFoodDisplayPrice(f),
+        codPrice: f.codPrice != null ? Number(f.codPrice) : null,
         variants: serializeFoodVariants(f.variants),
         image: f.image || '',
         images: f.image ? [f.image] : [],
@@ -117,6 +119,10 @@ export async function approveFoodItem(id) {
         
         try {
             const { notifyOwnersSafely } = await import('../../../../core/notifications/firebase.service.js');
+            const { createInboxNotifications } = await import('../../../../core/notifications/notification.service.js');
+            const { getIO, rooms } = await import('../../../../config/socket.js');
+
+            // 1. Push notification via FCM
             await notifyOwnersSafely(
                 [{ ownerType: 'RESTAURANT', ownerId: updated.restaurantId }],
                 {
@@ -130,6 +136,37 @@ export async function approveFoodItem(id) {
                     }
                 }
             );
+
+            // 2. Real-time socket broadcast to restaurant panel
+            const io = getIO();
+            if (io) {
+                io.to(rooms.restaurant(updated.restaurantId)).emit('food_approval_status', {
+                    foodId: String(updated._id),
+                    name: updated.name,
+                    status: 'approved',
+                    approvalStatus: 'approved',
+                    message: `Your dish "${updated.name}" has been approved!`
+                });
+                io.to(rooms.restaurant(updated.restaurantId)).emit('notification', {
+                    title: 'Dish Approved! 🍲',
+                    body: `Your dish "${updated.name}" has been approved and is now visible to customers.`,
+                    type: 'food_approved',
+                    data: { foodId: String(updated._id) }
+                });
+            }
+
+            // 3. Save to in-app notification center inbox
+            await createInboxNotifications({
+                notifications: [{
+                    ownerType: 'RESTAURANT',
+                    ownerId: updated.restaurantId,
+                    title: 'Dish Approved! 🍲',
+                    message: `Your dish "${updated.name}" has been approved and is now visible to customers.`,
+                    link: '/restaurant/inventory',
+                    category: 'food_approval',
+                    metadata: { foodId: String(updated._id), status: 'approved' }
+                }]
+            });
         } catch (e) {
             console.error('Failed to send food approval notification:', e);
         }
@@ -156,6 +193,10 @@ export async function rejectFoodItem(id, reason) {
         
         try {
             const { notifyOwnersSafely } = await import('../../../../core/notifications/firebase.service.js');
+            const { createInboxNotifications } = await import('../../../../core/notifications/notification.service.js');
+            const { getIO, rooms } = await import('../../../../config/socket.js');
+
+            // 1. Push notification via FCM
             await notifyOwnersSafely(
                 [{ ownerType: 'RESTAURANT', ownerId: updated.restaurantId }],
                 {
@@ -170,6 +211,38 @@ export async function rejectFoodItem(id, reason) {
                     }
                 }
             );
+
+            // 2. Real-time socket broadcast to restaurant panel
+            const io = getIO();
+            if (io) {
+                io.to(rooms.restaurant(updated.restaurantId)).emit('food_approval_status', {
+                    foodId: String(updated._id),
+                    name: updated.name,
+                    status: 'rejected',
+                    approvalStatus: 'rejected',
+                    reason: r,
+                    message: `Your dish "${updated.name}" was rejected. Reason: ${r}`
+                });
+                io.to(rooms.restaurant(updated.restaurantId)).emit('notification', {
+                    title: 'Dish Rejected ❌',
+                    body: `Your dish "${updated.name}" was rejected. Reason: ${r}`,
+                    type: 'food_rejected',
+                    data: { foodId: String(updated._id), reason: r }
+                });
+            }
+
+            // 3. Save to in-app notification center inbox
+            await createInboxNotifications({
+                notifications: [{
+                    ownerType: 'RESTAURANT',
+                    ownerId: updated.restaurantId,
+                    title: 'Dish Rejected ❌',
+                    message: `Your dish "${updated.name}" was rejected. Reason: ${r}`,
+                    link: '/restaurant/inventory',
+                    category: 'food_approval',
+                    metadata: { foodId: String(updated._id), status: 'rejected', reason: r }
+                }]
+            });
         } catch (e) {
             console.error('Failed to send food rejection notification:', e);
         }

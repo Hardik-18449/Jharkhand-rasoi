@@ -633,6 +633,8 @@ export async function listPublicApprovedFoods(query = {}) {
         name: f.name,
         description: f.description || '',
         price: getFoodDisplayPrice(f),
+        prepaidPrice: f.prepaidPrice != null ? Number(f.prepaidPrice) : getFoodDisplayPrice(f),
+        codPrice: f.codPrice != null ? Number(f.codPrice) : null,
         image: resolveStoredUploadPath(f.image || ''),
         foodType: f.foodType || 'Non-Veg',
         isAvailable: f.isAvailable !== false,

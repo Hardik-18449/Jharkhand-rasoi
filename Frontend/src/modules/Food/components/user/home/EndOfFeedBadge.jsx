@@ -1,4 +1,4 @@
-import chefMascot from "@food/assets/chef-mascot.png";
+import chefMascot from "@food/assets/brandlogo.png";
 
 export default function EndOfFeedBadge({ className = "" }) {
   return (
