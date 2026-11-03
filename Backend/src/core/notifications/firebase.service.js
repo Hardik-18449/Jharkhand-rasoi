@@ -284,21 +284,44 @@ const findPushDeviceIndex = (devices = [], { fcmToken, voipToken, devicePlatform
 
 const readTokensFromDoc = (doc, platform) => {
     if (!doc) return [];
+    const tokens = [];
+
     if (platform) {
-        return normalizeTokenList(doc[getTokenFieldForPlatform(platform)] || []);
+        const field = getTokenFieldForPlatform(platform);
+        if (Array.isArray(doc[field])) tokens.push(...doc[field]);
+        if (Array.isArray(doc.pushDevices)) {
+            for (const dev of doc.pushDevices) {
+                if (dev?.fcmToken && (!dev.pushPlatform || dev.pushPlatform === platform)) {
+                    tokens.push(dev.fcmToken);
+                }
+            }
+        }
+    } else {
+        if (Array.isArray(doc.fcmTokens)) tokens.push(...doc.fcmTokens);
+        if (Array.isArray(doc.fcmTokenMobile)) tokens.push(...doc.fcmTokenMobile);
+        if (Array.isArray(doc.pushDevices)) {
+            for (const dev of doc.pushDevices) {
+                if (dev?.fcmToken) {
+                    tokens.push(dev.fcmToken);
+                }
+            }
+        }
     }
-    return normalizeTokenList([
-        ...(Array.isArray(doc.fcmTokens) ? doc.fcmTokens : []),
-        ...(Array.isArray(doc.fcmTokenMobile) ? doc.fcmTokenMobile : [])
-    ]);
+
+    return normalizeTokenList(tokens);
 };
 
 export const listOwnerTokens = async ({ ownerType, ownerId, platform }) => {
     if (!ownerType || !ownerId) return [];
     const model = getOwnerModel(ownerType);
     if (!model) return [];
-    const doc = await model.findById(ownerId).select('fcmTokens fcmTokenMobile').lean();
-    return readTokensFromDoc(doc, platform);
+    const doc = await model.findById(ownerId).select('fcmTokens fcmTokenMobile pushDevices').lean();
+    let tokens = readTokensFromDoc(doc, platform);
+    // If specific platform returned no tokens, fallback to all available tokens on this account
+    if (!tokens.length && platform) {
+        tokens = readTokensFromDoc(doc);
+    }
+    return tokens;
 };
 
 export const listOwnerPushDevices = async ({ ownerType, ownerId } = {}) => {
@@ -546,7 +569,7 @@ export const sendNotificationToOwner = async ({ ownerType, ownerId, payload, pla
 
     const tokens = await listOwnerTokens({ ownerType, ownerId, platform });
     if (!tokens.length) {
-        return { successCount: 0, failureCount: 0, results: [] };
+        return { successCount: 0, failureCount: 0, results: [], noTokens: true, message: 'No registered push devices or tokens found for this account' };
     }
     try {
         console.log(`[FCM] Sending to ${ownerType}:${ownerId}. Title: "${enrichedPayload.title || 'Data Only'}"`);

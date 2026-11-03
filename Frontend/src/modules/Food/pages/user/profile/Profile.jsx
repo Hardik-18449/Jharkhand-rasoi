@@ -99,7 +99,7 @@ export default function Profile() {
 
   // Trigger web push registration when profile mounts to ensure FCM token is saved
   useEffect(() => {
-    registerWebPushForCurrentModule().catch(console.error);
+    registerWebPushForCurrentModule("/user").catch(console.error);
   }, []);
 
   const handleVegModeUpdate = (nextValue) => {
@@ -503,6 +503,20 @@ export default function Profile() {
     if (isTestingNotification) return;
     setIsTestingNotification(true);
     try {
+      if (typeof window !== "undefined" && "Notification" in window) {
+        if (Notification.permission === "denied") {
+          toast.error("Notification permission is blocked in your browser. Please allow notifications in site settings and retry.");
+          setIsTestingNotification(false);
+          return;
+        }
+      }
+
+      try {
+        await registerWebPushForCurrentModule("/user", { throwOnError: false });
+      } catch (regErr) {
+        console.warn("[User Push] Registration warning:", regErr);
+      }
+
       let platform = "web";
       if (typeof window !== "undefined" && window.flutter_inappwebview) {
         platform = "mobile";
@@ -514,7 +528,9 @@ export default function Profile() {
       
       console.log("[FCM Test Details]:", details)
       if (successCount > 0) {
-        toast.success(`Test sent! Delivered: ${successCount}, Failed: ${failureCount}`)
+        toast.success(`Test sent! Delivered: ${successCount}${failureCount > 0 ? `, Failed: ${failureCount}` : ''}`)
+      } else if (details?.noTokens || (successCount === 0 && failureCount === 0)) {
+        toast.error("No registered push devices found. Please ensure notification permissions are allowed in your browser/app.")
       } else {
         toast.error(`Test failed to deliver. Delivered: 0, Failed: ${failureCount}`)
       }

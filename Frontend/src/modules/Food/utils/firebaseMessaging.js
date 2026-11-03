@@ -33,12 +33,18 @@ const notificationDedupWindowMs = 8000;
 const pushDebugLog = (prefix, message, data = {}) => {};
 const pushDebugWarn = (prefix, message, data = {}) => {};
 
-function normalizeModuleFromPath(pathname = window.location.pathname) {
+export function normalizeModuleFromPath(pathname = "") {
+  let full = String(pathname || "").toLowerCase();
+  if (!full || full === "/" || full === "/index.html") {
+    if (typeof window !== "undefined") {
+      full = `${window.location.pathname} ${window.location.hash} ${window.location.href}`.toLowerCase();
+    }
+  }
   // Admin routes can contain words such as "restaurant" and "delivery" in
   // their settings URLs, so admin must be resolved before those modules.
-  if (pathname.includes("/admin")) return "admin";
-  if (pathname.includes("/restaurant") && !pathname.includes("/restaurants")) return "restaurant";
-  if (pathname.includes("/delivery")) return "delivery";
+  if (full.includes("/admin")) return "admin";
+  if (full.includes("/restaurant") && !full.includes("/restaurants/")) return "restaurant";
+  if (full.includes("/delivery")) return "delivery";
   return "user";
 }
 
@@ -902,7 +908,7 @@ async function attachForegroundListener(firebaseAppInstance) {
   foregroundListenerAttached = true;
 }
 
-export async function registerWebPushForCurrentModule(pathname = window.location.pathname, options = {}) {
+export async function registerWebPushForCurrentModule(pathname = "", options = {}) {
   const moduleName = normalizeModuleFromPath(pathname);
   if (moduleName === "admin" && options?.allowAdmin !== true) return false;
 

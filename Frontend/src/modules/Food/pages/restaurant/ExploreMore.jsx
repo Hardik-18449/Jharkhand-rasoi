@@ -363,7 +363,7 @@ export default function ExploreMore() {
 
   useEffect(() => {
     // Register for push notifications on mount for this module
-    registerWebPushForCurrentModule().catch(err => {
+    registerWebPushForCurrentModule("/food/restaurant").catch(err => {
       debugError("Failed to register push notifications:", err)
     })
   }, [])
@@ -683,7 +683,12 @@ export default function ExploreMore() {
       // Refresh the current device registration before testing FCM. This also
       // prompts for browser notification permission when it has not been set.
       if (channel === "fcm") {
-        await registerWebPushForCurrentModule()
+        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "denied") {
+          toast.error("Notification permission is blocked in your browser. Please allow notifications in site settings and retry.")
+          setIsTestingNotification(false)
+          return
+        }
+        await registerWebPushForCurrentModule("/food/restaurant", { throwOnError: false })
       }
 
       console.info("[RestaurantVoIPTest] click", {
@@ -724,7 +729,9 @@ export default function ExploreMore() {
         const failureCount = details?.failureCount || 0
         console.info("[FCM Test Details]:", details)
         if (successCount > 0) {
-          toast.success(`Test sent! Delivered: ${successCount}, Failed: ${failureCount}`)
+          toast.success(`Test sent! Delivered: ${successCount}${failureCount > 0 ? `, Failed: ${failureCount}` : ''}`)
+        } else if (details?.noTokens || (successCount === 0 && failureCount === 0)) {
+          toast.error("No registered push devices found. Please ensure notification permissions are allowed in your browser/app.")
         } else {
           toast.error(`Test failed to deliver. Delivered: 0, Failed: ${failureCount}`)
         }
