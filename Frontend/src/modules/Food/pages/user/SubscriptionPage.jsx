@@ -33,6 +33,40 @@ import { useCompanyName } from "@food/hooks/useCompanyName";
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation";
 
 // Helper to guarantee strictly no emojis are rendered on this page
+
+const SPOTIFY_PLAN_THEMES = [
+  {
+    pillBg: "bg-[#FFCE85] text-[#291700]", // Warm Gold / Amber
+    titleColor: "#FFB84D",
+    buttonBg: "bg-[#FFCE85] hover:bg-[#FFC266] text-[#291700]",
+  },
+  {
+    pillBg: "bg-[#FFD2D7] text-[#1E0408]", // Pastel Pink / Rose
+    titleColor: "#FF8093",
+    buttonBg: "bg-[#FFD2D7] hover:bg-[#FFBAC3] text-[#1E0408]",
+  },
+  {
+    pillBg: "bg-[#A7D1ED] text-[#051C2C]", // Pastel Sky / Family
+    titleColor: "#85C4F0",
+    buttonBg: "bg-[#A7D1ED] hover:bg-[#92C4E5] text-[#051C2C]",
+  },
+  {
+    pillBg: "bg-[#D8F872] text-[#132300]", // Electric Lime / Mini
+    titleColor: "#C2F53E",
+    buttonBg: "bg-[#D8F872] hover:bg-[#C9F050] text-[#132300]",
+  },
+  {
+    pillBg: "bg-[#C4B5FD] text-[#1E0845]", // Lavender / Student
+    titleColor: "#A78BFA",
+    buttonBg: "bg-[#C4B5FD] hover:bg-[#B39DFB] text-[#1E0845]",
+  },
+  {
+    pillBg: "bg-[#A7F3D0] text-[#022C22]", // Fresh Mint / Emerald
+    titleColor: "#6EE7B7",
+    buttonBg: "bg-[#A7F3D0] hover:bg-[#86EFAC] text-[#022C22]",
+  },
+];
+
 const cleanText = (str) => {
   if (!str || typeof str !== "string") return "";
   return str
@@ -315,11 +349,11 @@ export default function SubscriptionPage() {
               </p>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {plans.map((plan) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {plans.map((plan, index) => {
+                const theme = SPOTIFY_PLAN_THEMES[index % SPOTIFY_PLAN_THEMES.length];
                 const isPopular = Boolean(plan.isPopular);
                 const isCurrentPlan = mySub?.isSubscribed && mySub?.planName === plan.name;
-                const cleanedBadge = cleanText(plan.badgeText) || "VIP";
                 const cleanedName = cleanText(plan.name) || plan.name;
                 const cleanedDesc = cleanText(plan.description) || plan.description;
 
@@ -328,128 +362,127 @@ export default function SubscriptionPage() {
                     ? Math.round(((plan.originalPrice - plan.price) / plan.originalPrice) * 100)
                     : null;
 
+                const durationLabel =
+                  plan.durationDays >= 365
+                    ? "1 year"
+                    : plan.durationDays >= 60
+                    ? `${Math.round(plan.durationDays / 30)} months`
+                    : `${plan.durationDays || 30} days`;
+
                 return (
-                  <Card
+                  <div
                     key={plan._id}
-                    className={`rounded-2xl transition-all duration-200 flex flex-col justify-between overflow-hidden relative ${
-                      isPopular
-                        ? "border-2 border-amber-400 shadow-md ring-2 ring-amber-300/30"
-                        : "border border-gray-200 dark:border-gray-800 hover:border-gray-300 shadow-xs"
-                    }`}
+                    className="relative flex flex-col justify-between rounded-2xl bg-[#1e1e1e] hover:bg-[#242424] border border-white/10 p-6 pt-5 transition-all duration-300 shadow-xl group"
                   >
-                    {/* RECOMMENDED CHOICE BANNER */}
-                    {isPopular && (
-                      <div className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-black text-xs font-black uppercase tracking-wider py-1.5 px-4 text-center flex items-center justify-center gap-1.5 shadow-xs">
-                        <Crown className="h-3.5 w-3.5 fill-black text-black" />
-                        <span>Recommended Choice</span>
+                    {/* Top Offer Pill / Badge */}
+                    <div className="mb-4">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-md text-xs font-black tracking-wide shadow-sm ${theme.pillBg}`}
+                      >
+                        {isPopular
+                          ? `₹${plan.price} for ${durationLabel}`
+                          : discountPercent
+                          ? `Save ${discountPercent}%`
+                          : `₹${plan.price} for ${durationLabel}`}
+                      </span>
+                    </div>
+
+                    <div className="flex-1 flex flex-col">
+                      {/* Plan Brand Tag */}
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-white/70 mb-1">
+                        <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        <span className="uppercase tracking-wider">VIP Club</span>
                       </div>
-                    )}
 
-                    <CardContent className="p-5 md:p-6 flex-1 space-y-4">
-                      {/* Plan Header */}
-                      <div className="flex items-center justify-between">
-                        <Badge
-                          className="font-bold text-[10px] uppercase text-white shadow-xs"
-                          style={{ backgroundColor: plan.badgeColor || "#7e3866" }}
-                        >
-                          {cleanedBadge}
-                        </Badge>
+                      {/* Plan Title in Theme Accent Color */}
+                      <h3
+                        className="text-2xl sm:text-3xl font-black tracking-tight leading-tight mb-2"
+                        style={{ color: theme.titleColor }}
+                      >
+                        {cleanedName}
+                      </h3>
 
-                        <div className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 rounded-full">
-                          <Clock className="h-3 w-3 text-primary" />
-                          <span>{plan.durationDays} Days</span>
+                      {/* Price & Duration */}
+                      <div className="mb-2">
+                        <div className="text-sm font-black text-white">
+                          ₹{plan.price} for {durationLabel}
+                        </div>
+                        <div className="text-xs text-white/50 font-medium mt-0.5">
+                          {plan.originalPrice > plan.price ? (
+                            <>
+                              <span className="line-through mr-1.5">₹{plan.originalPrice}</span>
+                              <span>Save {discountPercent}%</span>
+                            </>
+                          ) : (
+                            <span>Cancel or extend anytime</span>
+                          )}
                         </div>
                       </div>
 
-                      {/* Name & Desc */}
-                      <div>
-                        <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
-                          {cleanedName}
-                        </h3>
-                        {cleanedDesc ? (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                            {cleanedDesc}
-                          </p>
-                        ) : (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Full VIP priority access and kitchen queue privileges.
-                          </p>
+                      {/* Hairline Divider */}
+                      <div className="w-full h-[1px] bg-white/10 my-4" />
+
+                      {/* Bullet Benefits List */}
+                      <ul className="space-y-2.5 text-sm text-gray-200 font-medium flex-1 mb-6">
+                        {/* 1. Kitchen Priority */}
+                        <li className="flex items-start gap-2.5 leading-snug">
+                          <span className="text-white/60 font-black text-base leading-none select-none">•</span>
+                          <span>Kitchen Priority Cooking (Rank #{plan.priorityLevel || 1})</span>
+                        </li>
+
+                        {/* 2. Free Delivery */}
+                        <li className="flex items-start gap-2.5 leading-snug">
+                          <span className="text-white/60 font-black text-base leading-none select-none">•</span>
+                          <span>
+                            {plan.freeDeliveryMinOrder > 0
+                              ? `Free delivery on orders above ₹${plan.freeDeliveryMinOrder}`
+                              : "Free delivery on all eligible orders"}
+                          </span>
+                        </li>
+
+                        {/* 3. Extra Discount */}
+                        {plan.discountPercent > 0 && (
+                          <li className="flex items-start gap-2.5 leading-snug">
+                            <span className="text-white/60 font-black text-base leading-none select-none">•</span>
+                            <span>Extra {plan.discountPercent}% OFF on partner restaurants</span>
+                          </li>
                         )}
-                      </div>
 
-                      {/* Pricing */}
-                      <div className="pt-2 border-t border-gray-100 dark:border-gray-800 space-y-1">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-3xl font-extrabold text-gray-900 dark:text-white">
-                            ₹{plan.price}
-                          </span>
-                          {plan.originalPrice > plan.price && (
-                            <span className="text-sm font-semibold text-gray-400 line-through">
-                              ₹{plan.originalPrice}
-                            </span>
-                          )}
-                          {discountPercent && (
-                            <span className="text-[11px] font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded-full">
-                              Save {discountPercent}%
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
-                          {plan.durationDays >= 365
-                            ? "Full year access"
-                            : plan.durationDays >= 90
-                            ? "3 months validity"
-                            : "30 days validity"}
-                        </div>
-                      </div>
-
-                      {/* Kitchen Priority Callout */}
-                      <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-start gap-2.5">
-                        <Flame className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                        <div className="text-xs text-gray-700 dark:text-gray-200">
-                          <span className="font-bold text-primary block">
-                            Kitchen Priority Rank #{plan.priorityLevel || 1}
-                          </span>
-                          Orders cooked first before standard customer tickets.
-                        </div>
-                      </div>
-
-                      {/* Features List */}
-                      <div className="space-y-2 pt-1">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                          Plan Benefits:
-                        </div>
+                        {/* 4. Custom features from Database */}
                         {plan.features?.map((feat, fIdx) => {
                           const cleanedFeat = cleanText(feat);
                           if (!cleanedFeat) return null;
                           return (
-                            <div
-                              key={fIdx}
-                              className="flex items-start gap-2 text-xs text-gray-700 dark:text-gray-300 font-medium"
-                            >
-                              <Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5 stroke-[2.5]" />
+                            <li key={fIdx} className="flex items-start gap-2.5 leading-snug">
+                              <span className="text-white/60 font-black text-base leading-none select-none">•</span>
                               <span>{cleanedFeat}</span>
-                            </div>
+                            </li>
                           );
                         })}
-                      </div>
-                    </CardContent>
 
-                    {/* CTA Button */}
-                    <div className="p-5 pt-0">
-                      <Button
-                        onClick={() => handleOpenSubscribe(plan)}
-                        className={`w-full py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-xs ${
-                          isPopular
-                            ? "bg-amber-400 hover:bg-amber-500 text-black font-extrabold shadow-xs"
-                            : "bg-gray-900 hover:bg-black text-white dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{isCurrentPlan ? "Extend Plan" : "Get VIP Pass"}</span>
-                        <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                      </Button>
+                        {/* 5. One-time payment */}
+                        <li className="flex items-start gap-2.5 leading-snug">
+                          <span className="text-white/60 font-black text-base leading-none select-none">•</span>
+                          <span>One-time wallet payment or auto-extend</span>
+                        </li>
+                      </ul>
                     </div>
-                  </Card>
+
+                    {/* CTA Button and Disclaimer Footer */}
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenSubscribe(plan)}
+                        className={`w-full rounded-full py-3.5 px-6 font-black text-sm uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-lg flex items-center justify-center cursor-pointer ${theme.buttonBg}`}
+                      >
+                        <span>{isCurrentPlan ? "Current Plan" : `Get ${cleanedName}`}</span>
+                      </button>
+
+                      <p className="mt-3 text-[11px] text-center text-white/50 leading-relaxed">
+                        ₹{plan.price} for {plan.durationDays} days. Valid on all orders. Cancel anytime. Terms apply.
+                      </p>
+                    </div>
+                  </div>
                 );
               })}
             </div>
