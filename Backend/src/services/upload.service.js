@@ -103,9 +103,13 @@ const processAndSaveImage = async ({ buffer, prefix, folder = 'misc', width, hei
     }
 
     if (await useCloudinary()) {
-        const processed = await sharpInstance.webp({ quality }).toBuffer();
-        const { url } = await uploadBufferToCloudinary(processed, { subFolder: folder });
-        return url;
+        try {
+            const processed = await sharpInstance.webp({ quality }).toBuffer();
+            const { url } = await uploadBufferToCloudinary(processed, { subFolder: folder });
+            return url;
+        } catch (cloudinaryErr) {
+            console.error('[Upload] Cloudinary upload failed, falling back to local:', cloudinaryErr?.message || cloudinaryErr);
+        }
     }
 
     const dir = ensureUploadDirExists();

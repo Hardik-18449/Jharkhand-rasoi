@@ -6,9 +6,9 @@ const phoneSchema = z
     .min(8, 'Phone must be at least 8 digits')
     .max(15, 'Phone must be at most 15 digits');
 
-const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-const aadharRegex = /^[0-9]{12}$/;
-const drivingLicenseRegex = /^[A-Z]{2}[0-9]{2}[0-9]{4}[0-9]{7}$/;
+const panRegex = /^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$/;
+const aadharRegex = /^[0-9\s-]{12,16}$/;
+const drivingLicenseRegex = /^[A-Za-z0-9\s-]{8,25}$/;
 
 const deliveryRegisterSchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -38,8 +38,18 @@ const deliveryRegisterSchema = z.object({
         .optional()
         .or(z.literal('')),
     fcmToken: z.string().optional().nullable(),
-    platform: z.enum(['web', 'mobile']).optional().default('web')
-});
+    platform: z.enum(['web', 'mobile']).optional().default('web'),
+    // Document URLs from progressive/single uploads
+    profilePhoto: z.string().optional().nullable().or(z.literal('')),
+    aadharPhoto: z.string().optional().nullable().or(z.literal('')),
+    aadharFrontPhoto: z.string().optional().nullable().or(z.literal('')),
+    aadharBackPhoto: z.string().optional().nullable().or(z.literal('')),
+    panPhoto: z.string().optional().nullable().or(z.literal('')),
+    drivingLicenseFrontPhoto: z.string().optional().nullable().or(z.literal('')),
+    drivingLicenseBackPhoto: z.string().optional().nullable().or(z.literal('')),
+    rcPhoto: z.string().optional().nullable().or(z.literal('')),
+    upiQrCode: z.string().optional().nullable().or(z.literal(''))
+}).passthrough();
 
 export const validateDeliveryRegisterDto = (body) => {
     const result = deliveryRegisterSchema.safeParse(body);
@@ -63,9 +73,29 @@ const deliveryProfileUpdateSchema = z.object({
         .regex(drivingLicenseRegex, 'Invalid driving license format')
         .optional()
         .or(z.literal('')),
+    panNumber: z
+        .string()
+        .regex(panRegex, 'Invalid PAN format')
+        .optional()
+        .or(z.literal('')),
+    aadharNumber: z
+        .string()
+        .regex(aadharRegex, 'Invalid Aadhar format')
+        .optional()
+        .or(z.literal('')),
     fcmToken: z.string().optional().nullable(),
-    platform: z.enum(['web', 'mobile']).optional().default('web')
-});
+    platform: z.enum(['web', 'mobile']).optional().default('web'),
+    // Document URLs from progressive/single uploads
+    profilePhoto: z.string().optional().nullable().or(z.literal('')),
+    aadharPhoto: z.string().optional().nullable().or(z.literal('')),
+    aadharFrontPhoto: z.string().optional().nullable().or(z.literal('')),
+    aadharBackPhoto: z.string().optional().nullable().or(z.literal('')),
+    panPhoto: z.string().optional().nullable().or(z.literal('')),
+    drivingLicenseFrontPhoto: z.string().optional().nullable().or(z.literal('')),
+    drivingLicenseBackPhoto: z.string().optional().nullable().or(z.literal('')),
+    rcPhoto: z.string().optional().nullable().or(z.literal('')),
+    upiQrCode: z.string().optional().nullable().or(z.literal(''))
+}).passthrough();
 
 export const validateDeliveryProfileUpdateDto = (body) => {
     const result = deliveryProfileUpdateSchema.safeParse(body);
@@ -114,4 +144,3 @@ export const validateDeliveryBankDetailsDto = (body) => {
     }
     return result.data;
 };
-

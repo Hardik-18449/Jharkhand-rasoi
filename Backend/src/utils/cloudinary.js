@@ -12,7 +12,8 @@ export const isCloudinaryConfigured = () =>
     );
 
 // Active provider chosen by the admin toggle ('local' | 'cloudinary'), cached briefly.
-let providerCache = { value: 'local', expiresAt: 0 };
+let providerCache = { value: 'cloudinary', expiresAt: 0 };
+
 // Checks if current environment is running on localhost / development
 export const isLocalhostEnvironment = () => {
     const nodeEnv = (process.env.NODE_ENV || '').toLowerCase().trim();
@@ -32,24 +33,24 @@ export const isLocalhostEnvironment = () => {
     );
 };
 
-
 export const getUploadProvider = async () => {
     if (providerCache.expiresAt > Date.now()) return providerCache.value;
     
-    // Default provider by environment:
-    // Localhost -> Cloudinary (if configured)
-    // Production Domain -> Local Server Storage ('local')
-    const isLocal = isLocalhostEnvironment();
-    let defaultProvider = (isLocal && isCloudinaryConfigured()) ? 'cloudinary' : 'local';
+    // When Cloudinary is configured in .env, default to 'cloudinary'
+    let defaultProvider = isCloudinaryConfigured() ? 'cloudinary' : 'local';
 
     let value = defaultProvider;
     try {
         const doc = await UploadSetting.findOne({ key: 'singleton' }).lean();
         if (doc?.imageUploadProvider) {
-            value = doc.imageUploadProvider;
+            if (doc.imageUploadProvider === 'cloudinary' && isCloudinaryConfigured()) {
+                value = 'cloudinary';
+            } else if (doc.imageUploadProvider === 'local') {
+                value = isCloudinaryConfigured() ? 'cloudinary' : 'local';
+            }
         }
     } catch {
-        // DB unavailable -> fall back to environment default
+        // DB unavailable -> fall back to default
     }
     providerCache = { value, expiresAt: Date.now() + 15 * 1000 };
     return value;
@@ -65,7 +66,7 @@ export const setUploadProvider = async (imageUploadProvider) => {
     return doc.imageUploadProvider;
 };
 
-// Use Cloudinary only when it is selected in settings AND credentials exist.
+// Use Cloudinary when credentials exist AND provider resolves to cloudinary (default if configured).
 export const useCloudinary = async () =>
     isCloudinaryConfigured() && (await getUploadProvider()) === 'cloudinary';
 

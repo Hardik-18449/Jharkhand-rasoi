@@ -1,7 +1,7 @@
 const FILE_SIZE_LIMIT_RE = /(file size|too large|max(?:imum)?(?: allowed)?(?: file)? size|limit exceeded)/i;
 const INVALID_TYPE_RE = /(invalid file type|only .* allowed|unsupported media type|mime|format not supported)/i;
 
-export const DEFAULT_IMAGE_UPLOAD_LIMIT_MB = 5;
+export const DEFAULT_IMAGE_UPLOAD_LIMIT_MB = 2;
 
 export const getImageValidationError = (file, { maxSizeMb = DEFAULT_IMAGE_UPLOAD_LIMIT_MB } = {}) => {
   if (!file) return 'Please select an image file';
@@ -10,8 +10,9 @@ export const getImageValidationError = (file, { maxSizeMb = DEFAULT_IMAGE_UPLOAD
     return 'Please select a valid image file.';
   }
 
-  if (Number(file.size || 0) > maxSizeMb * 1024 * 1024) {
-    return `Image size should be less than ${maxSizeMb}MB.`;
+  // Pre-compression warning if extraordinarily large (e.g. > 20MB)
+  if (Number(file.size || 0) > 20 * 1024 * 1024) {
+    return `Original image size is too large. Please select a photo under 20MB.`;
   }
 
   return '';

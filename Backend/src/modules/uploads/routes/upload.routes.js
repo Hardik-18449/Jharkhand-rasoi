@@ -23,6 +23,7 @@ router.post('/image', upload.single('file'), async (req, res, next) => {
         return res.status(200).json({
             success: true,
             message: 'Image uploaded successfully',
+            url,
             data: {
                 url,
                 publicId: null

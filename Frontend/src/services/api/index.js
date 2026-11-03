@@ -1484,23 +1484,23 @@ export const deliveryAPI = {
     const resolvedFcmToken = fcmToken || getModuleFcmToken("delivery");
     return authService.logout(token, resolvedFcmToken, platform);
   },
-  /** POST /food/delivery/register - multipart FormData (new partner, no token). */
-  register: (formData) => {
-    if (!formData || !(formData instanceof FormData)) {
+  /** POST /food/delivery/register - supports either JSON (with document URLs) or FormData */
+  register: (data) => {
+    if (!data) {
       return Promise.reject(
-        new Error("FormData with details and document files is required"),
+        new Error("Registration data is required"),
       );
     }
-    return deliveryClient.post("/food/delivery/register", formData);
+    return deliveryClient.post("/food/delivery/register", data);
   },
-  /** PATCH /food/delivery/profile - complete profile after OTP (Bearer token required). */
-  completeProfile: (formData) => {
-    if (!formData || !(formData instanceof FormData)) {
+  /** PATCH /food/delivery/profile - complete profile after OTP (supports JSON or FormData) */
+  completeProfile: (data) => {
+    if (!data) {
       return Promise.reject(
-        new Error("FormData with details and document files is required"),
+        new Error("Profile data is required"),
       );
     }
-    return deliveryClient.patch("/food/delivery/profile", formData);
+    return deliveryClient.patch("/food/delivery/profile", data);
   },
   /** PATCH /food/delivery/profile/details - JSON updates (vehicle number, etc). */
   updateProfileDetails: (payload) =>

@@ -1,14 +1,21 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowLeft, Upload, X, Check, Camera, Image as ImageIcon } from "lucide-react"
-import { deliveryAPI } from "@food/api"
+import { ArrowLeft, Upload, X, Check, Camera, Image as ImageIcon, RefreshCw, AlertCircle } from "lucide-react"
+import { deliveryAPI, uploadAPI } from "@food/api"
 import { toast } from "sonner"
-import { getImageValidationError } from '@/shared/utils/uploadErrors.js'
-import { isFlutterBridgeAvailable, openCamera } from "@food/utils/imageUploadUtils"
+import { openCamera } from "@food/utils/imageUploadUtils"
+import { compressImage, validateImageFile } from "@/shared/utils/imageCompressor.js"
 import useDeliveryBackNavigation from "../../hooks/useDeliveryBackNavigation"
-const debugLog = (...args) => {}
-const debugWarn = (...args) => {}
-const debugError = (...args) => {}
+
+const DOCUMENT_LABELS = {
+  profilePhoto: "Profile Photo",
+  aadharFrontPhoto: "Aadhar Card (Front)",
+  aadharBackPhoto: "Aadhar Card (Back)",
+  panPhoto: "PAN Card Photo",
+  drivingLicenseFrontPhoto: "Driving License (Front)",
+  drivingLicenseBackPhoto: "Driving License (Back)",
+  rcPhoto: "RC (Registration Certificate)"
+}
 
 const createEmptyUploadedDocs = () => ({
   profilePhoto: null,
@@ -20,7 +27,7 @@ const createEmptyUploadedDocs = () => ({
   rcPhoto: null
 })
 
-// IndexedDB helpers for persistent file storage
+// IndexedDB helpers for persistent file/URL storage
 const DELIVERY_FILES_DB = "DeliverySignupFiles"
 const FILES_STORE = "files"
 
@@ -54,7 +61,7 @@ const saveFileToDB = async (key, file) => {
       tx.onabort = () => reject(tx.error || new Error("IndexedDB write transaction aborted"))
     })
   } catch (err) {
-    debugError("IndexedDB save failed:", err)
+    console.error("IndexedDB save failed:", err)
   }
 }
 
@@ -64,13 +71,11 @@ const getFileFromDB = async (key) => {
     const tx = db.transaction(FILES_STORE, "readonly")
     const request = tx.objectStore(FILES_STORE).get(key)
     return new Promise((resolve) => {
-      request.onsuccess = () => {
-        resolve(request.result || null)
-      }
+      request.onsuccess = () => resolve(request.result || null)
       request.onerror = () => resolve(null)
     })
   } catch (err) {
-    debugError("IndexedDB load failed:", err)
+    console.error("IndexedDB load failed:", err)
     return null
   }
 }
@@ -86,7 +91,7 @@ const deleteFileFromDB = async (key) => {
       tx.onabort = () => reject(tx.error || new Error("IndexedDB delete transaction aborted"))
     })
   } catch (err) {
-    debugError("IndexedDB delete failed:", err)
+    console.error("IndexedDB delete failed:", err)
   }
 }
 
@@ -101,25 +106,20 @@ const clearAllFilesFromDB = async () => {
       tx.onabort = () => reject(tx.error || new Error("IndexedDB clear transaction aborted"))
     })
   } catch (err) {
-    debugError("IndexedDB clear failed:", err)
+    console.error("IndexedDB clear failed:", err)
   }
 }
 
 const sanitizeUploadedDocValue = (value) => {
   if (!value) return null
-
   if (typeof value === "string") {
-    return value.startsWith("blob:") ? null : value
+    return value.startsWith("blob:") ? null : { url: value }
   }
-
   if (typeof value === "object") {
     const url = typeof value.url === "string" ? value.url : ""
-    if (url.startsWith("blob:")) {
-      return null
-    }
-    return value
+    if (url.startsWith("blob:")) return null
+    return url ? value : null
   }
-
   return null
 }
 
@@ -133,73 +133,42 @@ const sanitizeUploadedDocs = (docs) => ({
   rcPhoto: sanitizeUploadedDocValue(docs?.rcPhoto)
 })
 
-const compressImageToWebP = (file, maxWidth = 1024, quality = 0.8) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = (event) => {
-      const img = new Image()
-      img.src = event.target.result
-      img.onload = () => {
-        const canvas = document.createElement("canvas")
-        let width = img.width
-        let height = img.height
-
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width)
-          width = maxWidth
-        }
-
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext("2d")
-        ctx.drawImage(img, 0, 0, width, height)
-        const dataUrl = canvas.toDataURL("image/webp", quality)
-        resolve(dataUrl)
-      }
-      img.onerror = (error) => reject(error)
-    }
-    reader.onerror = (error) => reject(error)
-  })
-}
-
 const getFriendlyRegistrationError = (error) => {
   const rawMessage =
     error?.response?.data?.message ||
     error?.response?.data?.error ||
+    error?.userMessage ||
     error?.message ||
     ""
 
-  if (/E11000 duplicate key error/i.test(rawMessage)) {
-    if (/vehicleNumber_1/i.test(rawMessage) || /vehicleNumber/i.test(rawMessage)) {
+  const lower = rawMessage.toLowerCase()
+
+  if (/E11000 duplicate key error/i.test(rawMessage) || lower.includes("already registered") || lower.includes("duplicate")) {
+    if (lower.includes("vehicle")) {
       return "This vehicle number is already registered. Please use a different vehicle number."
     }
-
-    if (/panNumber_1/i.test(rawMessage) || /panNumber/i.test(rawMessage)) {
+    if (lower.includes("pan")) {
       return "This PAN number is already registered."
     }
-
-    if (/aadharNumber_1/i.test(rawMessage) || /aadharNumber/i.test(rawMessage)) {
+    if (lower.includes("aadhar")) {
       return "This Aadhar number is already registered."
     }
-
-    if (/drivingLicense/i.test(rawMessage)) {
+    if (lower.includes("license") || lower.includes("driving")) {
       return "This driving license number is already registered."
     }
-
+    if (lower.includes("phone")) {
+      return "This phone number is already registered. Please login instead."
+    }
     return "This account detail is already registered. Please check your information."
   }
 
   return rawMessage || "Failed to register. Please try again."
 }
 
-
 export default function SignupStep2() {
   const navigate = useNavigate()
   const goBack = useDeliveryBackNavigation()
-  const isMobileDevice =
-    typeof navigator !== "undefined" &&
-    /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent || "")
+
   const fileInputRefs = useRef({
     profilePhoto: null,
     aadharFrontPhoto: null,
@@ -209,6 +178,7 @@ export default function SignupStep2() {
     drivingLicenseBackPhoto: null,
     rcPhoto: null
   })
+
   const [documents, setDocuments] = useState({
     profilePhoto: null,
     aadharFrontPhoto: null,
@@ -218,27 +188,30 @@ export default function SignupStep2() {
     drivingLicenseBackPhoto: null,
     rcPhoto: null
   })
+
   const [uploadedDocs, setUploadedDocs] = useState(() => {
     const saved = localStorage.getItem("deliverySignupDocs")
     if (saved) {
       try {
         return sanitizeUploadedDocs(JSON.parse(saved))
       } catch (e) {
-        debugError("Error parsing saved docs:", e)
+        console.error("Error parsing saved docs:", e)
       }
     }
     return createEmptyUploadedDocs()
   })
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploading, setUploading] = useState({})
+  const [uploadErrors, setUploadErrors] = useState({})
   const [isSuccess, setIsSuccess] = useState(false)
 
-  // Hydrate files from IndexedDB on load
+  // Hydrate files/URLs from IndexedDB on load
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" })
     document.documentElement.scrollTop = 0
     document.body.scrollTop = 0
-    
+
     const loadFiles = async () => {
       const [prof, aadharFront, aadharBack, pan, dlFront, dlBack, rc] = await Promise.all([
         getFileFromDB("profilePhoto"),
@@ -249,7 +222,17 @@ export default function SignupStep2() {
         getFileFromDB("drivingLicenseBackPhoto"),
         getFileFromDB("rcPhoto")
       ])
-      
+
+      const docMap = {
+        profilePhoto: prof,
+        aadharFrontPhoto: aadharFront,
+        aadharBackPhoto: aadharBack,
+        panPhoto: pan,
+        drivingLicenseFrontPhoto: dlFront,
+        drivingLicenseBackPhoto: dlBack,
+        rcPhoto: rc
+      }
+
       setDocuments(prev => ({
         ...prev,
         ...(prof && { profilePhoto: prof }),
@@ -261,26 +244,24 @@ export default function SignupStep2() {
         ...(rc && { rcPhoto: rc })
       }))
 
-      setUploadedDocs(prev => ({
-        ...prev,
-        ...(prof && { profilePhoto: { file: true } }),
-        ...(aadharFront && { aadharFrontPhoto: { file: true } }),
-        ...(aadharBack && { aadharBackPhoto: { file: true } }),
-        ...(pan && { panPhoto: { file: true } }),
-        ...(dlFront && { drivingLicenseFrontPhoto: { file: true } }),
-        ...(dlBack && { drivingLicenseBackPhoto: { file: true } }),
-        ...(rc && { rcPhoto: { file: true } })
-      }))
+      // For any item that is already a server URL, mark as uploaded
+      setUploadedDocs(prev => {
+        const next = { ...prev }
+        Object.entries(docMap).forEach(([k, v]) => {
+          if (v && typeof v === "string" && (v.startsWith("http://") || v.startsWith("https://") || v.startsWith("/uploads/"))) {
+            next[k] = { url: v }
+          }
+        })
+        return next
+      })
     }
     loadFiles()
   }, [])
 
-  // Save uploaded docs metadata to session storage whenever they change
+  // Save uploaded docs metadata to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("deliverySignupDocs", JSON.stringify(uploadedDocs))
   }, [uploadedDocs])
-
-  // Removed incorrect URL.revokeObjectURL cleanup that was breaking image previews
 
   const getPreviewSrc = (docType) => {
     const uploaded = uploadedDocs[docType]
@@ -288,55 +269,69 @@ export default function SignupStep2() {
     if (uploaded?.url) return uploaded.url
 
     const localFile = documents[docType]
-    if (typeof localFile === "string" && localFile.startsWith("data:")) {
+    if (typeof localFile === "string") {
       return localFile
-    }
-    if (localFile) {
-      if (!localFile._previewUrl) {
-        try {
-          const blob = (localFile instanceof Blob || localFile instanceof File) 
-            ? localFile 
-            : new Blob([localFile], { type: localFile.type || "image/webp" })
-          localFile._previewUrl = URL.createObjectURL(blob)
-        } catch (e) {
-          return null
-        }
-      }
-      return localFile._previewUrl
     }
     return null
   }
 
-  const handleOpenUploadOptions = (docType) => {
-    fileInputRefs.current[docType]?.click()
-  }
+  // Core Progressive / One-By-One Upload Handler
+  const handleUploadSingleFile = async (docType, rawFile) => {
+    if (!rawFile) return
 
-  const handleFileSelect = async (docType, file) => {
-    if (!file) return
-
-    const imageValidationError = getImageValidationError(file)
-    if (imageValidationError) {
-      toast.error(imageValidationError)
+    const validationErr = validateImageFile(rawFile, { maxInputMb: 20 })
+    if (validationErr) {
+      toast.error(validationErr)
       return
     }
 
-    try {
-      // Compress to WebP (max width 1024px, 80% quality)
-      const compressedDataUrl = await compressImageToWebP(file, 1024, 0.8)
+    const label = DOCUMENT_LABELS[docType] || docType
 
-      setDocuments((prev) => ({ ...prev, [docType]: compressedDataUrl }))
-      setUploadedDocs((prev) => ({ ...prev, [docType]: { file: true } }))
-      await saveFileToDB(docType, compressedDataUrl)
-      toast.success(`${docType.replace(/([A-Z])/g, " $1").trim()} selected`)
-    } catch (error) {
-      debugError("Image compression failed:", error)
-      toast.error("Failed to process image. Please try another one.")
+    setUploading(prev => ({ ...prev, [docType]: true }))
+    setUploadErrors(prev => ({ ...prev, [docType]: null }))
+
+    try {
+      // 1. Client-side compression: resize down to max 1280px WebP, target size <= 2MB
+      const compressed = await compressImage(rawFile, {
+        maxDimension: 1280,
+        quality: 0.8,
+        targetMaxBytes: 2 * 1024 * 1024,
+        filenamePrefix: `delivery-${docType}`
+      })
+
+      // 2. Set instant local preview
+      setDocuments(prev => ({ ...prev, [docType]: compressed.dataUrl }))
+
+      // 3. Upload immediately to single upload endpoint
+      const response = await uploadAPI.uploadMedia(compressed.file, { folder: "delivery" })
+      const serverUrl = response?.data?.data?.url || response?.data?.url
+
+      if (!serverUrl) {
+        throw new Error("No URL returned from server")
+      }
+
+      // 4. Save server URL in state & storage
+      setUploadedDocs(prev => ({
+        ...prev,
+        [docType]: { url: serverUrl, sizeKb: compressed.sizeKb }
+      }))
+      setDocuments(prev => ({ ...prev, [docType]: serverUrl }))
+      await saveFileToDB(docType, serverUrl)
+
+      setUploading(prev => ({ ...prev, [docType]: false }))
+      toast.success(`${label} uploaded successfully (${compressed.sizeKb} KB)`)
+    } catch (err) {
+      console.error(`Upload error for ${docType}:`, err)
+      setUploading(prev => ({ ...prev, [docType]: false }))
+      const msg = err?.response?.data?.message || err?.userMessage || err?.message || "Upload failed. Please try again."
+      setUploadErrors(prev => ({ ...prev, [docType]: msg }))
+      toast.error(`Failed to upload ${label}: ${msg}`)
     }
   }
 
   const handleTakeCameraPhoto = (docType, label) => {
     openCamera({
-      onSelectFile: (file) => handleFileSelect(docType, file),
+      onSelectFile: (file) => handleUploadSingleFile(docType, file),
       fileNamePrefix: `signup-${docType}`
     })
   }
@@ -346,19 +341,21 @@ export default function SignupStep2() {
   }
 
   const handleRemove = async (docType) => {
-    setDocuments(prev => ({
-      ...prev,
-      [docType]: null
-    }))
-    setUploadedDocs(prev => ({
-      ...prev,
-      [docType]: null
-    }))
+    setDocuments(prev => ({ ...prev, [docType]: null }))
+    setUploadedDocs(prev => ({ ...prev, [docType]: null }))
+    setUploadErrors(prev => ({ ...prev, [docType]: null }))
     await deleteFileFromDB(docType)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // 1. Guard against in-flight uploads
+    const isAnyUploading = Object.values(uploading).some(Boolean)
+    if (isAnyUploading) {
+      toast.error("Please wait for all documents to finish uploading.")
+      return
+    }
 
     const raw = localStorage.getItem("deliverySignupDetails")
     if (!raw) {
@@ -376,99 +373,84 @@ export default function SignupStep2() {
       return
     }
 
-    if (!documents.profilePhoto) {
-      toast.error("Profile Photo is required")
-      return
-    }
-    if (!documents.aadharFrontPhoto) {
-      toast.error("Aadhar Card (Front) is required")
-      return
-    }
-    if (!documents.aadharBackPhoto) {
-      toast.error("Aadhar Card (Back) is required")
-      return
-    }
-    if (!documents.panPhoto) {
-      toast.error("PAN Card Photo is required")
-      return
-    }
-    if (!documents.rcPhoto) {
-      toast.error("RC (Registration Certificate) is required")
-      return
-    }
+    // 2. Validate all required documents are uploaded
+    const requiredList = [
+      { key: "profilePhoto", label: "Profile Photo" },
+      { key: "aadharFrontPhoto", label: "Aadhar Card (Front)" },
+      { key: "aadharBackPhoto", label: "Aadhar Card (Back)" },
+      { key: "panPhoto", label: "PAN Card Photo" },
+      { key: "rcPhoto", label: "RC (Registration Certificate)" }
+    ]
 
-    const formData = new FormData()
-    formData.append("name", details.name || "")
-    formData.append("phone", String(details.phone || "").replace(/\D/g, "").slice(0, 15))
-    if (details.email) formData.append("email", String(details.email).trim())
-    if (details.ref) formData.append("ref", String(details.ref).trim())
-    if (details.countryCode) formData.append("countryCode", details.countryCode)
-    if (details.address) formData.append("address", details.address)
-    if (details.city) formData.append("city", details.city)
-    if (details.state) formData.append("state", details.state)
-    if (details.vehicleType) formData.append("vehicleType", details.vehicleType)
-    if (details.vehicleName) formData.append("vehicleName", details.vehicleName)
-    if (details.vehicleNumber) formData.append("vehicleNumber", details.vehicleNumber)
-    if (details.drivingLicenseNumber) {
-      formData.append("drivingLicenseNumber", details.drivingLicenseNumber)
-      formData.append("documents[drivingLicense][number]", details.drivingLicenseNumber)
-    }
-    if (details.panNumber) formData.append("panNumber", details.panNumber)
-    if (details.aadharNumber) formData.append("aadharNumber", details.aadharNumber)
-
-    const appendFileToForm = (formData, key, fileData, filename) => {
-      if (!fileData) return;
-      if (typeof fileData === 'string' && fileData.startsWith('data:')) {
-        const arr = fileData.split(',');
-        const mime = arr[0].match(/:(.*?);/)[1];
-        const bstr = atob(arr[1]);
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        while (n--) {
-          u8arr[n] = bstr.charCodeAt(n);
+    for (const req of requiredList) {
+      const url = uploadedDocs[req.key]?.url || (typeof documents[req.key] === "string" && (documents[req.key].startsWith("http") || documents[req.key].startsWith("/uploads/")) ? documents[req.key] : null)
+      if (!url) {
+        // If they have a local dataUrl from previous session, auto-upload it now
+        if (documents[req.key] && typeof documents[req.key] === "string" && documents[req.key].startsWith("data:")) {
+          try {
+            toast.info(`Uploading ${req.label}...`)
+            await handleUploadSingleFile(req.key, documents[req.key])
+            continue
+          } catch {
+            toast.error(`Please upload ${req.label}`)
+            return
+          }
         }
-        formData.append(key, new File([u8arr], filename, { type: mime }));
-      } else {
-        formData.append(key, fileData);
+        toast.error(`${req.label} is required and must be uploaded`)
+        return
       }
-    };
-
-    appendFileToForm(formData, "profilePhoto", documents.profilePhoto, "profile.webp");
-    appendFileToForm(formData, "aadharFrontPhoto", documents.aadharFrontPhoto, "aadhar_front.webp");
-    appendFileToForm(formData, "aadharBackPhoto", documents.aadharBackPhoto, "aadhar_back.webp");
-    appendFileToForm(formData, "panPhoto", documents.panPhoto, "pan.webp");
-    appendFileToForm(formData, "drivingLicenseFrontPhoto", documents.drivingLicenseFrontPhoto, "dl_front.webp");
-    appendFileToForm(formData, "drivingLicenseBackPhoto", documents.drivingLicenseBackPhoto, "dl_back.webp");
-    appendFileToForm(formData, "rcPhoto", documents.rcPhoto, "rc.webp");
+    }
 
     // Try to get FCM token before registering
-    let fcmToken = null;
-    let platform = "web";
+    let fcmToken = null
+    let platform = "web"
     try {
       if (typeof window !== "undefined") {
         if (window.flutter_inappwebview) {
-          platform = "mobile";
-          const handlerNames = ["getFcmToken", "getFCMToken", "getPushToken", "getFirebaseToken"];
+          platform = "mobile"
+          const handlerNames = ["getFcmToken", "getFCMToken", "getPushToken", "getFirebaseToken"]
           for (const handlerName of handlerNames) {
             try {
-              const t = await window.flutter_inappwebview.callHandler(handlerName, { module: "delivery" });
+              const t = await window.flutter_inappwebview.callHandler(handlerName, { module: "delivery" })
               if (t && typeof t === "string" && t.length > 20) {
-                fcmToken = t.trim();
-                break;
+                fcmToken = t.trim()
+                break
               }
             } catch (e) {}
           }
         } else {
-          fcmToken = localStorage.getItem("fcm_web_registered_token_delivery") || null;
+          fcmToken = localStorage.getItem("fcm_web_registered_token_delivery") || null
         }
       }
     } catch (e) {
-      debugWarn("Failed to get FCM token during signup", e);
+      console.warn("Failed to get FCM token during signup", e)
     }
 
-    if (fcmToken) {
-      formData.append("fcmToken", fcmToken);
-      formData.append("platform", platform);
+    // 3. Build clean lightweight JSON payload with already-uploaded URLs
+    const payload = {
+      name: details.name || "",
+      phone: String(details.phone || "").replace(/\D/g, "").slice(0, 15),
+      email: details.email ? String(details.email).trim() : undefined,
+      ref: details.ref ? String(details.ref).trim() : undefined,
+      countryCode: details.countryCode || "+91",
+      address: details.address || "",
+      city: details.city || "",
+      state: details.state || "",
+      vehicleType: details.vehicleType || "bike",
+      vehicleName: details.vehicleName || "",
+      vehicleNumber: details.vehicleNumber || "",
+      drivingLicenseNumber: details.drivingLicenseNumber ? details.drivingLicenseNumber.trim() : undefined,
+      panNumber: details.panNumber ? details.panNumber.toUpperCase().trim() : undefined,
+      aadharNumber: details.aadharNumber ? details.aadharNumber.replace(/\D/g, "") : undefined,
+      profilePhoto: uploadedDocs.profilePhoto?.url || documents.profilePhoto,
+      aadharFrontPhoto: uploadedDocs.aadharFrontPhoto?.url || documents.aadharFrontPhoto,
+      aadharBackPhoto: uploadedDocs.aadharBackPhoto?.url || documents.aadharBackPhoto,
+      panPhoto: uploadedDocs.panPhoto?.url || documents.panPhoto,
+      drivingLicenseFrontPhoto: uploadedDocs.drivingLicenseFrontPhoto?.url || documents.drivingLicenseFrontPhoto || "",
+      drivingLicenseBackPhoto: uploadedDocs.drivingLicenseBackPhoto?.url || documents.drivingLicenseBackPhoto || "",
+      rcPhoto: uploadedDocs.rcPhoto?.url || documents.rcPhoto,
+      fcmToken,
+      platform
     }
 
     const isCompleteProfile = localStorage.getItem("deliveryNeedsRegistration") === "true"
@@ -476,11 +458,9 @@ export default function SignupStep2() {
     setIsSubmitting(true)
 
     try {
-      // New number (OTP ke baad pehli baar): DB me abhi partner nahi hai,
-      // is case me register hi call karna hai (no auth token needed).
       const response = isCompleteProfile
-        ? await deliveryAPI.register(formData)
-        : await deliveryAPI.completeProfile(formData)
+        ? await deliveryAPI.register(payload)
+        : await deliveryAPI.completeProfile(payload)
 
       if (response?.data?.success) {
         localStorage.removeItem("deliverySignupDetails")
@@ -488,11 +468,13 @@ export default function SignupStep2() {
         await clearAllFilesFromDB()
         localStorage.removeItem("deliveryNeedsRegistration")
         setIsSuccess(true)
+      } else {
+        toast.error(response?.data?.message || "Failed to submit registration.")
       }
     } catch (error) {
-      debugError("Error submitting registration:", error)
-      const message = getFriendlyRegistrationError(error)
-      toast.error(message)
+      console.error("Delivery signup error:", error)
+      const friendlyMessage = getFriendlyRegistrationError(error)
+      toast.error(friendlyMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -501,62 +483,85 @@ export default function SignupStep2() {
   const DocumentUpload = ({ docType, label, required = true }) => {
     const uploaded = uploadedDocs[docType]
     const isUploading = uploading[docType]
+    const uploadError = uploadErrors[docType]
     const src = getPreviewSrc(docType)
+    const isReady = Boolean(uploaded?.url)
 
     return (
-      <div className="bg-white rounded-lg p-4 border border-gray-200">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
+      <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm transition-all hover:border-gray-300">
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-semibold text-gray-800">
+            {label} {required && <span className="text-red-500">*</span>}
+          </label>
+          {isReady && uploaded?.sizeKb && (
+            <span className="text-[11px] font-medium text-gray-400 bg-gray-50 px-2 py-0.5 rounded">
+              {uploaded.sizeKb} KB
+            </span>
+          )}
+        </div>
 
-        {uploaded ? (
+        {isReady ? (
           <div className="relative">
             {src ? (
               <img
                 src={src}
                 alt={label}
-                className="w-full h-48 object-cover rounded-lg"
+                className="w-full h-48 object-cover rounded-lg border border-gray-100"
               />
             ) : (
               <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00B761]"></div>
               </div>
             )}
             <button
               type="button"
               onClick={() => handleRemove(docType)}
-              className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+              className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-md active:scale-95"
+              title="Remove photo"
             >
               <X className="w-4 h-4" />
             </button>
-            <div className="absolute bottom-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full flex items-center gap-1 text-sm">
-              <Check className="w-4 h-4" />
+            <div className="absolute bottom-2 left-2 bg-[#00B761] text-white px-3 py-1 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-md">
+              <Check className="w-3.5 h-3.5 stroke-[3]" />
               <span>Uploaded</span>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 transition-colors px-4">
-            <div className="flex flex-col items-center justify-center pt-5 pb-3">
+          <div className={`flex flex-col items-center justify-center w-full min-h-[180px] border-2 border-dashed rounded-xl transition-all px-4 py-4 ${
+            uploadError ? "border-red-300 bg-red-50/30" : "border-gray-200 bg-gray-50/50 hover:border-[#00B761]"
+          }`}>
+            <div className="flex flex-col items-center justify-center mb-3">
               {isUploading ? (
                 <>
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mb-2"></div>
-                  <p className="text-sm text-gray-500">Uploading...</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#00B761] border-t-transparent mb-2"></div>
+                  <p className="text-sm font-semibold text-gray-700">Compressing & Uploading...</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Optimizing under 2MB for fast upload</p>
+                </>
+              ) : uploadError ? (
+                <>
+                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mb-2">
+                    <AlertCircle className="w-5 h-5 text-red-500" />
+                  </div>
+                  <p className="text-xs font-semibold text-red-600 text-center max-w-[240px] mb-1">
+                    {uploadError}
+                  </p>
+                  <p className="text-[11px] text-gray-400">Tap below to retry</p>
                 </>
               ) : (
                 <>
-                  <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-500 mb-1">Upload document</p>
-                  <p className="text-xs text-gray-400">PNG, JPG up to 5MB</p>
+                  <Upload className="w-7 h-7 text-gray-400 mb-2" />
+                  <p className="text-sm font-semibold text-gray-700">Upload document</p>
+                  <p className="text-xs text-gray-400 mt-0.5">PNG, JPG, WebP up to 2MB (Auto-compressed)</p>
                 </>
               )}
             </div>
 
             {!isUploading && (
-              <div className="w-full grid grid-cols-2 gap-2 pb-4">
+              <div className="w-full grid grid-cols-2 gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => handleTakeCameraPhoto(docType, label)}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gray-900 text-white text-xs font-bold cursor-pointer hover:bg-black transition-all active:scale-95"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-gray-900 text-white text-xs font-bold cursor-pointer hover:bg-black transition-all active:scale-95 shadow-sm"
                 >
                   <Camera className="w-4 h-4" />
                   <span>Take Photo</span>
@@ -564,7 +569,7 @@ export default function SignupStep2() {
                 <button
                   type="button"
                   onClick={() => handlePickFromGallery(docType)}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-[#00B761] text-white text-xs font-bold cursor-pointer hover:bg-[#00A055] transition-all active:scale-95"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#00B761] text-white text-xs font-bold cursor-pointer hover:bg-[#00A055] transition-all active:scale-95 shadow-sm shadow-[#00B761]/20"
                 >
                   <ImageIcon className="w-4 h-4" />
                   <span>Gallery</span>
@@ -585,7 +590,7 @@ export default function SignupStep2() {
               onChange={(e) => {
                 const selectedFile = e.target.files[0]
                 if (selectedFile) {
-                  handleFileSelect(docType, selectedFile)
+                  handleUploadSingleFile(docType, selectedFile)
                 }
                 e.target.value = ""
               }}
@@ -601,12 +606,12 @@ export default function SignupStep2() {
     return (
       <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6">
         <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-xl border border-gray-100">
-          <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-            <Check className="w-10 h-10 text-amber-500" />
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <Check className="w-10 h-10 text-[#00B761]" />
           </div>
           <h2 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">Profile Under Review</h2>
           <p className="text-gray-500 font-medium leading-relaxed mb-8">
-            Your profile has been submitted successfully. It is currently under review by the admin. We will notify you once your request is approved.
+            Your documents and profile have been submitted successfully. It is currently under review by the admin team. We will notify you once approved.
           </p>
           <button
             onClick={() => navigate("/food/delivery/login", { replace: true })}
@@ -622,21 +627,27 @@ export default function SignupStep2() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div className="bg-white px-4 py-3 flex items-center gap-4 border-b border-gray-200">
+      <div className="bg-white px-4 py-3 flex items-center gap-4 border-b border-gray-200 sticky top-0 z-20">
         <button
           onClick={goBack}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors active:scale-95"
+          aria-label="Back"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5 text-gray-700" />
         </button>
-        <h1 className="text-lg font-medium">Upload Documents</h1>
+        <div>
+          <h1 className="text-base font-bold text-gray-900">Upload Documents</h1>
+          <p className="text-xs text-gray-500">Step 2 of 2: Document Verification</p>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="px-4 py-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Document Verification</h2>
-          <p className="text-sm text-gray-600">Please upload clear photos of your documents</p>
+      <div className="px-4 py-5 max-w-md mx-auto">
+        <div className="mb-5 bg-emerald-50 border border-emerald-200 rounded-xl p-3.5">
+          <h2 className="text-sm font-bold text-emerald-950 mb-1">Fast & Optimized Uploads</h2>
+          <p className="text-xs text-emerald-800 leading-relaxed">
+            Photos are automatically compressed to under 2MB and uploaded securely one-by-one.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -654,17 +665,16 @@ export default function SignupStep2() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`w-full py-4 rounded-lg font-bold text-white text-base transition-colors mt-6 ${isSubmitting
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-[#00B761] hover:bg-[#00A055]"
-              }`}
+            className={`w-full py-4 rounded-xl font-bold text-white text-base transition-all mt-6 shadow-lg active:scale-95 ${
+              isSubmitting
+                ? "bg-gray-400 cursor-not-allowed shadow-none"
+                : "bg-[#00B761] hover:bg-[#00A055] shadow-[#00B761]/30 cursor-pointer"
+            }`}
           >
-            {isSubmitting ? "Submitting..." : "Complete Signup"}
+            {isSubmitting ? "Submitting Registration..." : "Complete Signup"}
           </button>
         </form>
       </div>
-
     </div>
   )
 }
-

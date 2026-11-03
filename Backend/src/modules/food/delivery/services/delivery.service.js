@@ -75,6 +75,12 @@ export const registerDeliveryPartner = async (payload, files) => {
     } else if (payload?.rcPhoto) {
         images.rcPhoto = String(payload.rcPhoto).trim();
     }
+    
+    if (files?.upiQrCode?.[0]) {
+        images.upiQrCode = await uploadDeliveryImage(files.upiQrCode[0].buffer);
+    } else if (payload?.upiQrCode) {
+        images.upiQrCode = String(payload.upiQrCode).trim();
+    }
 
     const partner = await FoodDeliveryPartner.create({
         name,
@@ -173,10 +179,29 @@ export const updateDeliveryPartnerProfile = async (userId, payload, files) => {
         }
     }
 
+    if (panNumber !== undefined) partner.panNumber = panNumber;
+    if (aadharNumber !== undefined) partner.aadharNumber = aadharNumber;
+
     let updatedDocsRequiringReapproval = false;
 
-    if (files?.profilePhoto?.[0]) {
-        partner.profilePhoto = await uploadDeliveryImage(files.profilePhoto[0].buffer);
+    const docFields = [
+        'profilePhoto',
+        'aadharPhoto',
+        'aadharFrontPhoto',
+        'aadharBackPhoto',
+        'panPhoto',
+        'drivingLicenseFrontPhoto',
+        'drivingLicenseBackPhoto',
+        'rcPhoto',
+        'upiQrCode'
+    ];
+
+    for (const field of docFields) {
+        if (files?.[field]?.[0]) {
+            partner[field] = await uploadDeliveryImage(files[field][0].buffer);
+        } else if (payload?.[field] && typeof payload[field] === 'string' && payload[field].trim()) {
+            partner[field] = String(payload[field]).trim();
+        }
     }
 
     await partner.save();
