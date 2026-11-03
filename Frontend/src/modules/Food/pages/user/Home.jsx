@@ -94,6 +94,8 @@ import HomeHeader from "@food/components/user/home/HomeHeader";
 import HeroBanner from "@food/components/user/home/HeroBanner";
 import RestaurantGrid from "@food/components/user/home/RestaurantGrid";
 import NearbyDishesSection from "@food/components/user/home/NearbyDishesSection";
+import EndOfFeedBadge from "@food/components/user/home/EndOfFeedBadge";
+import VipSubscriptionModal from "@food/components/user/home/VipSubscriptionModal";
 import ExploreMoreSection from "@food/components/user/home/ExploreMoreSection";
 import RestaurantImageCarousel from "@food/components/user/home/RestaurantImageCarousel";
 import QuickSection from "@food/components/user/home/QuickSection";
@@ -2614,6 +2616,9 @@ export default function Home() {
           zoneId={effectiveZoneId}
           backendOrigin={BACKEND_ORIGIN}
         />
+
+        {/* That's All For Now End of Feed Badge */}
+        <EndOfFeedBadge />
 </motion.div>
             ) : (
               <motion.div
@@ -3608,6 +3613,8 @@ export default function Home() {
         )}
 
       <StickyCartCard />
+      {/* Spotify-style VIP Subscription Promo Modal */}
+      <VipSubscriptionModal />
       {/* Live order strip: only on homepage (not in UserLayout) */}
       <OrderTrackingCard hasBottomNav />
       </div> {/* Closes the unified relative z-10 w-full mb-2 container from top */}
