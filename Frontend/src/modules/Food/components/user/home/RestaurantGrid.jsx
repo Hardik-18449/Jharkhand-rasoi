@@ -43,11 +43,11 @@ function RestaurantGrid({
 
   return (
     <div
-      className={`px-4 pt-1 sm:pt-1.5 lg:pt-2 pb-10 ${
+      className={`px-4 pt-1 sm:pt-1.5 lg:pt-2 ${
         isLoading ? "opacity-50" : "opacity-100"
       } transition-opacity duration-300`}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-4 lg:gap-5 xl:gap-6 items-stretch pb-5 sm:pb-4 lg:pb-5 xl:pb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-4 lg:gap-5 xl:gap-6 items-stretch sm:pb-4 lg:pb-5 xl:pb-6">
         {restaurants.map((restaurant, index) => (
           <HomeRestaurantCard
             key={
@@ -67,7 +67,6 @@ function RestaurantGrid({
         ))}
       </div>
 
-      {/* End of list Jharkhand Rasoi branding */}
     </div>
   );
 }

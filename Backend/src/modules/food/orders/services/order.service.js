@@ -1402,18 +1402,40 @@ export async function updateOrderStatusRestaurant(
   // Real-time: delivery request / ready notifications.
   try {
     const io = getIO();
-    if (io) {
-      // When food is PREPARED (ready_for_pickup or ready) -> notify delivery partner or trigger fresh dispatch hunt!
-      if (
-        (String(orderStatus) === "ready_for_pickup" || String(orderStatus) === "ready") &&
-        (String(from) !== "ready_for_pickup" && String(from) !== "ready")
-      ) {
-        console.log(`[DEBUG] Food is prepared! Order ${order._id.toString()} status changed to '${orderStatus}'. Triggering delivery notification / dispatch.`);
-        const assignedId = order.dispatch?.deliveryPartnerId?.toString?.() || order.dispatch?.deliveryPartnerId;
-        const currentDispatchStatus = order.dispatch?.status;
-        const isAlreadyAccepted = currentDispatchStatus === 'accepted' && order.dispatch?.acceptedAt && assignedId;
 
-        if (isAlreadyAccepted) {
+    // 1. When restaurant ACCEPTS the order (status becomes "preparing" or "confirmed")
+    // -> Immediately hunt and notify nearby delivery partners so a rider can accept early!
+    if (
+      (String(orderStatus) === "preparing" || String(orderStatus) === "confirmed") &&
+      String(from) !== "preparing" && String(from) !== "ready_for_pickup" && String(from) !== "ready"
+    ) {
+      console.log(`[DEBUG] Order ${order._id.toString()} accepted by restaurant (${orderStatus}). Triggering delivery dispatch hunt.`);
+      const assignedId = order.dispatch?.deliveryPartnerId?.toString?.() || order.dispatch?.deliveryPartnerId;
+      const isAlreadyAccepted = order.dispatch?.status === 'accepted' && order.dispatch?.acceptedAt && assignedId;
+      if (!isAlreadyAccepted) {
+        try {
+          await dispatchService.resetDispatchForFreshHunt(order._id);
+          await dispatchService.tryAutoAssign(order._id, { attempt: 1 });
+          const fresh = await FoodOrder.findById(order._id);
+          if (fresh) order = fresh;
+        } catch (err) {
+          console.error(`[DEBUG] Auto-assign on order accept failed:`, err);
+        }
+      }
+    }
+
+    // 2. When food is PREPARED (ready_for_pickup or ready) -> notify delivery partner or trigger fresh dispatch hunt!
+    if (
+      (String(orderStatus) === "ready_for_pickup" || String(orderStatus) === "ready") &&
+      (String(from) !== "ready_for_pickup" && String(from) !== "ready")
+    ) {
+      console.log(`[DEBUG] Food is prepared! Order ${order._id.toString()} status changed to '${orderStatus}'. Triggering delivery notification / dispatch.`);
+      const assignedId = order.dispatch?.deliveryPartnerId?.toString?.() || order.dispatch?.deliveryPartnerId;
+      const currentDispatchStatus = order.dispatch?.status;
+      const isAlreadyAccepted = currentDispatchStatus === 'accepted' && order.dispatch?.acceptedAt && assignedId;
+
+      if (isAlreadyAccepted) {
+        if (io) {
           console.log(`[DEBUG] Notifying assigned partner ${assignedId} that order is ready for pickup.`);
           const restaurant = await FoodRestaurant.findById(order.restaurantId).select('restaurantName location addressLine1 area city state').lean();
           const payload = buildDeliverySocketPayload(order, restaurant);
@@ -1421,16 +1443,17 @@ export async function updateOrderStatusRestaurant(
             `[DeliveryDispatch] Emitting order_ready to ${rooms.delivery(assignedId)} for order ${order._id.toString()}`,
           );
           io.to(rooms.delivery(assignedId)).emit('order_ready', payload);
-        } else {
-          // Fresh hunt for delivery partners now that food is ready
-          console.log(`[DEBUG] Order ${order._id.toString()} is prepared. Triggering FRESH delivery dispatch to nearby riders.`);
-          try {
-            await dispatchService.resetDispatchForFreshHunt(order._id);
-            await dispatchService.tryAutoAssign(order._id, { attempt: 1 });
-            order = await FoodOrder.findById(order._id);
-          } catch (err) {
-            console.error(`[DEBUG] Auto-assign on food ready failed:`, err);
-          }
+        }
+      } else {
+        // Fresh hunt for delivery partners now that food is ready
+        console.log(`[DEBUG] Order ${order._id.toString()} is prepared. Triggering FRESH delivery dispatch to nearby riders.`);
+        try {
+          await dispatchService.resetDispatchForFreshHunt(order._id);
+          await dispatchService.tryAutoAssign(order._id, { attempt: 1 });
+          const fresh = await FoodOrder.findById(order._id);
+          if (fresh) order = fresh;
+        } catch (err) {
+          console.error(`[DEBUG] Auto-assign on food ready failed:`, err);
         }
       }
     }

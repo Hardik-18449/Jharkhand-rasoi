@@ -223,16 +223,19 @@ export async function listNearbyOnlineDeliveryPartners(
       continue;
     }
 
-    // Riders without saved GPS still receive offers — location is tracked live in Firebase.
-    const entry = {
-      partnerId: p._id,
-      distanceKm: null,
-      status: p.status,
-      locationUnknown: true,
-      isDedicated: Boolean(isOwnDedicated),
-    };
-    radiusEligible.push(entry);
-    zoneEligible.push(entry);
+    // Only dedicated riders of this restaurant can receive offers if GPS is missing.
+    // Public platform riders must have valid GPS coordinates within maxKm to be eligible.
+    if (isOwnDedicated) {
+      const entry = {
+        partnerId: p._id,
+        distanceKm: null,
+        status: p.status,
+        locationUnknown: true,
+        isDedicated: true,
+      };
+      radiusEligible.push(entry);
+      zoneEligible.push(entry);
+    }
   }
 
   let scored = radiusEligible;
@@ -300,7 +303,6 @@ async function notifyDeliveryPartnerOffer({
     });
     io.to(roomName).emit('play_notification_sound', eventPayload);
     io.to(roomName).emit('new_order', eventPayload);
-    io.to('all_delivery').emit('new_order_available', eventPayload);
     logger.info(
       `[Dispatch] Instantly emitted socket offer for partner ${partner.partnerId} order ${order._id}`,
     );
@@ -349,10 +351,11 @@ export async function tryAutoAssign(orderId, options = {}) {
   const lockTimeout = 60000; // 60 seconds lock interval
 
   const dispatchableStatuses = new Set([
+    'confirmed',
+    'preparing',
     'ready_for_pickup',
     'ready',
     'picked_up',
-    ...(options.isResend || options.forceDispatch ? ['preparing', 'confirmed'] : []),
   ]);
 
   const order = await FoodOrder.findOneAndUpdate(
@@ -459,17 +462,7 @@ export async function tryAutoAssign(orderId, options = {}) {
         io.to(roomName).emit('play_notification_sound', eventPayload);
         io.to(roomName).emit('new_order', eventPayload);
       }
-      io.to('all_delivery').emit('new_order_available', {
-        ...payload,
-        offeredAt,
-        isResend: Boolean(options.isResend),
-      });
-      io.to('all_delivery').emit('new_order', {
-        ...payload,
-        offeredAt,
-        isResend: Boolean(options.isResend),
-      });
-      logger.info(`[PM2 LOG] [Socket.IO] Instantly emitted order ${order._id} to ${eligible.length} riders & all_delivery`);
+      logger.info(`[PM2 LOG] [Socket.IO] Instantly emitted order ${order._id} to ${eligible.length} eligible nearby riders`);
     }
 
     // 2. Firebase RTDB (Concurrent publishing across all eligible riders in parallel)

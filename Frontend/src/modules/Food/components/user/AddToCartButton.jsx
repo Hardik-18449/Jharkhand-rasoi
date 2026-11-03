@@ -71,7 +71,7 @@ export default function AddToCartButton({ item, className = "" }) {
       onClick={handleAddToCart}
       className="bg-primary hover:bg-secondary text-white font-bold shadow-md transition-all active:scale-95"
     >
-      Add to Cart
+      <ShoppingCartPlus className="h-4 w-4"  />
     </Button>
   )
 }
