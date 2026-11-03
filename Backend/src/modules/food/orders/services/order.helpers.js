@@ -195,6 +195,9 @@ export function normalizeOrderForClient(orderDoc) {
   const order = orderDoc?.toObject ? orderDoc.toObject() : orderDoc || {};
   const mongoId = (order._id || orderDoc?._id || "").toString();
   const displayId = order.order_id || mongoId;
+  const rawPartner = order?.dispatch?.deliveryPartnerId || order?.deliveryPartnerId || null;
+  const partnerObj = rawPartner && typeof rawPartner === 'object' ? rawPartner : null;
+
   return {
     ...order,
     orderMongoId: mongoId,
@@ -202,8 +205,16 @@ export function normalizeOrderForClient(orderDoc) {
     status: order?.orderStatus || order?.status || "",
     deliveredAt:
       order?.deliveryState?.deliveredAt || order?.deliveredAt || null,
-    deliveryPartnerId:
-      order?.dispatch?.deliveryPartnerId || order?.deliveryPartnerId || null,
+    deliveryPartnerId: partnerObj ? (partnerObj._id || partnerObj.id) : rawPartner,
+    deliveryPartner: partnerObj ? {
+      _id: partnerObj._id || partnerObj.id,
+      name: partnerObj.name || partnerObj.fullName || "Delivery Partner",
+      phone: partnerObj.phone || partnerObj.phoneNumber || "",
+      vehicleNumber: partnerObj.vehicleNumber || "",
+      vehicleType: partnerObj.vehicleType || "",
+      profilePhoto: partnerObj.profilePhoto || partnerObj.profileImage || partnerObj.avatar || "",
+      rating: partnerObj.rating || 5.0,
+    } : (order?.deliveryPartner || null),
     rating: order?.ratings?.restaurant?.rating ?? order?.rating ?? null,
     restaurantNote: order?.restaurantNote || "",
     cancellationReason: (order?.orderStatus?.includes('cancel') || order?.status?.includes('cancel')) 

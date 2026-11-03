@@ -21,6 +21,9 @@ import {
   Users,
   MessageSquare,
   FileText,
+  Bike,
+  Phone,
+  MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import notificationSound from "@food/assets/audio/restaurant-order-ring.wav";
@@ -78,46 +81,71 @@ const getAllOrdersTimestamp = (order) =>
   order?.createdAt ||
   new Date().toISOString();
 
-const transformOrderForList = (order) => ({
-  orderId: order.orderId || order._id,
-  mongoId: order._id,
-  status: order.status || "pending",
-  customerName: order.userId?.name || order.customerName || "Customer",
-  type: "Home Delivery",
-  tableOrToken: null,
-  timePlaced: new Date(getAllOrdersTimestamp(order)).toLocaleDateString(
-    "en-US",
-    {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    },
-  ),
-  eta: null,
-  itemsSummary:
-    order.items?.map((item) => `${item.quantity}x ${item.name}`).join(", ") ||
-    "No items",
-  photoUrl: order.items?.[0]?.image || null,
-  photoAlt: order.items?.[0]?.name || "Order",
-  paymentMethod: order.paymentMethod || order.payment?.method || null,
-  deliveryPartnerId: order.deliveryPartnerId || null,
-  dispatchStatus: order.dispatch?.status || null,
-  preparingTimestamp: order.tracking?.preparing?.timestamp
-    ? new Date(order.tracking.preparing.timestamp)
-    : new Date(order.createdAt || Date.now()),
-  initialETA: order.estimatedDeliveryTime || 30,
-  sortTimestamp: new Date(getAllOrdersTimestamp(order)).getTime(),
-  scheduledAt: order.scheduledAt || null,
-  restaurantNote: order.restaurantNote || null,
-  isPriority: Boolean(order.isPriority || order.customerSubscription?.isSubscribed),
-  priorityLevel: Number(order.priorityLevel || order.customerSubscription?.priorityLevel || 0),
-  customerSubscription: order.customerSubscription || (order.userId?.isSubscribed ? {
-    isSubscribed: true,
-    planName: order.userId?.subscriptionPlanName,
-    badgeText: order.userId?.subscriptionBadge || 'VIP'
-  } : null),
-});
+const transformOrderForList = (order) => {
+  const rawPartner = order.deliveryPartner || order.dispatch?.deliveryPartnerId;
+  const partnerObj = rawPartner && typeof rawPartner === "object" ? rawPartner : null;
+
+  let deliveryAddressStr = null;
+  const addr = order.deliveryAddress || order.address;
+  if (typeof addr === "string") {
+    deliveryAddressStr = addr;
+  } else if (addr && typeof addr === "object") {
+    const parts = [addr.street, addr.additionalDetails, addr.area, addr.city].filter(Boolean);
+    deliveryAddressStr = parts.length ? parts.join(", ") : (addr.formattedAddress || addr.address || null);
+  }
+
+  return {
+    orderId: order.orderId || order._id,
+    mongoId: order._id,
+    status: order.status || "pending",
+    customerName: order.userId?.name || order.customerName || "Customer",
+    customerPhone: order.userId?.phone || order.customerPhone || order.deliveryAddress?.phone || null,
+    type: "Home Delivery",
+    tableOrToken: null,
+    timePlaced: new Date(getAllOrdersTimestamp(order)).toLocaleDateString(
+      "en-US",
+      {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+    ),
+    eta: null,
+    itemsSummary:
+      order.items?.map((item) => `${item.quantity}x ${item.name}`).join(", ") ||
+      "No items",
+    photoUrl: order.items?.[0]?.image || null,
+    photoAlt: order.items?.[0]?.name || "Order",
+    paymentMethod: order.paymentMethod || order.payment?.method || null,
+    deliveryPartnerId: partnerObj ? (partnerObj._id || partnerObj.id) : (order.deliveryPartnerId || null),
+    deliveryPartner: partnerObj ? {
+      _id: partnerObj._id || partnerObj.id,
+      name: partnerObj.name || partnerObj.fullName || "Delivery Partner",
+      phone: partnerObj.phone || partnerObj.phoneNumber || "",
+      vehicleNumber: partnerObj.vehicleNumber || "",
+      vehicleType: partnerObj.vehicleType || "",
+      profilePhoto: partnerObj.profilePhoto || partnerObj.avatar || "",
+    } : null,
+    deliveryAddress: deliveryAddressStr,
+    dispatchStatus: order.dispatch?.status || null,
+    preparingTimestamp: order.tracking?.preparing?.timestamp
+      ? new Date(order.tracking.preparing.timestamp)
+      : new Date(order.createdAt || Date.now()),
+    initialETA: order.estimatedDeliveryTime || 30,
+    sortTimestamp: new Date(getAllOrdersTimestamp(order)).getTime(),
+    scheduledAt: order.scheduledAt || null,
+    restaurantNote: order.restaurantNote || null,
+    pickupOtp: order.pickupOtp || null,
+    isPriority: Boolean(order.isPriority || order.customerSubscription?.isSubscribed),
+    priorityLevel: Number(order.priorityLevel || order.customerSubscription?.priorityLevel || 0),
+    customerSubscription: order.customerSubscription || (order.userId?.isSubscribed ? {
+      isSubscribed: true,
+      planName: order.userId?.subscriptionPlanName,
+      badgeText: order.userId?.subscriptionBadge || 'VIP'
+    } : null),
+  };
+};
 
 // Completed Orders List Component
 function CompletedOrders({ onSelectOrder, refreshToken = 0 }) {
@@ -3472,6 +3500,63 @@ export default function OrdersMain() {
 
               <div className="border-t border-gray-100 my-3" />
 
+              {/* Delivery Address (Destination) */}
+              {selectedOrder.deliveryAddress && (
+                <div className="mb-3 p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                  <div className="flex items-center gap-1.5 mb-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                    <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Delivery Address (Customer Drop)</span>
+                  </div>
+                  <p className="text-xs text-gray-800 font-medium pl-5">{selectedOrder.deliveryAddress}</p>
+                </div>
+              )}
+
+              {/* Assigned Delivery Boy Details */}
+              {selectedOrder.deliveryPartner ? (
+                <div className="mb-3 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-blue-700 uppercase tracking-wider">
+                      <Bike className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Delivery Boy Details</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-100 text-blue-800 uppercase">
+                      {selectedOrder.status === 'out_for_delivery' || selectedOrder.status === 'picked_up' ? 'Out for Delivery' : 'Assigned'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-gray-900">{selectedOrder.deliveryPartner.name}</p>
+                      {selectedOrder.deliveryPartner.vehicleNumber && (
+                        <p className="text-[10px] text-gray-600">Vehicle: {selectedOrder.deliveryPartner.vehicleNumber}</p>
+                      )}
+                    </div>
+                    {selectedOrder.deliveryPartner.phone && (
+                      <a
+                        href={`tel:${selectedOrder.deliveryPartner.phone}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-sm transition-colors"
+                      >
+                        <Phone className="w-3 h-3" />
+                        <span>Call Rider</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                (String(selectedOrder.status).toLowerCase() === "ready" || String(selectedOrder.status).toLowerCase() === "ready_for_pickup") && (
+                  <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold text-amber-700 uppercase">Looking for Delivery Boy</p>
+                      <p className="text-[10px] text-amber-600">Searching for nearby delivery partner</p>
+                    </div>
+                    <ResendNotificationButton
+                      orderId={selectedOrder.orderId}
+                      mongoId={selectedOrder.mongoId}
+                      onSuccess={() => setIsSheetOpen(false)}
+                    />
+                  </div>
+                )
+              )}
+
               <div className="mb-3">
                 <p className="text-xs font-medium text-gray-700 mb-1">Items</p>
                 <p className="text-xs text-gray-600">
@@ -3574,6 +3659,7 @@ function OrderCard({
   mongoId,
   status,
   customerName,
+  customerPhone,
   type,
   tableOrToken,
   timePlaced,
@@ -3583,6 +3669,8 @@ function OrderCard({
   photoUrl,
   photoAlt,
   deliveryPartnerId,
+  deliveryPartner,
+  deliveryAddress,
   dispatchStatus,
   onSelect,
   onCancel,
@@ -3634,7 +3722,7 @@ function OrderCard({
       )}
 
       <div
-        onClick={() => onSelect?.({ orderId, mongoId, status, customerName, type, tableOrToken, timePlaced, eta, itemsSummary, paymentMethod, scheduledAt, restaurantNote, pickupOtp, deliveryPartnerId, dispatchStatus, cancellationReason, rejectionReason, isPriority, priorityLevel, customerSubscription })}
+        onClick={() => onSelect?.({ orderId, mongoId, status, customerName, customerPhone, type, tableOrToken, timePlaced, eta, itemsSummary, paymentMethod, scheduledAt, restaurantNote, pickupOtp, deliveryPartnerId, deliveryPartner, deliveryAddress, dispatchStatus, cancellationReason, rejectionReason, isPriority, priorityLevel, customerSubscription })}
         className="flex gap-3 items-start cursor-pointer pl-1">
 
         {/* Photo Container - Smaller for mobile */}
@@ -3693,6 +3781,49 @@ function OrderCard({
             <span className="whitespace-nowrap">{type}</span>
           </div>
 
+          {/* Delivery Destination */}
+          {deliveryAddress && (
+            <div className="flex items-center gap-1 text-[9px] text-slate-500 font-medium truncate mb-1" title={deliveryAddress}>
+              <MapPin className="w-2.5 h-2.5 text-rose-500 flex-shrink-0" />
+              <span className="truncate">{deliveryAddress}</span>
+            </div>
+          )}
+
+          {/* Assigned Delivery Boy Details */}
+          {deliveryPartner ? (
+            <div
+              className="mb-1.5 px-2 py-1 bg-blue-50/90 border border-blue-200/80 rounded-lg flex items-center justify-between gap-1 text-[9px]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-1.5 truncate">
+                <div className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[7px] flex-shrink-0">
+                  <Bike className="w-2.5 h-2.5" />
+                </div>
+                <div className="truncate">
+                  <p className="font-bold text-slate-900 truncate leading-tight">
+                    {deliveryPartner.name || "Assigned Rider"}
+                  </p>
+                  {deliveryPartner.vehicleNumber && (
+                    <p className="text-[7.5px] text-slate-500 leading-tight">
+                      {deliveryPartner.vehicleNumber}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {deliveryPartner.phone && (
+                <a
+                  href={`tel:${deliveryPartner.phone}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-blue-200 text-blue-700 rounded font-bold text-[7.5px] shadow-xs hover:bg-blue-50 active:scale-95 transition-all flex-shrink-0"
+                  title="Call Rider"
+                >
+                  <Phone className="w-2 h-2" />
+                  <span>Call</span>
+                </a>
+              )}
+            </div>
+          ) : null}
+
           {/* Items Summary - One line only */}
           <p className="text-[10px] text-slate-600 font-bold truncate italic mb-1">
             {itemsSummary}
@@ -3746,32 +3877,7 @@ function OrderCard({
             )}
 
             <div className="flex items-center gap-1.5 flex-shrink-0">
-              {(isPreparing || isReady || normalizedStatus === "confirmed") && (
-                <>
-                  {deliveryPartnerId && (
-                    <div className="h-5 w-5 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600" title="Driver Assigned">
-                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {!deliveryPartnerId && isPreparing && (
-                    <div className="px-1.5 py-0.5 rounded bg-slate-50 text-slate-400 text-[7px] font-black border border-slate-100 uppercase tracking-tighter">
-                      No Rider
-                    </div>
-                  )}
-
-                  {dispatchStatus !== "accepted" && (
-                    <ResendNotificationButton
-                      orderId={orderId}
-                      mongoId={mongoId}
-                      onSuccess={onSelect}
-                    />
-                  )}
-                </>
-              )}
-
+              {/* When PREPARING: Only show clean, prominent MARK READY button without squishing or cutting off */}
               {isPreparing && onMarkReady && (
                 <button
                   type="button"
@@ -3780,10 +3886,48 @@ function OrderCard({
                     onMarkReady({ orderId, mongoId, customerName });
                   }}
                   disabled={isMarkingReady}
-                  className="px-3 py-1.5 rounded-lg text-[9px] font-black text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50"
+                  className="px-3.5 py-1.5 rounded-lg text-[10px] font-black text-white shadow-sm transition-transform active:scale-95 disabled:opacity-50 whitespace-nowrap flex-shrink-0"
                   style={{ backgroundColor: brandColor }}>
                   {isMarkingReady ? "..." : "MARK READY"}
                 </button>
+              )}
+
+              {/* When READY: Show rider status or Resend button */}
+              {isReady && (
+                <>
+                  {deliveryPartner ? (
+                    <div className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[8px] font-bold border border-emerald-200 uppercase tracking-tight flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Rider Assigned
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[8px] font-black border border-amber-200 uppercase tracking-tighter animate-pulse">
+                        Searching Rider
+                      </span>
+                      <ResendNotificationButton
+                        orderId={orderId}
+                        mongoId={mongoId}
+                        onSuccess={onSelect}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* When OUT FOR DELIVERY / PICKED UP */}
+              {(normalizedStatus === "out_for_delivery" || normalizedStatus === "picked_up") && (
+                <div className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[8px] font-bold border border-blue-200 uppercase tracking-tight flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                  On The Way
+                </div>
+              )}
+
+              {/* When DELIVERED */}
+              {normalizedStatus === "delivered" && (
+                <div className="px-2 py-0.5 rounded bg-slate-50 text-slate-600 text-[8px] font-bold border border-slate-200 uppercase tracking-tight">
+                  Delivered
+                </div>
               )}
             </div>
           </div>
@@ -4088,7 +4232,8 @@ function ReadyOrders({ onSelectOrder, refreshToken = 0 }) {
       pollMs,
     });
 
-  const orders = rawOrders.map((order) => ({
+  const orders = rawOrders.map(transformOrderForList).map((order) => ({
+    ...order,
     orderId: order.orderId || order._id,
     mongoId: order._id,
     status: order.status || "ready",
@@ -4170,7 +4315,8 @@ const OutForDeliveryOrders = ({ onSelectOrder, refreshToken = 0 }) => {
       refreshToken,
     });
 
-  const orders = rawOrders.map((order) => ({
+  const orders = rawOrders.map(transformOrderForList).map((order) => ({
+    ...order,
     orderId: order.orderId || order._id,
     mongoId: order._id,
     status: order.status || "out_for_delivery",

@@ -349,11 +349,10 @@ export async function tryAutoAssign(orderId, options = {}) {
   const lockTimeout = 60000; // 60 seconds lock interval
 
   const dispatchableStatuses = new Set([
-    'confirmed',
-    'preparing',
     'ready_for_pickup',
     'ready',
     'picked_up',
+    ...(options.isResend || options.forceDispatch ? ['preparing', 'confirmed'] : []),
   ]);
 
   const order = await FoodOrder.findOneAndUpdate(

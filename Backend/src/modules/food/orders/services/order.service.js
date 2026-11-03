@@ -493,11 +493,8 @@ export async function createOrder(userId, dto) {
   }
 
   const dispatchableStatuses = [
-    "confirmed",
-    "preparing",
     "ready_for_pickup",
     "ready",
-    "picked_up",
   ];
   if (
     dispatchMode === "auto" &&
@@ -623,11 +620,8 @@ export async function afterOnlinePaymentCaptured(orderInput) {
 
   const settings = await getDispatchSettings();
   const dispatchableStatuses = [
-    "confirmed",
-    "preparing",
     "ready_for_pickup",
     "ready",
-    "picked_up",
   ];
   if (settings.dispatchMode === "auto" && dispatchableStatuses.includes(order.orderStatus)) {
     try {
@@ -696,7 +690,7 @@ export async function getOrderById(
       "restaurantId",
       "restaurantName ownerPhone profileImage area city location rating totalRatings primaryContactNumber",
     )
-    .populate("dispatch.deliveryPartnerId", "name fullName phone phoneNumber rating totalRatings profileImage avatar")
+    .populate("dispatch.deliveryPartnerId", "name fullName phone phoneNumber rating totalRatings profilePhoto profileImage avatar vehicle vehicleNumber vehicleType")
     .populate("userId", "name fullName phone email flag codEnabled")
     .select("+deliveryOtp +pickupOtp")
     .lean();
@@ -736,6 +730,9 @@ export async function getOrderById(
     const sanitized = sanitizeOrderForExternal(order);
     if (restaurantId && order.pickupOtp) {
       sanitized.pickupOtp = order.pickupOtp;
+    }
+    if (order.dispatch?.deliveryPartnerId && typeof order.dispatch.deliveryPartnerId === 'object') {
+      sanitized.deliveryPartner = order.dispatch.deliveryPartnerId;
     }
     return sanitized;
   }
@@ -1236,6 +1233,7 @@ export async function listOrdersRestaurant(restaurantId, query) {
   const [docs, total] = await Promise.all([
     FoodOrder.find(filter)
       .populate("userId", "name phone email profileImage isSubscribed subscriptionPlanName subscriptionBadge")
+      .populate("dispatch.deliveryPartnerId", "name fullName phone phoneNumber rating totalRatings profilePhoto profileImage avatar vehicle vehicleNumber vehicleType")
       .sort({ isPriority: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -1391,54 +1389,40 @@ export async function updateOrderStatusRestaurant(
   try {
     const io = getIO();
     if (io) {
-      // On accept (confirmed or preparing) -> request delivery partners via central logic
+      // When food is PREPARED (ready_for_pickup or ready) -> notify delivery partner or trigger fresh dispatch hunt!
       if (
-        (String(orderStatus) === "preparing" || String(orderStatus) === "confirmed") && 
-        (String(from) !== "preparing" && String(from) !== "confirmed")
+        (String(orderStatus) === "ready_for_pickup" || String(orderStatus) === "ready") &&
+        (String(from) !== "ready_for_pickup" && String(from) !== "ready")
       ) {
-        console.log(
-          `[DEBUG] Order ${order._id.toString()} status changed to '${orderStatus}'. Triggering FRESH delivery dispatch.`,
-        );
-        
-        try {
-            // CRITICAL: Reset dispatch state so tryAutoAssign is NOT blocked by stale locks
-            // from any previous dispatch attempt (e.g. from createOrder flow).
-            // This ensures restaurant accept ALWAYS triggers an immediate, fresh dispatch.
-            const currentDispatchStatus = order.dispatch?.status;
-            const isAlreadyAccepted = currentDispatchStatus === 'accepted' && order.dispatch?.acceptedAt;
-            
-            if (!isAlreadyAccepted) {
-              await dispatchService.resetDispatchForFreshHunt(order._id);
-            }
-            
+        console.log(`[DEBUG] Food is prepared! Order ${order._id.toString()} status changed to '${orderStatus}'. Triggering delivery notification / dispatch.`);
+        const assignedId = order.dispatch?.deliveryPartnerId?.toString?.() || order.dispatch?.deliveryPartnerId;
+        const currentDispatchStatus = order.dispatch?.status;
+        const isAlreadyAccepted = currentDispatchStatus === 'accepted' && order.dispatch?.acceptedAt && assignedId;
+
+        if (isAlreadyAccepted) {
+          console.log(`[DEBUG] Notifying assigned partner ${assignedId} that order is ready for pickup.`);
+          const restaurant = await FoodRestaurant.findById(order.restaurantId).select('restaurantName location addressLine1 area city state').lean();
+          const payload = buildDeliverySocketPayload(order, restaurant);
+          logger.info(
+            `[DeliveryDispatch] Emitting order_ready to ${rooms.delivery(assignedId)} for order ${order._id.toString()}`,
+          );
+          io.to(rooms.delivery(assignedId)).emit('order_ready', payload);
+        } else {
+          // Fresh hunt for delivery partners now that food is ready
+          console.log(`[DEBUG] Order ${order._id.toString()} is prepared. Triggering FRESH delivery dispatch to nearby riders.`);
+          try {
+            await dispatchService.resetDispatchForFreshHunt(order._id);
             await dispatchService.tryAutoAssign(order._id, { attempt: 1 });
-            // Refresh local order state after assignment search
-            order = await FoodOrder.findById(order._id); 
-        } catch (err) {
-            console.error(`[DEBUG] Auto-assign in updateOrderStatusRestaurant failed:`, err);
+            order = await FoodOrder.findById(order._id);
+          } catch (err) {
+            console.error(`[DEBUG] Auto-assign on food ready failed:`, err);
+          }
         }
       }
-
-            // When ready for pickup -> ping assigned delivery partner.
-            if (String(orderStatus) === 'ready_for_pickup' && String(from) !== 'ready_for_pickup') {
-                console.log(`[DEBUG] Order ${order._id.toString()} changed to 'ready_for_pickup'.`);
-                const assignedId = order.dispatch?.deliveryPartnerId?.toString?.() || order.dispatch?.deliveryPartnerId;
-                if (assignedId) {
-                    console.log(`[DEBUG] Notifying assigned partner ${assignedId} that order is ready.`);
-                    const restaurant = await FoodRestaurant.findById(order.restaurantId).select('restaurantName location addressLine1 area city state').lean();
-                    const payload = buildDeliverySocketPayload(order, restaurant);
-                    logger.info(
-                      `[DeliveryDispatch] Emitting order_ready to ${rooms.delivery(assignedId)} for order ${order._id.toString()}`,
-                    );
-                    io.to(rooms.delivery(assignedId)).emit('order_ready', payload);
-                } else {
-                    console.log(`[DEBUG] Order ${order._id.toString()} is ready but no partner assigned.`);
-                }
-            }
-        }
-    } catch (err) {
-        console.error('[DEBUG] Error in delivery notification logic:', err);
     }
+  } catch (err) {
+    console.error('[DEBUG] Error in delivery notification logic:', err);
+  }
 
     enqueueOrderEvent('restaurant_order_status_updated', {
         orderMongoId: order._id?.toString?.(),
@@ -1890,11 +1874,11 @@ export async function updateOrderStatusAdmin(orderId, adminId, orderStatus, note
 
     // Real-time: delivery request / ready notifications.
     if (
-      (String(orderStatus) === "preparing" || String(orderStatus) === "confirmed") && 
-      (String(from) !== "preparing" && String(from) !== "confirmed")
+      (String(orderStatus) === "ready_for_pickup" || String(orderStatus) === "ready") && 
+      (String(from) !== "ready_for_pickup" && String(from) !== "ready")
     ) {
       console.log(
-        `[DEBUG] Admin accepted order ${order._id.toString()}. Status changed to '${orderStatus}'. Triggering FRESH delivery dispatch.`
+        `[DEBUG] Admin marked order ${order._id.toString()} as '${orderStatus}' (Food Prepared). Triggering FRESH delivery dispatch.`
       );
       try {
         const currentDispatchStatus = order.dispatch?.status;
@@ -1902,9 +1886,9 @@ export async function updateOrderStatusAdmin(orderId, adminId, orderStatus, note
         
         if (!isAlreadyAccepted) {
           await dispatchService.resetDispatchForFreshHunt(order._id);
+          await dispatchService.tryAutoAssign(order._id, { attempt: 1 });
+          order = await FoodOrder.findById(order._id);
         }
-        await dispatchService.tryAutoAssign(order._id, { attempt: 1 });
-        order = await FoodOrder.findById(order._id); 
       } catch (err) {
         console.error(`[DEBUG] Auto-assign in updateOrderStatusAdmin failed:`, err);
       }

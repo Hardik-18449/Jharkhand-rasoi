@@ -20,6 +20,8 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  Bike,
+  Phone,
 } from "lucide-react"
 import ResendNotificationButton from "@food/components/restaurant/ResendNotificationButton"
 const debugLog = (...args) => {}
@@ -269,7 +271,9 @@ export default function OrderDetails({ idProp, mongoIdProp, onClose }) {
               restaurantGets,
               deliveryDistance
             },
-            deliveryPartnerId: order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null,
+            deliveryPartnerId: order.deliveryPartnerId || order.dispatch?.deliveryPartnerId?._id || order.dispatch?.deliveryPartnerId || null,
+            deliveryPartner: order.deliveryPartner || (typeof order.dispatch?.deliveryPartnerId === 'object' ? order.dispatch?.deliveryPartnerId : null),
+            deliveryAddress: order.deliveryAddress?.formattedAddress || order.deliveryAddress?.address || fullAddress,
             dispatchStatus: order.dispatch?.status || null,
             reason: order.cancellationReason || '',
             restaurantNote: order.restaurantNote || '',
@@ -867,7 +871,7 @@ export default function OrderDetails({ idProp, mongoIdProp, onClose }) {
               <hr className="border-gray-200 my-3" />
               
             </div>
-               <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <MapPin className="w-5 h-5 text-gray-600" />
               <div className="flex-1">
                 <p className="text-sm text-gray-900">{orderData.customer.location}</p>
@@ -875,7 +879,63 @@ export default function OrderDetails({ idProp, mongoIdProp, onClose }) {
               <p className="text-sm text-gray-600">{orderData.customer.distance}</p>
             </div>
           </div>
+        </div>
 
+        {/* Delivery Boy Details Section */}
+        <div>
+          <h2 className="text-base font-bold text-gray-900 mb-3">Delivery boy details</h2>
+          <div className="bg-white rounded-lg p-4 mb-3 shadow-xs border border-gray-100">
+            {orderData.deliveryPartner ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                    <Bike className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{orderData.deliveryPartner.name || "Delivery Partner"}</p>
+                    {orderData.deliveryPartner.vehicleNumber && (
+                      <p className="text-xs text-gray-500 mt-0.5">Vehicle: {orderData.deliveryPartner.vehicleNumber}</p>
+                    )}
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase">
+                      {orderData.status === "DELIVERED" ? "Delivered" : orderData.status === "OUT_FOR_DELIVERY" ? "Out for Delivery" : "Assigned"}
+                    </span>
+                  </div>
+                </div>
+                {orderData.deliveryPartner.phone && (
+                  <a
+                    href={`tel:${orderData.deliveryPartner.phone}`}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>Call Rider</span>
+                  </a>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
+                    <Bike className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">
+                      {orderData.status === "PREPARING"
+                        ? "Rider will be notified once food is marked Ready"
+                        : orderData.status === "READY" || orderData.status === "READY_FOR_PICKUP"
+                        ? "Searching for nearby delivery partner..."
+                        : "No delivery partner assigned"}
+                    </p>
+                  </div>
+                </div>
+                {(orderData.status === "READY" || orderData.status === "READY_FOR_PICKUP") && (
+                  <ResendNotificationButton
+                    orderId={orderId}
+                    onSuccess={() => window.location.reload()}
+                  />
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Item Details Section */}
