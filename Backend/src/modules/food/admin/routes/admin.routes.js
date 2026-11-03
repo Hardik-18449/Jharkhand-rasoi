@@ -222,6 +222,10 @@ router.post('/delivery/:id/cash-limit/settle', adminController.settleDeliveryCas
 router.get('/delivery/join-requests', adminController.getDeliveryJoinRequests);
 router.get('/delivery/available-partners', adminController.getAvailableDeliveryPartners);
 router.get('/delivery/wallets', adminController.getDeliveryWallets);
+router.put('/delivery/wallets', adminController.updateDeliveryBoyWallet);
+router.patch('/delivery/wallets', adminController.updateDeliveryBoyWallet);
+router.put('/delivery/wallets/:id', adminController.updateDeliveryBoyWallet);
+router.patch('/delivery/wallets/:id', adminController.updateDeliveryBoyWallet);
 router.get('/delivery/bonus-transactions', adminController.getDeliveryPartnerBonusTransactions);
 router.get('/delivery/earnings', adminController.getDeliveryEarnings);
 router.post('/delivery/bonus', adminController.addDeliveryPartnerBonus);

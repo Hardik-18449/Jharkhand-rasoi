@@ -5311,6 +5311,89 @@ export async function getDeliveryWallets(query = {}) {
     };
 }
 
+export async function updateDeliveryBoyWallet(body = {}, adminUser) {
+    const rawDeliveryId = body.deliveryId || body.id || body.walletId;
+    if (!rawDeliveryId || !mongoose.Types.ObjectId.isValid(String(rawDeliveryId))) {
+        throw new ValidationError('Valid delivery partner ID is required');
+    }
+    const partnerObjectId = new mongoose.Types.ObjectId(String(rawDeliveryId));
+    const partner = await FoodDeliveryPartner.findById(partnerObjectId).lean();
+    if (!partner) throw new ValidationError('Delivery partner not found');
+
+    const currentBalances = await getRiderBalances(partnerObjectId);
+    const currentPocket = currentBalances.pocketBalance;
+    const currentCash = currentBalances.cashInHand;
+
+    // 1. Adjust Pocket Balance if provided
+    if (body.pocketBalance !== undefined && body.pocketBalance !== null) {
+        const targetPocket = Number(body.pocketBalance);
+        if (!Number.isFinite(targetPocket) || targetPocket < 0) {
+            throw new ValidationError('Pocket balance must be a valid non-negative number');
+        }
+        const pocketDiff = Number((targetPocket - currentPocket).toFixed(2));
+        if (pocketDiff > 0) {
+            const transactionId = `ADJ-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+            await DeliveryBonusTransaction.create({
+                deliveryPartnerId: partnerObjectId,
+                transactionId,
+                amount: pocketDiff,
+                reference: body.reference || 'Admin Wallet Adjustment (Credit)',
+                createdByAdminId: adminUser?._id
+            });
+        } else if (pocketDiff < 0) {
+            const debitAmount = Math.abs(pocketDiff);
+            await FoodDeliveryWithdrawal.create({
+                deliveryPartnerId: partnerObjectId,
+                amount: debitAmount,
+                status: 'approved',
+                paymentMethod: 'admin_adjustment',
+                transactionId: `ADJ-D-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
+                adminNote: body.reference || 'Admin Wallet Adjustment (Debit)',
+                processedAt: new Date()
+            });
+        }
+    }
+
+    // 2. Adjust Cash In Hand if provided
+    if (body.cashInHand !== undefined && body.cashInHand !== null) {
+        const targetCash = Number(body.cashInHand);
+        if (!Number.isFinite(targetCash) || targetCash < 0) {
+            throw new ValidationError('Cash in hand must be a valid non-negative number');
+        }
+        const cashDiff = Number((targetCash - currentCash).toFixed(2));
+        if (cashDiff < 0) {
+            const settleAmount = Math.abs(cashDiff);
+            await FoodDeliveryCashDeposit.create({
+                deliveryPartnerId: partnerObjectId,
+                amount: settleAmount,
+                paymentMethod: 'cash',
+                status: 'Completed',
+                adminId: adminUser?._id,
+                adminNote: body.reference || 'Admin Cash Settlement'
+            });
+        }
+    }
+
+    const newBalances = await getRiderBalances(partnerObjectId);
+    const cashLimitSettings = await FoodDeliveryCashLimit.findOne({ isActive: true }).lean();
+    const globalLimit = Number(cashLimitSettings?.deliveryCashLimit || 0);
+
+    return {
+        deliveryId: partner._id,
+        walletId: partner._id,
+        name: partner.name,
+        phone: partner.phone || '',
+        pocketBalance: newBalances.pocketBalance,
+        cashInHand: newBalances.cashInHand,
+        cashCollected: newBalances.cashCollected,
+        totalEarning: newBalances.totalEarned,
+        bonus: newBalances.totalBonus,
+        totalWithdrawn: newBalances.totalWithdrawn,
+        remainingCashLimit: Math.max(0, globalLimit - newBalances.cashInHand),
+        availableCashLimit: Math.max(0, globalLimit - newBalances.cashInHand)
+    };
+}
+
 /**
  * Fetch cash limit settlement (deposit) transactions
  */

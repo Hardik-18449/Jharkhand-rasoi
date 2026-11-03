@@ -399,6 +399,8 @@ export const adminAPI = {
   /** Delivery boy wallets (stub until backend implements - returns empty so list still loads) */
   getDeliveryBoyWallets: (params) =>
     adminClient.get("/food/admin/delivery/wallets", { params }),
+  updateDeliveryBoyWallet: (body) =>
+    adminClient.put("/food/admin/delivery/wallets", body ?? {}),
   getDeliveryPartnerById: (id) =>
     adminClient.get(`/food/admin/delivery/${id}`),
   approveDeliveryPartner: (id) =>
