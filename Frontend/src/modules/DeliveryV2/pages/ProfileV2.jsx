@@ -96,7 +96,7 @@ export const ProfileV2 = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] pb-32 font-sans text-gray-900">
+    <div className="min-h-screen bg-[#F8F9FB] pb-32 font-sans text-gray-900 scrollbar-hide">
       
       {/* 1. FIGMA PROFILE HERO HEADER (Orange Curved Gradient) */}
       <div className="relative bg-gradient-to-b from-[#FF5500] to-[#E64A00] text-white pt-8 pb-14 px-6 rounded-b-[36px] shadow-lg shadow-orange-500/15 overflow-hidden">

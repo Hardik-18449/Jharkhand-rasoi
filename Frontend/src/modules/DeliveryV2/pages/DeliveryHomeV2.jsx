@@ -1528,20 +1528,45 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
               {/* DEV SIMULATION TOGGLE */}
               {import.meta.env.DEV && (
                  <button 
+                   type="button"
                    onClick={handleSimulationToggle}
-                   className={`px-3 h-8 rounded-lg text-[9px] font-black border transition-all ${isSimMode ? 'bg-orange-500 border-orange-400 text-white animate-pulse' : 'bg-white/10 border-white/20 text-white/40'}`}
+                   className={`px-3 h-8 rounded-xl text-[10px] font-black uppercase tracking-wider border shadow-sm transition-all flex items-center justify-center ${
+                     isSimMode 
+                       ? 'bg-amber-600 border-amber-400 text-white shadow-amber-600/30 animate-pulse' 
+                       : 'bg-white hover:bg-gray-50 text-gray-800 border-black/10 shadow-xs'
+                   }`}
+                   title="Toggle Dev Simulation"
                  >
                    SIM
                  </button>
               )}
            </div>
-          <div className="flex items-center gap-3">
-             <button onClick={() => setShowEmergencyPopup(true)} className="w-9 h-9 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20 active:scale-95 transition-all shadow-lg"><AlertTriangle className="w-4 h-4" /></button>
-             <button onClick={() => navigate('/food/delivery/help/id-card')} className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20 active:scale-95 transition-all shadow-lg"><Contact className="w-4 h-4" /></button>
-             <button onClick={() => setShowNotifications(true)} className="relative w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/10 active:scale-95 transition-all shadow-lg">
-                <Bell className="w-4 h-4" />
+          <div className="flex items-center gap-2.5">
+             <button 
+               type="button"
+               onClick={() => setShowEmergencyPopup(true)} 
+               className="w-9 h-9 rounded-full bg-white flex items-center justify-center border border-red-100 shadow-md active:scale-95 transition-all hover:bg-red-50"
+               title="Emergency SOS"
+             >
+               <AlertTriangle className="w-4 h-4" style={{ color: '#DC2626' }} />
+             </button>
+             <button 
+               type="button"
+               onClick={() => navigate('/food/delivery/help/id-card')} 
+               className="w-9 h-9 rounded-full bg-white flex items-center justify-center border border-blue-100 shadow-md active:scale-95 transition-all hover:bg-blue-50"
+               title="Rider ID Card"
+             >
+               <Contact className="w-4 h-4" style={{ color: '#2563EB' }} />
+             </button>
+             <button 
+               type="button"
+               onClick={() => setShowNotifications(true)} 
+               className="relative w-9 h-9 rounded-full bg-white flex items-center justify-center border border-gray-100 shadow-md active:scale-95 transition-all hover:bg-gray-50"
+               title="Notifications"
+             >
+                <Bell className="w-4 h-4" style={{ color: '#1F2937' }} />
                 {notificationUnreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-600 flex items-center justify-center text-[9px] font-black text-white border-2 border-[#121212] shadow-xl animate-in zoom-in duration-300">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 flex items-center justify-center text-[9px] font-black text-white border-2 border-white shadow-md animate-in zoom-in duration-300">
                     {notificationUnreadCount > 9 ? '9+' : notificationUnreadCount}
                   </span>
                 )}
@@ -1549,7 +1574,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
           </div>
         </div>
 
-        {/* â”€â”€â”€ LIVE STATUS / PROGRESS BADGE (MATCHED PRO) â”€â”€â”€ */}
+        {/* ─── LIVE STATUS / PROGRESS BADGE (MATCHED PRO) ─── */}
         <AnimatePresence>
           {(currentTab === 'feed' || Boolean(incomingOrder)) && (
             <motion.div 
@@ -1560,59 +1585,79 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
             >
               {activeOrder ? (
                 <div className="grid grid-cols-2 gap-3 w-full">
-                  {/* LEFT: DISTANCE (Vibrant Orange Card) */}
-                  <div className="bg-primary rounded-2xl p-3.5 shadow-xl shadow-orange-500/20 border border-orange-400/50 flex items-center justify-between overflow-hidden relative">
-                    <div className="flex flex-col z-10">
-                      <span className="text-[9px] text-white/70 font-black uppercase tracking-[0.15em] mb-1">Distance</span>
-                      <div className="flex items-end gap-1">
-                        <span className="text-2xl font-black text-white leading-none tracking-tighter">
+                  {/* LEFT: DISTANCE (Crisp White Card with High-Contrast Typography & Orange Badge) */}
+                  <div className="bg-white rounded-2xl p-3.5 shadow-lg border border-black/5 flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-0.5">Distance</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black text-gray-950 leading-none tracking-tight">
                           {distanceToTarget && distanceToTarget !== Infinity ? (distanceToTarget / 1000).toFixed(1) : '--'}
                         </span>
-                        <span className="text-[11px] text-white/80 font-bold mb-0.5">KM</span>
+                        <span className="text-xs font-black text-gray-500">KM</span>
                       </div>
                     </div>
-                    <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center z-10 shadow-lg">
-                      <Navigation2 className="w-4 h-4 text-primary rotate-45" />
+                    <div 
+                      className="w-9 h-9 rounded-xl flex items-center justify-center shadow-xs shrink-0" 
+                      style={{ backgroundColor: '#FFF7ED', border: '1px solid #FFEDD5' }}
+                    >
+                      <Navigation2 className="w-4 h-4 rotate-45" style={{ color: '#EA580C' }} />
                     </div>
                   </div>
 
-                  {/* RIGHT: TIME (Emerald PRO Content) */}
-                  <div className="bg-[#10B981] rounded-2xl p-3.5 shadow-xl shadow-green-500/20 border border-green-400/50 flex items-center justify-between relative overflow-hidden group">
-                    <div className="flex flex-col z-10">
-                      <span className="text-[9px] text-white/70 font-black uppercase tracking-[0.15em] mb-1">Arrival</span>
-                      <div className="flex items-end gap-1">
-                        <span className="text-2xl font-black text-white leading-none tracking-tighter">
+                  {/* RIGHT: TIME / ARRIVAL (Crisp White Card with High-Contrast Typography & Emerald Badge) */}
+                  <div className="bg-white rounded-2xl p-3.5 shadow-lg border border-black/5 flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-0.5">Arrival</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black text-gray-950 leading-none tracking-tight">
                           {eta ? String(eta) : '--'}
                         </span>
-                        <span className="text-[11px] text-white/80 font-bold mb-0.5">MIN</span>
+                        <span className="text-xs font-black text-gray-500">MIN</span>
                       </div>
                     </div>
-                    <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center z-10 shadow-lg">
-                       <Clock className="w-4 h-4 text-[#10B981]" />
+                    <div 
+                      className="w-9 h-9 rounded-xl flex items-center justify-center shadow-xs shrink-0" 
+                      style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0' }}
+                    >
+                      <Clock className="w-4 h-4" style={{ color: '#059669' }} />
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="bg-white/5 rounded-2xl p-4 flex items-center justify-between border border-white/5 shadow-sm backdrop-blur-md">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-green-500/10 rounded-full flex items-center justify-center shrink-0">
-                      <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
+                <div className="bg-white rounded-2xl p-3.5 flex items-center justify-between border border-black/5 shadow-md">
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs" 
+                      style={{ 
+                        backgroundColor: isOnline ? '#ECFDF5' : '#F3F4F6',
+                        border: isOnline ? '1px solid #A7F3D0' : '1px solid #E5E7EB' 
+                      }}
+                    >
+                      <div 
+                        className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'animate-pulse' : ''}`} 
+                        style={{ backgroundColor: isOnline ? '#10B981' : '#9CA3AF' }} 
+                      />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white font-black text-[11px] uppercase tracking-widest leading-none mb-1">{isOnline ? 'System Online' : 'System Offline'}</h3>
-                      <p className="text-gray-400 text-[10px] font-bold uppercase tracking-tight">{isOnline ? 'Waiting for order requests' : 'Go online to receive orders'}</p>
+                      <h3 className="text-gray-950 font-black text-xs uppercase tracking-wider leading-none mb-1">
+                        {isOnline ? 'System Online' : 'System Offline'}
+                      </h3>
+                      <p className="text-gray-500 text-[11px] font-semibold tracking-tight">
+                        {isOnline ? 'Waiting for order requests' : 'Go online to receive orders'}
+                      </p>
                     </div>
                   </div>
                   {emergencyNumbers.teamLeader && (
                     <div className="flex flex-col items-center justify-center ml-3 shrink-0">
                       <button 
+                        type="button"
                         onClick={() => window.location.href = `tel:${emergencyNumbers.teamLeader.replace(/\D/g, '')}`}
-                        className="w-10 h-10 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 active:scale-95 transition-all shadow-lg"
+                        className="w-9 h-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center active:scale-95 transition-all shadow-xs hover:bg-blue-100"
                         title="Call Team Leader"
                       >
-                        <Phone className="w-4 h-4" />
+                        <Phone className="w-4 h-4" style={{ color: '#2563EB' }} />
                       </button>
-                      <span className="text-[8px] font-bold text-blue-300/80 uppercase mt-1 tracking-wider text-center">
+                      <span className="text-[8px] font-bold text-gray-500 uppercase mt-1 tracking-wider text-center">
                         Team Leader
                       </span>
                     </div>
@@ -1659,7 +1704,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       />
 
       {/* â”€â”€â”€ 2. MAIN CONTENT â”€â”€â”€ */}
-      <div className={`flex-1 relative overflow-y-auto ${currentTab === 'history' || currentTab === 'profile' || currentTab === 'pocket' || currentTab === 'orders' ? 'pt-0' : 'pt-[120px]'} delivery-scroll-container overscroll-contain`}>
+      <div className={`flex-1 relative overflow-y-auto scrollbar-hide ${currentTab === 'history' || currentTab === 'profile' || currentTab === 'pocket' || currentTab === 'orders' ? 'pt-0' : 'pt-[120px]'} delivery-scroll-container overscroll-contain`}>
          {currentTab === 'feed' ? (
            <div className="absolute inset-0 top-[-120px]">
              {isOnline ? (
