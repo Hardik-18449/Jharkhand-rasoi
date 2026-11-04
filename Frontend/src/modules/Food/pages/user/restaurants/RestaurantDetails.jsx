@@ -2313,8 +2313,15 @@ function RestaurantDetailsContent() {
         {/* Right Side - Image and Add Button Wrapper */}
         <div className="relative w-32 h-32 flex-shrink-0">
           {/* Image Container with rounded-2xl overflow-hidden */}
-          <div className="w-full h-full bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm">
-            <DishImage src={item.image} alt={item.name} className="w-full h-full object-cover" />
+          <div className="w-full h-full bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm relative">
+            <DishImage src={item.image} alt={item.name} className={`w-full h-full object-cover transition-all duration-300 ${shouldShowGrayscale || isRestaurantOffline ? 'filter blur-[1.5px] opacity-75 grayscale' : ''}`} />
+            {(shouldShowGrayscale || isRestaurantOffline) && (
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] flex items-center justify-center">
+                <span className="px-2 py-0.5 rounded-full bg-black/75 text-white text-[9px] font-black uppercase tracking-wider border border-white/20 shadow-sm">
+                  Closed
+                </span>
+              </div>
+            )}
           </div>
           {/* Button overlay - rendered outside of overflow-hidden image container to prevent clipping */}
           {quantity > 0 ? (

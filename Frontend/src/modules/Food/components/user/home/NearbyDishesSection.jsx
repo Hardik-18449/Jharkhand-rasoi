@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { Utensils, Sparkles, ChevronRight, Store } from "lucide-react";
 import { getPublicFoods } from "@/services/api";
 import AddToCartButton from "@food/components/user/AddToCartButton";
+import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability";
+import { toast } from "sonner";
 
 export default function NearbyDishesSection({
   zoneId,
@@ -90,6 +92,10 @@ export default function NearbyDishesSection({
             const codPrice = Number(dish.codPrice) || 0;
             const hasCashlessDiscount = codPrice > price;
 
+            const isRestaurantOpen = dish.isRestaurantOpen !== false && 
+              (!dish.restaurant || getRestaurantAvailabilityStatus(dish.restaurant).isOpen);
+            const isDishAvailable = dish.isAvailable !== false && isRestaurantOpen;
+
             const cartItem = {
               id: String(dish.id || dish._id),
               name: dish.name,
@@ -102,6 +108,8 @@ export default function NearbyDishesSection({
               image: dish.image,
               foodType: dish.foodType || (isVeg ? "Veg" : "Non-Veg"),
               isVeg: isVeg,
+              isAvailable: isDishAvailable,
+              isRestaurantOpen: isRestaurantOpen,
             };
 
             const restaurantUrl = `/user/restaurants/${dish.restaurantSlug || dish.restaurantId}`;
@@ -109,7 +117,7 @@ export default function NearbyDishesSection({
             return (
               <div
                 key={dish.id || dish._id}
-                className="group flex flex-col justify-between rounded-2xl border border-gray-200/80 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] p-3 shadow-sm hover:shadow-md transition-all duration-200"
+                className={`group flex flex-col justify-between rounded-2xl border border-gray-200/80 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] p-3 shadow-sm hover:shadow-md transition-all duration-200 ${!isDishAvailable ? 'opacity-80' : ''}`}
               >
                 <div>
                   {/* Dish Image */}
@@ -122,12 +130,12 @@ export default function NearbyDishesSection({
                         e.target.src =
                           "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60";
                       }}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${!isDishAvailable ? 'filter blur-[2px] grayscale' : ''}`}
                       loading="lazy"
                     />
 
                     {/* Veg / Non-Veg Indicator */}
-                    <div className="absolute top-2 left-2 rounded bg-white/95 dark:bg-gray-900/90 p-1 shadow-sm backdrop-blur-sm">
+                    <div className="absolute top-2 left-2 rounded bg-white/95 dark:bg-gray-900/90 p-1 shadow-sm backdrop-blur-sm z-10">
                       <span
                         className={`flex h-3.5 w-3.5 items-center justify-center rounded-[3px] border ${
                           isVeg ? "border-green-600" : "border-red-600"
@@ -141,11 +149,18 @@ export default function NearbyDishesSection({
                       </span>
                     </div>
 
-                    {/* Cashless discount tag */}
-                    {hasCashlessDiscount && (
-                      <span className="absolute bottom-2 left-2 rounded-md bg-emerald-600/90 text-white text-[10px] font-bold px-1.5 py-0.5 shadow-sm">
-                        Save ₹{codPrice - price} online
-                      </span>
+                    {!isDishAvailable ? (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center rounded-xl z-10">
+                        <span className="px-2.5 py-1 rounded-full bg-black/85 text-white text-[10px] font-black uppercase tracking-wider border border-white/20 shadow-sm">
+                          Closed
+                        </span>
+                      </div>
+                    ) : (
+                      hasCashlessDiscount && (
+                        <span className="absolute bottom-2 left-2 rounded-md bg-emerald-600/90 text-white text-[10px] font-bold px-1.5 py-0.5 shadow-sm">
+                          Save ₹{codPrice - price} online
+                        </span>
+                      )
                     )}
                   </div>
 
@@ -194,7 +209,22 @@ export default function NearbyDishesSection({
                     )}
                   </div>
 
-                  <AddToCartButton item={cartItem} />
+                  {isDishAvailable ? (
+                    <AddToCartButton item={cartItem} />
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toast.error("Restaurant is currently offline or timing is not available.");
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-gray-500 text-xs font-bold cursor-not-allowed flex items-center gap-1 select-none"
+                    >
+                      <span>Closed</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );

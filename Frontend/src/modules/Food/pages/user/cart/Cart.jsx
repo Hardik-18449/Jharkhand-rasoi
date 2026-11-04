@@ -1660,6 +1660,16 @@ export default function Cart() {
       const finalRestaurantId = restaurantData?.restaurantId || restaurantData?._id || null;
       const finalRestaurantName = restaurantData?.name || null;
 
+      // Validate restaurant availability (timings & operational status) for immediate orders
+      if (!isScheduled && restaurantData) {
+        const availability = getRestaurantAvailabilityStatus(restaurantData);
+        if (!availability.isOpen) {
+          toast.error("Restaurant is currently offline or timing is not available. Please order during open hours.");
+          setIsPlacingOrder(false);
+          return;
+        }
+      }
+
       if (!finalRestaurantId) {
         debugError('? CRITICAL: Cannot place order - Restaurant ID is missing!');
         debugError('?? Debug info:', {

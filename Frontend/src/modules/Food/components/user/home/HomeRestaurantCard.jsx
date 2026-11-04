@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { memo, useMemo } from "react";
 import {
@@ -99,13 +100,13 @@ function buildPreviewItems(restaurant, backendOrigin) {
     });
 }
 
-function PreviewItemCard({ item, onSelect }) {
+function PreviewItemCard({ item, onSelect, isRestaurantOpen = true }) {
   const isVeg = item.foodType === "Veg";
   return (
     <button
       type="button"
       onClick={(event) => onSelect(item, event)}
-      className="flex-shrink-0 w-[150px] sm:w-[170px] text-left focus:outline-none"
+      className={`flex-shrink-0 w-[150px] sm:w-[170px] text-left focus:outline-none ${!isRestaurantOpen ? 'cursor-not-allowed opacity-80' : ''}`}
     >
       <div className="relative h-[120px] sm:h-[135px] w-full overflow-hidden rounded-2xl bg-gray-100 dark:bg-zinc-800">
         <img
@@ -113,19 +114,27 @@ function PreviewItemCard({ item, onSelect }) {
           alt={item.name}
           loading="lazy"
           decoding="async"
-          className="h-full w-full object-cover"
+          className={`h-full w-full object-cover transition-all duration-300 ${!isRestaurantOpen ? 'filter blur-[2px] grayscale' : ''}`}
           onError={(event) => {
             event.currentTarget.src = foodImages[0];
           }}
         />
-        {item.isRecommended && (
+        {item.isRecommended && isRestaurantOpen && (
           <span className="absolute left-2 top-2 rounded-lg bg-white px-2 py-0.5 text-[11px] font-bold text-green-700 shadow-sm">
             Popular
           </span>
         )}
-        <span className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary/60 bg-white text-primary shadow-md">
-          <Plus className="h-5 w-5" strokeWidth={2.5} />
-        </span>
+        {!isRestaurantOpen ? (
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center rounded-2xl">
+            <span className="px-2.5 py-1 rounded-full bg-black/85 text-white text-[10px] font-black uppercase tracking-wider border border-white/20 shadow-sm">
+              Closed
+            </span>
+          </div>
+        ) : (
+          <span className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-primary/60 bg-white text-primary shadow-md">
+            <Plus className="h-5 w-5" strokeWidth={2.5} />
+          </span>
+        )}
       </div>
 
       <div className="mt-2 flex items-start gap-1.5">
@@ -337,7 +346,18 @@ function HomeRestaurantCard({
                   <PreviewItemCard
                     key={item.id || item.name}
                     item={item}
-                    onSelect={(selected, event) => openItem(selected.id, event)}
+                    isRestaurantOpen={availability.isOpen}
+                    onSelect={(selected, event) => {
+                      if (!availability.isOpen) {
+                        if (event) {
+                          event.preventDefault();
+                          event.stopPropagation();
+                        }
+                        toast.error("Restaurant is currently offline or timing is not available.");
+                        return;
+                      }
+                      openItem(selected.id, event);
+                    }}
                   />
                 ))}
               </div>

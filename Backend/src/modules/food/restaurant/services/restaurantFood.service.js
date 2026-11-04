@@ -622,31 +622,92 @@ export async function listPublicApprovedFoods(query = {}) {
     );
     const restaurants = restaurantIds.length
         ? await FoodRestaurant.find({ _id: { $in: restaurantIds } })
-            .select('restaurantName')
+            .select('restaurantName slug isAcceptingOrders isActive status openingTime closingTime deliveryTimings openDays operatingHours isOperating')
             .lean()
         : [];
+
+    const isRestaurantOpenNow = (r) => {
+        if (!r) return false;
+        if (r.status !== 'approved') return false;
+        if (r.isActive === false) return false;
+        if (r.isAcceptingOrders === false) return false;
+        if (r.isOperating === false) return false;
+
+        const now = new Date();
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const currentDay = dayNames[now.getDay()];
+
+        if (Array.isArray(r.openDays) && r.openDays.length > 0) {
+            const normDays = r.openDays.map((d) => String(d).trim().toLowerCase());
+            if (!normDays.includes(currentDay.toLowerCase())) return false;
+        }
+
+        const openTime = r.deliveryTimings?.openingTime || r.openingTime;
+        const closeTime = r.deliveryTimings?.closingTime || r.closingTime;
+
+        if (openTime && closeTime) {
+            const parseMins = (t) => {
+                if (!t || typeof t !== 'string') return null;
+                const parts = t.split(':').map(Number);
+                return parts.length >= 2 ? parts[0] * 60 + parts[1] : null;
+            };
+            const openM = parseMins(openTime);
+            const closeM = parseMins(closeTime);
+            if (openM !== null && closeM !== null) {
+                const nowM = now.getHours() * 60 + now.getMinutes();
+                if (openM < closeM) {
+                    if (nowM < openM || nowM > closeM) return false;
+                } else if (openM > closeM) {
+                    if (nowM < openM && nowM > closeM) return false;
+                }
+            }
+        }
+
+        return true;
+    };
+
     const restaurantMap = new Map(
-        restaurants.map((r) => [String(r._id), r.restaurantName])
+        restaurants.map((r) => [String(r._id), r])
     );
 
-    const foods = list.map((f) => ({
-        id: f._id,
-        _id: f._id,
-        restaurantId: f.restaurantId,
-        restaurantName: restaurantMap.get(String(f.restaurantId)) || '',
-        categoryId: f.categoryId || null,
-        categoryName: f.categoryName || '',
-        name: f.name,
-        description: f.description || '',
-        price: getFoodDisplayPrice(f),
-        prepaidPrice: f.prepaidPrice != null ? Number(f.prepaidPrice) : getFoodDisplayPrice(f),
-        codPrice: f.codPrice != null ? Number(f.codPrice) : null,
-        image: resolveStoredUploadPath(f.image || ''),
-        foodType: f.foodType || 'Non-Veg',
-        isAvailable: f.isAvailable !== false,
-        isRecommended: Boolean(f.isRecommended),
-        approvalStatus: f.approvalStatus || 'approved'
-    }));
+    const foods = list.map((f) => {
+        const rest = restaurantMap.get(String(f.restaurantId));
+        const isRestOpen = rest ? isRestaurantOpenNow(rest) : false;
+
+        return {
+            id: f._id,
+            _id: f._id,
+            restaurantId: f.restaurantId,
+            restaurantName: rest?.restaurantName || '',
+            restaurantSlug: rest?.slug || String(f.restaurantId || ''),
+            isRestaurantOpen: isRestOpen,
+            restaurant: rest ? {
+                _id: rest._id,
+                id: rest._id,
+                name: rest.restaurantName,
+                slug: rest.slug,
+                isAcceptingOrders: rest.isAcceptingOrders,
+                isActive: rest.isActive,
+                status: rest.status,
+                openingTime: rest.openingTime,
+                closingTime: rest.closingTime,
+                openDays: rest.openDays,
+                deliveryTimings: rest.deliveryTimings,
+            } : null,
+            categoryId: f.categoryId || null,
+            categoryName: f.categoryName || '',
+            name: f.name,
+            description: f.description || '',
+            price: getFoodDisplayPrice(f),
+            prepaidPrice: f.prepaidPrice != null ? Number(f.prepaidPrice) : getFoodDisplayPrice(f),
+            codPrice: f.codPrice != null ? Number(f.codPrice) : null,
+            image: resolveStoredUploadPath(f.image || ''),
+            foodType: f.foodType || 'Non-Veg',
+            isAvailable: f.isAvailable !== false,
+            isRecommended: Boolean(f.isRecommended),
+            approvalStatus: f.approvalStatus || 'approved'
+        };
+    });
 
     return { foods, total, page, limit };
 }

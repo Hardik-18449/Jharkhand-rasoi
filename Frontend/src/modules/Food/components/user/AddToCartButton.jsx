@@ -5,17 +5,27 @@ import { isModuleAuthenticated } from "@food/utils/auth"
 import { useNavigate, useLocation } from "react-router-dom"
 import { toast } from "sonner"
 
-
 export default function AddToCartButton({ item, className = "" }) {
   const { addToCart, isInCart, getCartItem, updateQuantity } = useCart()
-  const inCart = isInCart(item.id)
-  const cartItem = getCartItem(item.id)
+  const inCart = isInCart(item?.id)
+  const cartItem = getCartItem(item?.id)
   const navigate = useNavigate()
   const location = useLocation()
+
+  const isUnavailable =
+    item?.isAvailable === false ||
+    item?.isRestaurantOpen === false ||
+    item?.isOpen === false ||
+    item?.disabled === true
 
   const handleAddToCart = (e) => {
     e.preventDefault()
     e.stopPropagation()
+
+    if (isUnavailable) {
+      toast.error("Restaurant is currently offline or timing is not available.")
+      return
+    }
 
     if (!isModuleAuthenticated("user")) {
       toast.error("Please login to add items to cart")
@@ -29,6 +39,7 @@ export default function AddToCartButton({ item, className = "" }) {
   const handleIncrease = (e) => {
     e.preventDefault()
     e.stopPropagation()
+    if (isUnavailable) return
     updateQuantity(item.id, (cartItem?.quantity || 0) + 1)
   }
 
@@ -36,6 +47,19 @@ export default function AddToCartButton({ item, className = "" }) {
     e.preventDefault()
     e.stopPropagation()
     updateQuantity(item.id, (cartItem?.quantity || 0) - 1)
+  }
+
+  if (isUnavailable) {
+    return (
+      <Button
+        size="sm"
+        disabled
+        aria-label="Item unavailable"
+        className={`bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-gray-500 font-bold shadow-none cursor-not-allowed text-xs h-8 px-2.5 select-none ${className}`}
+      >
+        <span>Closed</span>
+      </Button>
+    )
   }
 
   if (inCart) {
@@ -75,13 +99,13 @@ export default function AddToCartButton({ item, className = "" }) {
   }
 
   return (
-  <Button
-    size="sm"
-    onClick={handleAddToCart}
-    aria-label="Add to cart"
-    className={`bg-black hover:bg-neutral-800 text-white font-bold shadow-md transition-all active:scale-95 ${className}`}
-  >
-    <ShoppingCart className="h-4 w-4" strokeWidth={2.75} />
-  </Button>
-)
+    <Button
+      size="sm"
+      onClick={handleAddToCart}
+      aria-label="Add to cart"
+      className={`bg-black hover:bg-neutral-800 text-white font-bold shadow-md transition-all active:scale-95 ${className}`}
+    >
+      <ShoppingCart className="h-4 w-4" strokeWidth={2.75} />
+    </Button>
+  )
 }

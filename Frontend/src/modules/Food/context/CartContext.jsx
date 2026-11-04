@@ -1,6 +1,7 @@
 // src/context/cart-context.jsx
 import { createContext, useContext, useEffect, useMemo, useState } from "react"
 import { buildCartLineId } from "@food/utils/foodVariants"
+import { toast } from "sonner"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -174,6 +175,13 @@ export function CartProvider({ children }) {
   }, [cart])
 
   const addToCart = (item, sourcePosition = null) => {
+    if (item?.isAvailable === false || item?.isRestaurantOpen === false || item?.isOpen === false || item?.disabled === true) {
+      const msg = "Restaurant is currently offline or timing is not available. Item cannot be added.";
+      try {
+        toast.error(msg);
+      } catch (_) {}
+      return { ok: false, error: msg, code: 'RESTAURANT_CLOSED' };
+    }
     const safeCart = normalizeCartData(cart)
     if (safeCart.length > 0) {
       const firstItemRestaurantId = safeCart[0]?.restaurantId
