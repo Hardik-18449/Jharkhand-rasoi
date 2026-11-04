@@ -95,6 +95,12 @@ const normalizeCartData = (rawCart) => {
         item.cartLineId ||
         buildCartLineId(baseItemId, variantId)
 
+      const normalizedAddons = Array.isArray(item.addons)
+        ? item.addons
+        : Array.isArray(item.selectedAddons)
+          ? item.selectedAddons
+          : []
+
       return {
         ...item,
         id: lineItemId,

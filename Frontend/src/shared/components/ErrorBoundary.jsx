@@ -20,7 +20,7 @@ export class ErrorBoundary extends React.Component {
   }
 
   handleGoHome = () => {
-    window.location.href = '/'
+    window.location.href = '/food/user'
   }
 
   render() {

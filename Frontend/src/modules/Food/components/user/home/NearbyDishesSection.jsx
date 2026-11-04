@@ -92,8 +92,9 @@ export default function NearbyDishesSection({
             const codPrice = Number(dish.codPrice) || 0;
             const hasCashlessDiscount = codPrice > price;
 
-            const isRestaurantOpen = dish.isRestaurantOpen !== false && 
-              (!dish.restaurant || getRestaurantAvailabilityStatus(dish.restaurant).isOpen);
+            const isRestaurantOpen = dish.restaurant
+              ? getRestaurantAvailabilityStatus(dish.restaurant).isOpen
+              : (dish.isRestaurantOpen !== false);
             const isDishAvailable = dish.isAvailable !== false && isRestaurantOpen;
 
             const cartItem = {

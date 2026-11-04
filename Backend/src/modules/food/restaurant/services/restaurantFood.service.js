@@ -633,7 +633,7 @@ export async function listPublicApprovedFoods(query = {}) {
         if (r.isAcceptingOrders === false) return false;
         if (r.isOperating === false) return false;
 
-        const now = new Date();
+        const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const currentDay = dayNames[now.getDay()];
 
