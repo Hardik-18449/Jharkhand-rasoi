@@ -58,6 +58,11 @@ const toUploadsPath = (rawPath) => {
   const [withoutHash] = trimmed.split('#');
   const [pathnamePart, query = ''] = withoutHash.split('?');
   const normalizedPath = pathnamePart.replace(/\\/g, '/');
+
+  // Never treat frontend assets (e.g. /assets/foo.png) or static icons as uploads
+  if (/^\/?(assets|static)\//i.test(normalizedPath)) {
+    return '';
+  }
   const uploadsMatch = normalizedPath.match(UPLOADS_SEGMENT_REGEX);
 
   if (uploadsMatch) {
