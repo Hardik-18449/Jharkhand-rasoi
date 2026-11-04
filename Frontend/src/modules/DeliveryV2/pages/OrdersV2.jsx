@@ -122,10 +122,10 @@ function OrderInfo({ order, onOpen, onShowMap }) {
       </div>
 
       {itemsSummary && (
-        <p className="mt-2 text-xs text-gray-600 line-clamp-1 bg-gray-50/90 border border-gray-100/80 rounded-lg px-2.5 py-1">
-          <span className="font-bold text-gray-700">Items: </span>
-          {itemsSummary}
-        </p>
+        <div className="mt-2 text-xs text-gray-700 bg-gray-50/90 border border-gray-100/80 rounded-xl px-3 py-2 leading-relaxed">
+          <span className="font-bold text-gray-900">Items: </span>
+          <span className="text-gray-600 break-words">{itemsSummary}</span>
+        </div>
       )}
 
       <div className="mt-3 relative rounded-2xl bg-gray-50/90 p-3.5 text-xs border border-gray-100">
@@ -597,10 +597,10 @@ export default function OrdersV2({
 
                     {/* Items Summary if available */}
                     {itemsSummary && (
-                      <p className="mb-2 text-xs text-gray-600 line-clamp-1 bg-gray-50 border border-gray-100 rounded-lg px-2.5 py-1">
-                        <span className="font-bold text-gray-700">Items: </span>
-                        {itemsSummary}
-                      </p>
+                      <div className="mb-2.5 text-xs text-gray-700 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 leading-relaxed">
+                        <span className="font-bold text-gray-900">Items: </span>
+                        <span className="text-gray-600 break-words">{itemsSummary}</span>
+                      </div>
                     )}
 
                     {/* Locations Box */}

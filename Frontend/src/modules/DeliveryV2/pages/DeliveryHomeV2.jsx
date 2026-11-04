@@ -1898,7 +1898,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                            {Array.isArray(activeOrder?.items) && activeOrder.items.length > 0 && (
                              <div className="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
                                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Order Items</p>
-                                <p className="text-sm font-bold text-gray-800 line-clamp-2 leading-snug">
+                                <p className="text-sm font-bold text-gray-800 leading-relaxed break-words">
                                   {activeOrder.items.map(item => `${item.quantity}x ${item.menuItem?.name || item.name || 'Item'}`).join(', ')}
                                 </p>
                              </div>
