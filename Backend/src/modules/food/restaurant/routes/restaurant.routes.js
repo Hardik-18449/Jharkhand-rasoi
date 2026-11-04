@@ -98,7 +98,7 @@ router.post('/register', uploadFields, registerRestaurantController);
 router.get('/restaurants', cacheResponse(300, 'restaurants'), listApprovedRestaurantsController);
 router.get('/restaurants/:id', cacheResponse(600, 'restaurant_detail'), getApprovedRestaurantController);
 router.get('/restaurants/:id/menu', cacheResponse(600, 'restaurant_menu'), getPublicRestaurantMenuController);
-router.get('/restaurants/:id/outlet-timings', cacheResponse(600, 'restaurant_timings'), getOutletTimingsByRestaurantIdController);
+router.get('/restaurants/:id/outlet-timings', getOutletTimingsByRestaurantIdController);
 router.get('/offers', cacheResponse(300, 'offers'), listPublicOffersController);
 // Public: categories list (zone-aware; returns zone categories + global)
 router.get('/categories/public', cacheResponse(600, 'categories'), listCategoriesController);
@@ -116,13 +116,18 @@ router.patch('/availability', authMiddleware, requireRestaurant, async (req, res
     await invalidateCache('restaurants:*');
     next();
 }, updateRestaurantAcceptingOrdersController);
-router.patch('/profile', authMiddleware, requireRestaurant, updateRestaurantProfileController);
-router.patch('/availability', authMiddleware, requireRestaurant, updateRestaurantAcceptingOrdersController);
 router.patch('/dining-settings', authMiddleware, requireRestaurant, updateCurrentRestaurantDiningSettingsController);
 router.post('/dining-settings/request', authMiddleware, requireRestaurant, createDiningRequestController);
 router.get('/dining-settings/pending', authMiddleware, requireRestaurant, getPendingDiningRequestController);
 router.get('/outlet-timings', authMiddleware, requireRestaurant, getCurrentRestaurantOutletTimingsController);
-router.put('/outlet-timings', authMiddleware, requireRestaurant, upsertCurrentRestaurantOutletTimingsController);
+router.put('/outlet-timings', authMiddleware, requireRestaurant, async (req, res, next) => {
+    await invalidateCache('restaurant_timings:*');
+    await invalidateCache('restaurants:*');
+    await invalidateCache('restaurant_detail:*');
+    await invalidateCache('restaurant_menu:*');
+    await invalidateCache('foods:*');
+    next();
+}, upsertCurrentRestaurantOutletTimingsController);
 router.get('/finance', authMiddleware, requireRestaurant, getRestaurantFinanceController);
 router.get('/dashboard-stats', authMiddleware, requireRestaurant, getRestaurantDashboardStatsController);
 router.post('/withdraw', authMiddleware, requireRestaurant, moneyRateLimiter, createWithdrawalRequestController);

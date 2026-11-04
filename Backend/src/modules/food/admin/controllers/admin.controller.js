@@ -543,6 +543,14 @@ export async function updateRestaurantOutletTimings(req, res, next) {
             return res.status(400).json({ success: false, message: 'Invalid restaurant id' });
         }
         const data = await upsertOutletTimingsForRestaurant(id, req.body?.outletTimings);
+        await Promise.all([
+            invalidateCache('restaurant_timings:*'),
+            invalidateCache('restaurants:*'),
+            invalidateCache('restaurant_detail:*'),
+            invalidateCache('restaurant_menu:*'),
+            invalidateCache('foods:*'),
+            invalidateCache('restaurant:*')
+        ]);
         res.status(200).json({ success: true, message: 'Outlet timings updated successfully', data });
     } catch (error) {
         next(error);

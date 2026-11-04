@@ -1209,7 +1209,7 @@ function createInFlightCache({ ttlMs }) {
 // A small in-flight + short TTL cache collapses duplicate requests without changing functionality.
 const publicRestaurantsCache = createInFlightCache({ ttlMs: 1000 }); // 1 second for fast updates
 const publicRestaurantMenuCache = createInFlightCache({ ttlMs: 300000 });
-const publicRestaurantOutletTimingsCache = createInFlightCache({ ttlMs: 300000 });
+const publicRestaurantOutletTimingsCache = createInFlightCache({ ttlMs: 5000 });
 const publicCategoriesCache = createInFlightCache({ ttlMs: 300000 });
 const publicFoodsCache = createInFlightCache({ ttlMs: 300000 });
 const publicGenericGetCache = createInFlightCache({ ttlMs: 300000 });
@@ -1383,17 +1383,24 @@ const getPublicRestaurantOutletTimingsOnce = (id, config = {}) => {
       config: {},
     });
   }
+  const mergedConfig = {
+    ...axiosConfig,
+    params: { ...(axiosConfig.params || {}), _ts: Date.now() },
+    headers: {
+      ...(axiosConfig.headers || {}),
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+    },
+  };
   if (noCache) {
     return userClient.get(
       `/food/restaurant/restaurants/${safeId}/outlet-timings`,
-      { ...axiosConfig },
+      mergedConfig,
     );
   }
   const key = `outletTimings:${safeId}`;
   return publicRestaurantOutletTimingsCache.getOrCreate(key, () =>
-    userClient.get(`/food/restaurant/restaurants/${safeId}/outlet-timings`, {
-      ...axiosConfig,
-    }),
+    userClient.get(`/food/restaurant/restaurants/${safeId}/outlet-timings`, mergedConfig),
   );
 };
 

@@ -1954,13 +1954,16 @@ export const getApprovedRestaurantByIdOrSlug = async (idOrSlug, query = {}) => {
         }
     }
 
-    const [offers, singleRecMap] = await Promise.all([
+    const { FoodRestaurantOutletTimings } = await import('../models/outletTimings.model.js');
+    const [offers, singleRecMap, outletTimingsDoc] = await Promise.all([
         fetchOffers(doc._id),
-        populateRecommendedItems([doc])
+        populateRecommendedItems([doc]),
+        FoodRestaurantOutletTimings.findOne({ restaurantId: doc._id }).select('timings').lean()
     ]);
 
     return {
         ...doc,
+        outletTimings: outletTimingsDoc?.timings || doc.outletTimings || null,
         offers,
         restaurantOffers: {
             ...(doc.restaurantOffers || {}),

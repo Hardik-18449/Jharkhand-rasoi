@@ -630,7 +630,7 @@ function RestaurantDetailsContent() {
           // Load outlet timings asynchronously without blocking the main render flow
           const outletRestaurantId = transformedRestaurant.mongoId || actualRestaurant?._id || apiRestaurant?._id;
           if (outletRestaurantId) {
-            restaurantAPI.getOutletTimingsByRestaurantId(outletRestaurantId)
+            restaurantAPI.getOutletTimingsByRestaurantId(outletRestaurantId, { noCache: true })
               .then(outletResponse => {
                 const outletTimingsData = outletResponse?.data?.data?.outletTimings || outletResponse?.data?.outletTimings;
                 if (outletTimingsData) {

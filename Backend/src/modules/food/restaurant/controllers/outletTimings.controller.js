@@ -3,6 +3,9 @@ import { getOutletTimingsForRestaurant, upsertOutletTimingsForRestaurant } from 
 
 export const getOutletTimingsByRestaurantIdController = async (req, res, next) => {
     try {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         const data = await getOutletTimingsForRestaurant(req.params.id);
         return sendResponse(res, 200, 'Outlet timings fetched successfully', data);
     } catch (error) {
@@ -12,6 +15,9 @@ export const getOutletTimingsByRestaurantIdController = async (req, res, next) =
 
 export const getCurrentRestaurantOutletTimingsController = async (req, res, next) => {
     try {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         const restaurantId = req.user?.userId;
         const data = await getOutletTimingsForRestaurant(restaurantId);
         return sendResponse(res, 200, 'Outlet timings fetched successfully', data);

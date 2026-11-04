@@ -193,8 +193,9 @@ function HomeRestaurantCard({
     (restaurant?.status === 'rejected' && /disabled by admin|banned/i.test(restaurant?.rejectionReason || ''))
   );
 
+  const resolvedRestaurantId = restaurant?.mongoId || restaurant?._id || restaurant?.id || restaurant?.restaurantId;
   const { ref, outletTimings } = useDeferredOutletTimings(
-    restaurant?.mongoId,
+    resolvedRestaurantId,
     restaurant?.outletTimings ?? null,
   );
 

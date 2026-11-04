@@ -106,6 +106,36 @@ export async function upsertOutletTimingsForRestaurant(restaurantId, outletTimin
         { upsert: true, new: true, setDefaultsOnInsert: true, projection: 'timings updatedAt' }
     ).lean();
 
+    // Synchronize openDays and standard operating hours on the main FoodRestaurant document
+    try {
+        const { FoodRestaurant } = await import('../models/restaurant.model.js');
+        const openDays = timings.filter((t) => t.isOpen).map((t) => t.day);
+        const firstOpenTiming = timings.find((t) => t.isOpen && t.openingTime && t.closingTime);
+        const updateFields = { openDays };
+        if (firstOpenTiming) {
+            updateFields.openingTime = firstOpenTiming.openingTime;
+            updateFields.closingTime = firstOpenTiming.closingTime;
+        }
+        await FoodRestaurant.findByIdAndUpdate(restaurantId, { $set: updateFields });
+    } catch (syncErr) {
+        // Silently continue if restaurant document sync encounters an issue
+    }
+
+    // Invalidate Redis caches so users immediately receive the updated timings and availability
+    try {
+        const { invalidateCache } = await import('../../../../middleware/cache.js');
+        await Promise.all([
+            invalidateCache('restaurant_timings:*'),
+            invalidateCache('restaurants:*'),
+            invalidateCache('restaurant_detail:*'),
+            invalidateCache('restaurant_menu:*'),
+            invalidateCache('foods:*'),
+            invalidateCache('restaurant:*')
+        ]);
+    } catch (cacheErr) {
+        // Silently continue if cache invalidation fails
+    }
+
     return { outletTimings: toClientShape(doc) };
 }
 
