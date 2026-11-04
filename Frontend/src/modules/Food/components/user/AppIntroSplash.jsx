@@ -24,6 +24,12 @@ export default function AppIntroSplash({ onComplete }) {
       return;
     }
     
+    // Maximum 6-second total failsafe to prevent getting stuck
+    const failsafeTimer = setTimeout(() => {
+      safeSetIntroSeen();
+      onComplete();
+    }, 6000);
+
     const fetchScreens = async () => {
       try {
         const res = await api.get('/food/app-intro-ads/public');
@@ -103,6 +109,10 @@ export default function AppIntroSplash({ onComplete }) {
             muted 
             playsInline 
             loop 
+            onError={() => {
+              safeSetIntroSeen();
+              onComplete();
+            }}
           />
         ) : (
           <img 
@@ -110,6 +120,10 @@ export default function AppIntroSplash({ onComplete }) {
             src={getMediaUrl(currentScreen.mediaUrl)} 
             alt={currentScreen.title || "Intro"} 
             className="w-full h-full object-contain"
+            onError={() => {
+              safeSetIntroSeen();
+              onComplete();
+            }}
           />
         )}
       </div>

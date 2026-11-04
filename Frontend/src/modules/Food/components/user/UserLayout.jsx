@@ -133,17 +133,43 @@ function UserLayoutShell() {
 }
 
 export default function UserLayout() {
+  const location = useLocation()
+  const path = location.pathname.startsWith("/food")
+    ? location.pathname.substring(5) || "/"
+    : location.pathname
+  const normalizedPath = path.length > 1 ? path.replace(/\/+$/, "") : path
+
+  const isHomePage =
+    normalizedPath === "/" ||
+    normalizedPath === "" ||
+    normalizedPath === "/user"
+
   const [introFinished, setIntroFinished] = useState(() => {
     try {
+      if (!isHomePage) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem("appIntroSeen", "true")
+        }
+        return true
+      }
       return !!(typeof window !== 'undefined' && sessionStorage.getItem("appIntroSeen"))
     } catch (e) {
-      return true;
+      return true
     }
   })
 
+  useEffect(() => {
+    if (!isHomePage && !introFinished) {
+      try {
+        sessionStorage.setItem("appIntroSeen", "true")
+      } catch (e) {}
+      setIntroFinished(true)
+    }
+  }, [isHomePage, introFinished])
+
   return (
     <div className="min-h-screen min-h-[100dvh] bg-[#f5f5f5] dark:bg-[#0a0a0a] box-border overflow-x-clip">
-      {!introFinished && (
+      {isHomePage && !introFinished && (
         <AppIntroSplash onComplete={() => setIntroFinished(true)} />
       )}
 
