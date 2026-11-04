@@ -251,7 +251,8 @@ function getMeOnce(module) {
  * Restaurant OTP auth (backend: same phone format as user, 6-digit OTP e.g. 123456).
  */
 export function requestRestaurantOtp(phone) {
-  const normalized = normalizePhone(phone);
+  const digits = normalizePhone(phone);
+  const normalized = digits.length > 10 ? digits.slice(-10) : digits;
   if (normalized.length < 8) {
     return Promise.reject(new Error("Phone must be at least 8 digits"));
   }
@@ -259,7 +260,8 @@ export function requestRestaurantOtp(phone) {
 }
 
 export function verifyRestaurantOtp(phone, otp, fcmToken = null, platform = "web") {
-  const normalized = normalizePhone(phone);
+  const digits = normalizePhone(phone);
+  const normalized = digits.length > 10 ? digits.slice(-10) : digits;
   const otpStr = String(otp).replace(/\D/g, "").slice(0, 6);
   if (!normalized || otpStr.length < 6) {
     return Promise.reject(new Error("Phone and 6-digit OTP are required"));
@@ -275,7 +277,8 @@ export function verifyRestaurantOtp(phone, otp, fcmToken = null, platform = "web
  * Delivery partner OTP auth (backend: same phone + 6-digit OTP).
  */
 export function requestDeliveryOtp(phone) {
-  const normalized = normalizePhone(phone);
+  const digits = normalizePhone(phone);
+  const normalized = digits.length > 10 ? digits.slice(-10) : digits;
   if (normalized.length < 8) {
     return Promise.reject(new Error("Phone must be at least 8 digits"));
   }
@@ -283,7 +286,8 @@ export function requestDeliveryOtp(phone) {
 }
 
 export function verifyDeliveryOtp(phone, otp, fcmToken = null, platform = "web") {
-  const normalized = normalizePhone(phone);
+  const digits = normalizePhone(phone);
+  const normalized = digits.length > 10 ? digits.slice(-10) : digits;
   const otpStr = String(otp).replace(/\D/g, "").slice(0, 6);
   if (!normalized || otpStr.length < 6) {
     return Promise.reject(new Error("Phone and 6-digit OTP are required"));

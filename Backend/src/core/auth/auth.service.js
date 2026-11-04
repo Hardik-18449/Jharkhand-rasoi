@@ -7,7 +7,7 @@ import { FoodRestaurant } from "../../modules/food/restaurant/models/restaurant.
 import { FoodDeliveryPartner } from "../../modules/food/delivery/models/deliveryPartner.model.js";
 import { FoodReferralSettings } from "../../modules/food/admin/models/referralSettings.model.js";
 import { FoodReferralLog } from "../../modules/food/admin/models/referralLog.model.js";
-import { createOrUpdateOtp, verifyOtp } from "../otp/otp.service.js";
+import { createOrUpdateOtp, verifyOtp, shouldUseStaticOtp } from "../otp/otp.service.js";
 import { signAccessToken, signRefreshToken } from "./token.util.js";
 import { FoodRefreshToken } from "../refreshTokens/refreshToken.model.js";
 import { ValidationError, AuthError } from "./errors.js";
@@ -103,7 +103,7 @@ export const requestUserOtp = async (phone) => {
   const otp = await createOrUpdateOtp(phone);
   // TODO: integrate SMS provider here
   const shouldExposeOtp =
-    config.nodeEnv !== "production" || config.useDefaultOtp;
+    config.nodeEnv !== "production" || config.useDefaultOtp || shouldUseStaticOtp(phone);
   return shouldExposeOtp ? { otp } : {};
 };
 
@@ -356,7 +356,7 @@ export const requestRestaurantOtp = async (phone) => {
   const otp = await createOrUpdateOtp(phone);
   // Only expose OTP in response when in default/dev mode — never in production with real SMS
   const shouldExposeOtp =
-    config.nodeEnv !== "production" || config.useDefaultOtp;
+    config.nodeEnv !== "production" || config.useDefaultOtp || shouldUseStaticOtp(phone);
   return shouldExposeOtp ? { otp } : {};
 };
 
@@ -455,7 +455,7 @@ export const requestDeliveryOtp = async (phone) => {
   const otp = await createOrUpdateOtp(phone);
   // Only expose OTP in response when in default/dev mode — never in production with real SMS
   const shouldExposeOtp =
-    config.nodeEnv !== "production" || config.useDefaultOtp;
+    config.nodeEnv !== "production" || config.useDefaultOtp || shouldUseStaticOtp(phone);
   return shouldExposeOtp ? { otp } : {};
 };
 

@@ -94,7 +94,7 @@ export default function DeliverySignIn() {
   // Handle Send OTP
   const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
-    const cleaned = phoneNumber.replace(/\D/g, "");
+    const cleaned = phoneNumber.replace(/\D/g, "").slice(-10);
     if (!validatePhone(cleaned)) {
       triggerShake('Please enter a valid 10-digit Indian mobile number');
       return;
@@ -103,21 +103,25 @@ export default function DeliverySignIn() {
     setErrorMessage('');
     setIsLoading(true);
 
-    const fullPhone = `${DEFAULT_COUNTRY_CODE} ${cleaned}`.trim();
-
     try {
       clearModuleAuth("delivery");
-      await deliveryAPI.sendOTP(fullPhone, "login");
+      const res = await deliveryAPI.sendOTP(cleaned, "login");
 
       const authData = {
         method: "phone",
-        phone: fullPhone,
+        phone: cleaned,
         isSignUp: false,
         purpose: "login",
         module: "delivery",
       };
       localStorage.setItem("deliveryAuthData", JSON.stringify(authData));
       localStorage.setItem("delivery_draft_phone", cleaned);
+
+      // Auto-populate static/dev OTP if returned in response (e.g. test phones)
+      const serverOtp = res?.data?.data?.otp || res?.data?.otp;
+      if (serverOtp && String(serverOtp).length === 6) {
+        setOtpDigits(String(serverOtp).split(''));
+      }
 
       setIsLoading(false);
       setCurrentScreen('OTP');
@@ -180,8 +184,7 @@ export default function DeliverySignIn() {
     setIsLoading(true);
     setErrorMessage('');
 
-    const cleaned = phoneNumber.replace(/\D/g, "");
-    const fullPhone = `${DEFAULT_COUNTRY_CODE} ${cleaned}`.trim();
+    const cleaned = phoneNumber.replace(/\D/g, "").slice(-10);
 
     try {
       let fcmToken = null;
@@ -189,11 +192,46 @@ export default function DeliverySignIn() {
         fcmToken = localStorage.getItem("delivery_fcm_token") || null;
       } catch (_) {}
 
-      const res = await deliveryAPI.verifyOTP(fullPhone, code, "login", "", fcmToken, "web");
-      const authResData = res?.data?.data || res?.data;
+      const res = await deliveryAPI.verifyOTP(cleaned, code, "login", "", fcmToken, "web");
+      const authResData = res?.data?.data || res?.data || {};
 
-      // Store tokens and auth state
-      storeAuthData("delivery", authResData);
+      if (authResData.pendingApproval === true) {
+        localStorage.removeItem("deliveryAuthData");
+        setIsLoading(false);
+        triggerShake(
+          authResData.message ||
+          (authResData.isRejected
+            ? `Application rejected: ${authResData.rejectionReason || 'Contact support'}`
+            : "Your account is pending admin verification. You will be notified once approved.")
+        );
+        return;
+      }
+
+      if (authResData.needsRegistration === true) {
+        localStorage.removeItem("deliveryAuthData");
+        localStorage.setItem("deliveryNeedsRegistration", "true");
+        const details = {
+          name: "",
+          phone: cleaned,
+          countryCode: "+91",
+        };
+        localStorage.setItem("deliverySignupDetails", JSON.stringify(details));
+        setIsLoading(false);
+        navigate("/food/delivery/signup/details", { replace: true });
+        return;
+      }
+
+      const accessToken = authResData?.accessToken || authResData?.token;
+      const user = authResData?.user;
+      const refreshToken = authResData?.refreshToken || null;
+
+      if (!accessToken || !user) {
+        throw new Error("Invalid response from server");
+      }
+
+      // Store tokens and auth state properly
+      storeAuthData("delivery", accessToken, user, refreshToken);
+      window.dispatchEvent(new Event("deliveryAuthChanged"));
 
       // Register web push in background
       try {

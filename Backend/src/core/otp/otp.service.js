@@ -239,13 +239,27 @@ const normalizePhoneForOtp = (phone) => {
     return digits.slice(-10);
 };
 
-const DEFAULT_STATIC_TEST_PHONES = ['9755633147', '8624862400'];
+const DEFAULT_STATIC_TEST_PHONES = [
+    '9755633147',
+    '8624862400',
+    '8000000000',
+    '8000000001',
+    '8000000002',
+    '8000000003',
+    '8000000004',
+    '8000000005',
+    '9999999999',
+    '8888888888',
+    '7777777777'
+];
 
 /** True for designated developer test numbers when USE_DEFAULT_TEST_PHONE is enabled */
 const isDefaultTestPhone = (normalizedPhone) => {
     if (!normalizedPhone) return false;
     if (config.useDefaultTestPhone === false) return false;
     if (DEFAULT_STATIC_TEST_PHONES.includes(normalizedPhone)) return true;
+    if (/^80000000\d{2}$/.test(normalizedPhone)) return true;
+    if (/^99999999\d{2}$/.test(normalizedPhone)) return true;
     const testPhones = config.defaultTestPhones || [];
     if (testPhones.includes(normalizedPhone)) return true;
     if (config.defaultTestPhone && normalizedPhone === config.defaultTestPhone) return true;
