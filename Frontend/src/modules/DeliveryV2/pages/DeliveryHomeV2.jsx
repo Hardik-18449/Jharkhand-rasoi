@@ -541,54 +541,19 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
   const openCustomerDropInMaps = useCallback((order) => {
     if (!order) return;
 
+    // Minimize modal to reveal in-app LiveMap navigation
+    setIsModalMinimized(true);
+
     const customerCoords =
       parseLatLng(order.customerLocation) ||
       parseLatLng(order.customer_location) ||
       parseLatLng(order.deliveryAddress?.location) ||
       parseLatLng(order.deliveryAddress);
 
-    const restaurantCoords =
-      parseLatLng(order.restaurantLocation) ||
-      parseLatLng(order.restaurant_location) ||
-      parseLatLng(order.restaurantId?.location) ||
-      parseLatLng(order.restaurantId);
-
-    if (customerCoords && restaurantCoords) {
-      const { lat: rLat, lng: rLng } = restaurantCoords;
-      const { lat: cLat, lng: cLng } = customerCoords;
-      window.open(
-        `https://www.google.com/maps/dir/?api=1&origin=${rLat},${rLng}&destination=${cLat},${cLng}&travelmode=driving`,
-        '_blank',
-      );
-      return;
+    if (mapRef.current && customerCoords && Number.isFinite(customerCoords.lat) && Number.isFinite(customerCoords.lng)) {
+      mapRef.current.panTo({ lat: customerCoords.lat, lng: customerCoords.lng });
+      mapRef.current.setZoom(16);
     }
-
-    if (customerCoords) {
-      const { lat, lng } = customerCoords;
-      window.open(
-        `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`,
-        '_blank',
-      );
-      return;
-    }
-
-    const address =
-      order.customerAddress ||
-      order.deliveryAddress?.street ||
-      [
-        order.deliveryAddress?.street,
-        order.deliveryAddress?.additionalDetails,
-        order.deliveryAddress?.city,
-        order.deliveryAddress?.state,
-      ]
-        .filter(Boolean)
-        .join(', ') ||
-      'Customer Location';
-
-    window.open(
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
-      '_blank',
-    );
   }, []);
 
   // Auto-restore modal when status or content changes

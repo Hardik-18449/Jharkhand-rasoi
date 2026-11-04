@@ -16,9 +16,11 @@ import {
   Info,
   Phone,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Navigation2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import InAppMapModal from '@/modules/DeliveryV2/components/modals/InAppMapModal';
 import { getOrderAcceptId, getOrderMongoId } from '@food/utils/orderDispatchId';
 import {
   getRestaurantDisplayInfo,
@@ -72,7 +74,7 @@ function extractItemsSummary(order) {
     .join(', ');
 }
 
-function OrderInfo({ order }) {
+function OrderInfo({ order, onOpen, onShowMap }) {
   const amount =
     order?.earnings ||
     order?.riderEarning ||
@@ -146,18 +148,28 @@ function OrderInfo({ order }) {
                     <span>Call</span>
                   </a>
                 )}
-                {restaurantInfo.mapsUrl && (
-                  <a
-                    href={restaurantInfo.mapsUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200 text-[10px] font-bold text-blue-600 hover:bg-blue-100 active:scale-95 transition-all"
-                  >
-                    <span>Map</span>
-                    <ExternalLink className="h-2.5 w-2.5" />
-                  </a>
-                )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onShowMap) {
+                      onShowMap({
+                        title: restaurantInfo.name,
+                        type: 'pickup',
+                        address: restaurantInfo.address,
+                        coords: restaurantInfo.coords,
+                        order,
+                      });
+                    } else if (onOpen) {
+                      onOpen(order);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-orange-50 border border-orange-200 text-[10px] font-bold text-orange-700 hover:bg-orange-100 active:scale-95 transition-all"
+                  title="View on Map"
+                >
+                  <Navigation2 className="h-2.5 w-2.5" />
+                  <span>Map</span>
+                </button>
               </div>
             </div>
             <p className="mt-0.5 text-xs font-bold text-gray-900 truncate">{restaurantInfo.name}</p>
@@ -195,18 +207,28 @@ function OrderInfo({ order }) {
                     <span>Call</span>
                   </a>
                 )}
-                {customerInfo.mapsUrl && (
-                  <a
-                    href={customerInfo.mapsUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200 text-[10px] font-bold text-blue-600 hover:bg-blue-100 active:scale-95 transition-all"
-                  >
-                    <span>Map</span>
-                    <ExternalLink className="h-2.5 w-2.5" />
-                  </a>
-                )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onShowMap) {
+                      onShowMap({
+                        title: customerInfo.name,
+                        type: 'drop',
+                        address: customerInfo.address,
+                        coords: customerInfo.coords,
+                        order,
+                      });
+                    } else if (onOpen) {
+                      onOpen(order);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200 text-[10px] font-bold text-blue-700 hover:bg-blue-100 active:scale-95 transition-all"
+                  title="View on Map"
+                >
+                  <Navigation2 className="h-2.5 w-2.5" />
+                  <span>Map</span>
+                </button>
               </div>
             </div>
             <p className="mt-0.5 text-xs font-bold text-gray-900 truncate">{customerInfo.name}</p>
@@ -256,6 +278,7 @@ export default function OrdersV2({
   const [loadingDelivered, setLoadingDelivered] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'active' | 'delivered'
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+  const [activeMapPreview, setActiveMapPreview] = useState(null);
 
   const limit = Number(capacity.effectiveLimit || 1);
   const activeCount = Number(capacity.activeOrderCount ?? acceptedOrders.length);
@@ -307,7 +330,6 @@ export default function OrdersV2({
       <div className="mb-4 flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-black text-gray-950">Orders</h1>
-          <p className="mt-0.5 text-xs font-medium text-gray-500">Manage incoming offers and delivery history</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -406,7 +428,7 @@ export default function OrdersV2({
                 const id = getOrderMongoId(order) || getOrderAcceptId(order);
                 return (
                   <article key={id} className="rounded-2xl border border-orange-200/80 bg-white p-4 shadow-sm">
-                    <OrderInfo order={order} />
+                    <OrderInfo order={order} onOpen={onOpen} onShowMap={setActiveMapPreview} />
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <button
                         type="button"
@@ -469,7 +491,7 @@ export default function OrdersV2({
                     onClick={() => onOpen?.(order)}
                     className="w-full rounded-2xl border border-orange-200/80 bg-white p-4 text-left shadow-sm transition active:scale-[0.99] cursor-pointer hover:border-orange-300"
                   >
-                    <OrderInfo order={order} />
+                    <OrderInfo order={order} onOpen={onOpen} onShowMap={setActiveMapPreview} />
                     <div className="mt-4 flex flex-wrap items-center justify-between border-t border-gray-100 pt-3 gap-2">
                       <span className="rounded-full bg-orange-50 border border-orange-200 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-orange-700 truncate">
                         {String(order?.orderStatus || 'accepted').replaceAll('_', ' ')}
@@ -686,17 +708,23 @@ export default function OrdersV2({
                       <Store className="w-3.5 h-3.5" />
                       Pickup Restaurant
                     </span>
-                    {getRestaurantDisplayInfo(selectedOrderDetails).mapsUrl && (
-                      <a
-                        href={getRestaurantDisplayInfo(selectedOrderDetails).mapsUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs font-bold text-blue-600 hover:underline inline-flex items-center gap-0.5"
-                      >
-                        <span>Map</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const rInfo = getRestaurantDisplayInfo(selectedOrderDetails);
+                        setActiveMapPreview({
+                          title: rInfo.name,
+                          type: 'pickup',
+                          address: rInfo.address,
+                          coords: rInfo.coords,
+                          order: selectedOrderDetails,
+                        });
+                      }}
+                      className="text-xs font-bold text-orange-600 hover:underline inline-flex items-center gap-1 active:scale-95 transition-transform"
+                    >
+                      <Navigation2 className="w-3 h-3" />
+                      <span>Map</span>
+                    </button>
                   </div>
                   <p className="text-sm font-bold text-gray-900 mt-1">
                     {getRestaurantDisplayInfo(selectedOrderDetails).name}
@@ -722,17 +750,23 @@ export default function OrdersV2({
                       <MapPin className="w-3.5 h-3.5" />
                       Customer Drop
                     </span>
-                    {getCustomerDisplayInfo(selectedOrderDetails).mapsUrl && (
-                      <a
-                        href={getCustomerDisplayInfo(selectedOrderDetails).mapsUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs font-bold text-blue-600 hover:underline inline-flex items-center gap-0.5"
-                      >
-                        <span>Map</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cInfo = getCustomerDisplayInfo(selectedOrderDetails);
+                        setActiveMapPreview({
+                          title: cInfo.name,
+                          type: 'drop',
+                          address: cInfo.address,
+                          coords: cInfo.coords,
+                          order: selectedOrderDetails,
+                        });
+                      }}
+                      className="text-xs font-bold text-blue-600 hover:underline inline-flex items-center gap-1 active:scale-95 transition-transform"
+                    >
+                      <Navigation2 className="w-3 h-3" />
+                      <span>Map</span>
+                    </button>
                   </div>
                   <p className="text-sm font-bold text-gray-900 mt-1">
                     {getCustomerDisplayInfo(selectedOrderDetails).name}
@@ -787,6 +821,18 @@ export default function OrdersV2({
           </div>
         )}
       </AnimatePresence>
+
+      {/* In-App Map Preview Modal */}
+      <InAppMapModal
+        isOpen={Boolean(activeMapPreview)}
+        onClose={() => setActiveMapPreview(null)}
+        title={activeMapPreview?.title}
+        type={activeMapPreview?.type}
+        address={activeMapPreview?.address}
+        coords={activeMapPreview?.coords}
+        order={activeMapPreview?.order}
+        onOpenLiveRoute={onOpen}
+      />
       </div>
     </div>
   );

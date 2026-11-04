@@ -43,6 +43,10 @@ export const PickupActionModal = ({
     parseLatLng(order.restaurant_location);
 
   const openRestaurantInMaps = () => {
+    if (onMinimize) {
+      onMinimize();
+      return;
+    }
     if (restaurantCoords) {
       const { lat, lng } = restaurantCoords;
       window.open(

@@ -266,15 +266,15 @@ export const NewOrderModal = ({ order, queuedOrders = [], onSelectOrder, onAccep
                     <span>Restaurant Pickup</span>
                   </div>
                   {restaurantMapsLink && (
-                    <a
-                      href={restaurantMapsLink}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-green-600 hover:text-green-700 active:scale-95 transition-transform"
-                    >
-                      <span>Map</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                    <button
+                    type="button"
+                    onClick={() => onMinimize?.()}
+                    className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-green-600 hover:text-green-700 active:scale-95 transition-transform"
+                    title="View on Map"
+                  >
+                    <span>Map</span>
+                    <MapPin className="w-3 h-3" />
+                  </button>
                   )}
                 </div>
                 <p className="text-gray-950 font-bold text-base sm:text-xl leading-tight">{restaurantName}</p>
@@ -287,15 +287,15 @@ export const NewOrderModal = ({ order, queuedOrders = [], onSelectOrder, onAccep
                     <span>Customer Drop</span>
                   </div>
                   {customerMapsLink && (
-                    <a
-                      href={customerMapsLink}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:text-blue-700 active:scale-95 transition-transform"
-                    >
-                      <span>Map</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                    <button
+                    type="button"
+                    onClick={() => onMinimize?.()}
+                    className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:text-blue-700 active:scale-95 transition-transform"
+                    title="View on Map"
+                  >
+                    <span>Map</span>
+                    <MapPin className="w-3 h-3" />
+                  </button>
                   )}
                 </div>
                 <p className="text-gray-950 font-bold text-base sm:text-xl leading-tight">{customerName}</p>
