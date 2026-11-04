@@ -68,14 +68,7 @@ export default function AppIntroSplash({ onComplete }) {
   }, [currentIndex]);
 
   if (safeGetIntroSeen()) return null;
-  if (loading) {
-    return (
-      <div className="fixed inset-0 z-[100000] bg-white flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
-  if (screens.length === 0) return null;
+  if (loading || screens.length === 0) return null;
 
   const currentScreen = screens[currentIndex];
   const linkedRestaurant = currentScreen?.restaurantId;

@@ -227,7 +227,7 @@ export default function Restaurants() {
                                 </div>
                                 {restaurant.isBanned ? (
                                   <span className="bg-gray-400 text-white text-xs font-semibold px-3 py-1 rounded-md">
-                                    Offline
+                                    Closed
                                   </span>
                                 ) : (
                                   <Button className="bg-primary hover:opacity-90 dark:hover:opacity-80 text-white text-xs sm:text-sm h-7 sm:h-8 px-3 sm:px-4 flex-shrink-0 transition-opacity">

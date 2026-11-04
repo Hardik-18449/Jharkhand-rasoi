@@ -1439,7 +1439,7 @@ export default function CategoryPage() {
                           {isClosed && (
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
                               <div className="bg-gray-400/90 px-2 py-1 md:px-3 md:py-1.5 rounded-lg border border-white/20">
-                                <span className="text-white font-black uppercase tracking-widest text-[10px] md:text-xs">OFFLINE</span>
+                                <span className="text-white font-black uppercase tracking-widest text-[10px] md:text-xs">CLOSED</span>
                               </div>
                             </div>
                           )}
@@ -1550,7 +1550,7 @@ export default function CategoryPage() {
                           {isClosed && (
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
                               <div className="bg-gray-400/90 px-3 py-1.5 rounded-lg border border-white/20">
-                                <span className="text-white font-black uppercase tracking-widest text-xs">OFFLINE</span>
+                                <span className="text-white font-black uppercase tracking-widest text-xs">CLOSED</span>
                               </div>
                             </div>
                           )}

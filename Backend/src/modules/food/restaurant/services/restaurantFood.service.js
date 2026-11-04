@@ -648,8 +648,19 @@ export async function listPublicApprovedFoods(query = {}) {
         if (openTime && closeTime) {
             const parseMins = (t) => {
                 if (!t || typeof t !== 'string') return null;
-                const parts = t.split(':').map(Number);
-                return parts.length >= 2 ? parts[0] * 60 + parts[1] : null;
+                const raw = t.trim().toLowerCase();
+                const ampm = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap]m)$/);
+                if (ampm) {
+                    let h = Number(ampm[1]);
+                    const m = Number(ampm[2]);
+                    if (ampm[3] === 'pm' && h < 12) h += 12;
+                    if (ampm[3] === 'am' && h === 12) h = 0;
+                    return h * 60 + m;
+                }
+                const parts = raw.split(':').map(Number);
+                return (parts.length >= 2 && !Number.isNaN(parts[0]) && !Number.isNaN(parts[1]))
+                    ? parts[0] * 60 + parts[1]
+                    : null;
             };
             const openM = parseMins(openTime);
             const closeM = parseMins(closeTime);

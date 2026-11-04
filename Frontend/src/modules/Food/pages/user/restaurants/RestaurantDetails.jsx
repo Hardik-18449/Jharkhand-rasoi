@@ -589,6 +589,8 @@ function RestaurantDetailsContent() {
             openDays: Array.isArray(actualRestaurant?.openDays)
               ? actualRestaurant.openDays
               : (Array.isArray(apiRestaurant?.openDays) ? apiRestaurant.openDays : (Array.isArray(onboardingStep2?.openDays) ? onboardingStep2.openDays : [])),
+            openingTime: actualRestaurant?.openingTime || apiRestaurant?.openingTime || actualRestaurant?.deliveryTimings?.openingTime || apiRestaurant?.deliveryTimings?.openingTime || null,
+            closingTime: actualRestaurant?.closingTime || apiRestaurant?.closingTime || actualRestaurant?.deliveryTimings?.closingTime || apiRestaurant?.deliveryTimings?.closingTime || null,
             deliveryTimings: actualRestaurant?.deliveryTimings || apiRestaurant?.deliveryTimings || {
               openingTime: actualRestaurant?.openingTime || apiRestaurant?.openingTime || onboardingStep2?.deliveryTimings?.openingTime || "09:00",
               closingTime: actualRestaurant?.closingTime || apiRestaurant?.closingTime || onboardingStep2?.deliveryTimings?.closingTime || "22:00",
@@ -2374,7 +2376,7 @@ function RestaurantDetailsContent() {
                 : 'bg-white dark:bg-black hover:bg-orange-50/50 dark:hover:bg-zinc-900 text-orange-500 dark:text-orange-500 shadow-md border border-orange-500 dark:border-orange-500'
                 }`}
             >
-              {isRestaurantOffline ? "OFFLINE" : (
+              {isRestaurantOffline ? "CLOSED" : (
                 <>ADD <span className="text-[16px] sm:text-[18px] md:text-[20px] font-medium leading-none mt-[-2px]">+</span></>
               )}
             </motion.button>
@@ -2569,7 +2571,7 @@ function RestaurantDetailsContent() {
                     </h1>
                     {isRestaurantOffline && (
                       <span className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-widest shadow-sm bg-gray-400 text-white whitespace-nowrap flex-shrink-0">
-                        Offline Menu
+                        Closed
                       </span>
                     )}
                   </div>
@@ -2602,7 +2604,7 @@ function RestaurantDetailsContent() {
                   className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-white ${isRestaurantOffline ? "bg-rose-600" : "bg-emerald-600"
                     }`}
                 >
-                  {isRestaurantOffline ? "Offline" : "Open now"}
+                  {isRestaurantOffline ? "Closed" : "Open now"}
                 </span>
               </div>
 
@@ -2615,7 +2617,7 @@ function RestaurantDetailsContent() {
 
           {isRestaurantOffline && (
             <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-              This restaurant is currently offline. Orders are unavailable right now.
+              This restaurant is currently closed. Orders are unavailable right now.
             </div>
           )}
 

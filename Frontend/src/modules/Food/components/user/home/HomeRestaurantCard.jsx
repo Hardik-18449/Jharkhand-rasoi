@@ -303,7 +303,7 @@ function HomeRestaurantCard({
                       availability.isOpen ? "bg-green-50 text-green-700 border border-green-200" : "bg-gray-100 text-gray-500 border border-gray-200"
                     }`}
                   >
-                    {availability.isOpen ? "Open now" : "Offline"}
+                    {availability.isOpen ? "Open now" : "Closed"}
                   </span>
                   {availability.isOpen &&
                     availability.closingCountdownLabel &&
@@ -353,7 +353,7 @@ function HomeRestaurantCard({
                           event.preventDefault();
                           event.stopPropagation();
                         }
-                        toast.error("Restaurant is currently offline or timing is not available.");
+                        toast.error("Restaurant is currently closed or timing is not available.");
                         return;
                       }
                       openItem(selected.id, event);

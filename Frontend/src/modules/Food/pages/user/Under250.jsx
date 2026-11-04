@@ -182,7 +182,7 @@ const HorizontalMenuScroller = ({ restaurant, quantities, isClosed, handleItemCl
               {isClosed && (
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
                   <div className="bg-gray-400/90 px-3 py-1.5 rounded-lg border border-white/20">
-                    <span className="text-white font-black uppercase tracking-widest text-xs">OFFLINE</span>
+                    <span className="text-white font-black uppercase tracking-widest text-xs">CLOSED</span>
                   </div>
                 </div>
               )}
@@ -258,7 +258,7 @@ const HorizontalMenuScroller = ({ restaurant, quantities, isClosed, handleItemCl
                     disabled={true}
                     className="rounded-xl h-8 sm:h-9 md:h-10 px-4 sm:px-6 md:px-8 text-[12px] sm:text-[14px] md:text-[16px] font-bold uppercase tracking-wide bg-gray-400 dark:bg-gray-700 text-white cursor-not-allowed shadow-none"
                   >
-                    OFFLINE
+                    CLOSED
                   </Button>
                 ) : quantity > 0 ? (
                   <Link to="/user/cart" onClick={(e) => e.stopPropagation()}>
@@ -1574,7 +1574,7 @@ export default function Under250() {
                   {/* View Items Link */}
                   <Link to={isClosed ? '#' : `/user/restaurants/${restaurantSlug}?under250=true`} className={`flex-shrink-0 mt-1 ${isClosed ? 'cursor-not-allowed opacity-50' : ''}`} onClick={(e) => { if(isClosed) e.preventDefault() }}>
                     <span className={`font-bold text-sm md:text-base flex items-center hover:underline ${isClosed ? 'text-gray-500' : 'text-primary'}`}>
-                      {isClosed ? 'Offline' : 'View Items'} <ArrowRight className="h-4 w-4 ml-0.5" />
+                      {isClosed ? 'Closed' : 'View Items'} <ArrowRight className="h-4 w-4 ml-0.5" />
                     </span>
                   </Link>
                 </div>
