@@ -40,7 +40,7 @@ const mapOptions = {
   ]
 };
 const LIBRARIES = ['places', 'geometry'];
-const DEFAULT_FALLBACK_MAPS_KEY = 'AIzaSyCf99C2zeIaD6vR8nVsWbHOJONcdy67NAc';
+const DEFAULT_FALLBACK_MAPS_KEY = 'AIzaSyDzBYks_EAI7-2tjQZgHShSqSS5FVESYt4';
 const DELIVERY_GOOGLE_MAPS_API_KEY = String(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || DEFAULT_FALLBACK_MAPS_KEY)
   .trim()
   .replace(/^['"]|['"]$/g, '');

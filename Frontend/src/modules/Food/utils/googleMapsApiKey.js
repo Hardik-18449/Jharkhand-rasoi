@@ -11,7 +11,7 @@ function sanitizeApiKey(value) {
   return String(value).trim().replace(/^['"]|['"]$/g, "");
 }
 
-const DEFAULT_FALLBACK_MAPS_KEY = "AIzaSyCf99C2zeIaD6vR8nVsWbHOJONcdy67NAc";
+const DEFAULT_FALLBACK_MAPS_KEY = "AIzaSyDzBYks_EAI7-2tjQZgHShSqSS5FVESYt4";
 
 function getBuildTimeKey() {
   const envKey = sanitizeApiKey(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
