@@ -1,70 +1,113 @@
-import { useState, useRef, useEffect } from "react"
-import { useNavigate, Link } from "react-router-dom"
-import { motion } from "framer-motion"
-import { ShieldCheck, Truck, Star, Heart, ArrowRight, Loader2, ShieldQuestion } from "lucide-react"
-import { Button } from "@food/components/ui/button"
-import { toast } from "sonner"
-import { deliveryAPI } from "@food/api"
-import { clearModuleAuth } from "@food/utils/auth"
-import { useAppLogo } from "@food/hooks/useAppLogo"
-import logoNew from "@/assets/brandlogo.png"
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Phone,
+  ShieldCheck,
+  Bike,
+  Package,
+  ChevronLeft,
+  AlertCircle,
+  Clock,
+  Navigation,
+  Headphones,
+  ArrowRight,
+  Check,
+  Zap,
+  Loader2,
+  ShieldQuestion
+} from 'lucide-react';
+import { deliveryAPI } from '@food/api';
+import { setAuthData as storeAuthData, clearModuleAuth } from '@food/utils/auth';
+import { registerWebPushForCurrentModule } from '@food/utils/firebaseMessaging';
+import { useAppLogo } from '@food/hooks/useAppLogo';
+import logoNew from '@/assets/brandlogo.png';
+import { toast } from 'sonner';
 
-const DEFAULT_COUNTRY_CODE = "+91"
+const DEFAULT_COUNTRY_CODE = "+91";
 
 export default function DeliverySignIn() {
-  const logoUrl = useAppLogo('delivery_app') || logoNew
-  const navigate = useNavigate()
-  const [phone, setPhone] = useState(() => {
-    const draft = localStorage.getItem("delivery_draft_phone")
+  const navigate = useNavigate();
+  const logoUrl = useAppLogo('delivery_app') || logoNew;
+
+  // Navigation states: 'LOGIN' | 'OTP' | 'SUCCESS'
+  const [currentScreen, setCurrentScreen] = useState('LOGIN');
+
+  // Input states
+  const [phoneNumber, setPhoneNumber] = useState(() => {
+    const draft = localStorage.getItem("delivery_draft_phone");
     if (draft) return draft;
-    const stored = localStorage.getItem("deliveryAuthData")
+    const stored = localStorage.getItem("deliveryAuthData");
     if (stored) {
       try {
-        const data = JSON.parse(stored)
-        return data.phone ? data.phone.replace("+91", "").trim() : ""
-      } catch (e) { return "" }
-    }
-    return ""
-  })
-  const [loading, setLoading] = useState(false)
-  const submitting = useRef(false)
-
-  // iOS Safari keyboard float fix
-  useEffect(() => {
-    const handleFocus = () => {
-      if (typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-        setTimeout(() => {
-          window.scrollTo(0, 0);
-        }, 50);
+        const data = JSON.parse(stored);
+        return data.phone ? data.phone.replace("+91", "").trim() : "";
+      } catch (e) {
+        return "";
       }
-    };
-    const inputs = document.querySelectorAll('input[type="tel"], input[type="text"]');
-    inputs.forEach(input => input.addEventListener('focus', handleFocus));
-    return () => {
-      inputs.forEach(input => input.removeEventListener('focus', handleFocus));
-    };
-  }, [])
-
-  const validatePhone = (num) => {
-    const digits = num.replace(/\D/g, "")
-    return digits.length === 10 && ["6", "7", "8", "9"].includes(digits[0])
-  }
-
-  const handleSendOTP = async (e) => {
-    if (e) e.preventDefault()
-    if (!validatePhone(phone)) {
-      toast.error("Please enter a valid 10-digit mobile number")
-      return
     }
-    if (submitting.current) return
-    submitting.current = true
-    setLoading(true)
+    return "";
+  });
 
-    const fullPhone = `${DEFAULT_COUNTRY_CODE} ${phone}`.trim()
+  // 6 Digit OTP array
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const [timer, setTimer] = useState(30);
+  const [isTimerActive, setIsTimerActive] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorShake, setErrorShake] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // 6 Input refs for OTP
+  const inputRefs = [
+    useRef(null),
+    useRef(null),
+    useRef(null),
+    useRef(null),
+    useRef(null),
+    useRef(null)
+  ];
+
+  // Resend Countdown
+  useEffect(() => {
+    let interval = null;
+    if (isTimerActive && timer > 0) {
+      interval = setInterval(() => setTimer((t) => t - 1), 1000);
+    } else if (timer === 0) {
+      setIsTimerActive(false);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerActive, timer]);
+
+  // Shake trigger with solid error
+  const triggerShake = (msg) => {
+    setErrorMessage(msg);
+    setErrorShake(true);
+    setTimeout(() => setErrorShake(false), 500);
+  };
+
+  // Validate clean 10-digit Indian number
+  const validatePhone = (num) => {
+    const digits = num.replace(/\D/g, "");
+    return digits.length === 10 && ["6", "7", "8", "9"].includes(digits[0]);
+  };
+
+  // Handle Send OTP
+  const handleSendOtp = async (e) => {
+    if (e) e.preventDefault();
+    const cleaned = phoneNumber.replace(/\D/g, "");
+    if (!validatePhone(cleaned)) {
+      triggerShake('Please enter a valid 10-digit Indian mobile number');
+      return;
+    }
+
+    setErrorMessage('');
+    setIsLoading(true);
+
+    const fullPhone = `${DEFAULT_COUNTRY_CODE} ${cleaned}`.trim();
 
     try {
-      clearModuleAuth("delivery")
-      await deliveryAPI.sendOTP(fullPhone, "login")
+      clearModuleAuth("delivery");
+      await deliveryAPI.sendOTP(fullPhone, "login");
 
       const authData = {
         method: "phone",
@@ -72,165 +115,536 @@ export default function DeliverySignIn() {
         isSignUp: false,
         purpose: "login",
         module: "delivery",
-      }
-      localStorage.setItem("deliveryAuthData", JSON.stringify(authData))
-      toast.success("Verification code sent to your phone!")
-      navigate("/food/delivery/otp")
+      };
+      localStorage.setItem("deliveryAuthData", JSON.stringify(authData));
+      localStorage.setItem("delivery_draft_phone", cleaned);
+
+      setIsLoading(false);
+      setCurrentScreen('OTP');
+      setTimer(30);
+      setIsTimerActive(true);
+      setTimeout(() => inputRefs[0]?.current?.focus(), 300);
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || "Failed to send OTP."
-      toast.error(msg)
-    } finally {
-      setLoading(false)
-      submitting.current = false
+      const msg = err?.response?.data?.message || err?.message || "Failed to send verification code. Please try again.";
+      triggerShake(msg);
+      setIsLoading(false);
     }
-  }
+  };
+
+  // Handle OTP Digit Input
+  const handleOtpChange = (index, val) => {
+    const digitsOnly = val.replace(/\D/g, "");
+    if (!digitsOnly && val !== "") return;
+
+    const nextDigits = [...otpDigits];
+    nextDigits[index] = digitsOnly.slice(-1);
+    setOtpDigits(nextDigits);
+
+    if (digitsOnly && index < 5) {
+      inputRefs[index + 1]?.current?.focus();
+    }
+  };
+
+  // Handle Backspace in OTP
+  const handleKeyDown = (index, e) => {
+    if (e.key === 'Backspace') {
+      if (!otpDigits[index] && index > 0) {
+        inputRefs[index - 1]?.current?.focus();
+      }
+    }
+  };
+
+  // Handle Full Paste of 6-digit OTP
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasteData) return;
+
+    const nextDigits = ['', '', '', '', '', ''];
+    for (let i = 0; i < pasteData.length; i++) {
+      nextDigits[i] = pasteData[i];
+    }
+    setOtpDigits(nextDigits);
+    const nextFocusIndex = Math.min(pasteData.length, 5);
+    inputRefs[nextFocusIndex]?.current?.focus();
+  };
+
+  // Verify OTP
+  const handleVerifyOtp = async () => {
+    const code = otpDigits.join('');
+    if (code.length < 6) {
+      triggerShake('Please enter the complete 6-digit verification code');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage('');
+
+    const cleaned = phoneNumber.replace(/\D/g, "");
+    const fullPhone = `${DEFAULT_COUNTRY_CODE} ${cleaned}`.trim();
+
+    try {
+      let fcmToken = null;
+      try {
+        fcmToken = localStorage.getItem("delivery_fcm_token") || null;
+      } catch (_) {}
+
+      const res = await deliveryAPI.verifyOTP(fullPhone, code, "login", "", fcmToken, "web");
+      const authResData = res?.data?.data || res?.data;
+
+      // Store tokens and auth state
+      storeAuthData("delivery", authResData);
+
+      // Register web push in background
+      try {
+        registerWebPushForCurrentModule("delivery").catch(() => {});
+      } catch (_) {}
+
+      setIsLoading(false);
+      setCurrentScreen('SUCCESS');
+
+      // Seamless navigate to delivery home
+      setTimeout(() => {
+        navigate('/food/delivery', { replace: true });
+      }, 700);
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Invalid verification code. Please check and try again.";
+      triggerShake(msg);
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#FFF9F2] dark:bg-[#0a0a0a] flex flex-col relative overflow-hidden font-['Poppins']">
-      {/* iOS Keyboard Push-up Fix */}
-      <style>{`
-        @supports (-webkit-touch-callout: none) {
-          body, html {
-            height: -webkit-fill-available;
-            overscroll-behavior-y: none;
-          }
-          .min-h-screen {
-            min-height: -webkit-fill-available !important;
-          }
-          input:focus {
-            scroll-margin-bottom: 50vh;
-          }
-        }
-      `}</style>
-      {/* Soft Ambient Background Elements */}
-      <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-[#FFE4C4]/40 dark:bg-primary/5 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-[#E0F7FA]/50 dark:bg-blue-900/10 blur-[100px] pointer-events-none" />
+    <div className="min-h-screen bg-[#0A0D13] text-white flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-hidden font-sans selection:bg-orange-500/30 selection:text-orange-200">
       
-      {/* Floating Decorative Elements (Approximating the reference image's background icons) */}
-      <motion.div animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} className="absolute top-[15%] left-[8%] opacity-30 dark:opacity-10 pointer-events-none">
-        <span className="text-4xl text-orange-500">🍕</span>
-      </motion.div>
-      <motion.div animate={{ y: [0, 20, 0], rotate: [0, -10, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} className="absolute top-[25%] right-[10%] opacity-30 dark:opacity-10 pointer-events-none">
-        <span className="text-4xl">🛵</span>
-      </motion.div>
-      <motion.div animate={{ y: [0, -10, 0], scale: [1, 1.1, 1] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-[20%] left-[12%] opacity-30 dark:opacity-10 pointer-events-none">
-        <span className="text-4xl">⭐</span>
-      </motion.div>
-      <motion.div animate={{ y: [0, 15, 0], rotate: [0, 15, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-[15%] right-[15%] opacity-30 dark:opacity-10 pointer-events-none">
-        <span className="text-5xl">📍</span>
-      </motion.div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10 w-full max-w-md mx-auto">
+      {/* Background Ambience */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="w-full flex flex-col items-center"
-        >
-          <div className="relative mb-6 flex justify-center">
-            <div className="absolute inset-0 bg-blue-400/20 rounded-full blur-[40px] scale-150 pointer-events-none" />
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.15, 0.25, 0.15],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-orange-600/30 rounded-full blur-[120px]"
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.15, 1],
+            opacity: [0.1, 0.2, 0.1],
+          }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+          className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-amber-600/20 rounded-full blur-[130px]"
+        />
+        <div
+          className="absolute inset-0 opacity-[0.035]"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1.5px 1.5px, #ffffff 1px, transparent 0)`,
+            backgroundSize: '28px 28px',
+          }}
+        />
+      </div>
+
+      {/* Main Container Card Shell */}
+      <div className="relative z-10 w-full max-w-[420px] transition-all duration-300">
+        <div className="w-full bg-[#12161F] border border-neutral-800/80 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] relative overflow-hidden flex flex-col rounded-[36px] sm:rounded-[42px] ring-1 ring-white/10 shadow-[0_0_50px_rgba(249,115,22,0.1)]">
+
+          {/* ========================================================= */}
+          {/* 1. THE FLOATING ORANGE CURVED HEADER (From Figma Design) */}
+          {/* ========================================================= */}
+          <div className="relative w-full h-[250px] select-none overflow-hidden flex-shrink-0">
+            {/* Morphing & Floating Orange Wave Container */}
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 20 }}
-              className="relative w-36 h-36 sm:w-40 sm:h-40 rounded-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden border-4 border-white"
-              style={{ borderRadius: '50%', WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
+              animate={{
+                y: [-6, 6, -6],
+                rotate: [0, 0.8, -0.8, 0],
+                scale: [1, 1.015, 1],
+              }}
+              transition={{
+                duration: 5.5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              className="absolute -top-[55px] -left-[20%] w-[140%] h-[340px] pointer-events-none"
             >
-              <img 
-                src={logoUrl} 
-                alt="Delivery Logo" 
-                className="w-full h-full object-contain p-2"
-              />
-            </motion.div>
-          </div>
+              <svg
+                viewBox="0 0 500 400"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-full h-full preserve-3d filter drop-shadow-[0_15px_30px_rgba(249,115,22,0.4)]"
+              >
+                <defs>
+                  <linearGradient id="orangeGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#FF7A00" />
+                    <stop offset="45%" stopColor="#FF5500" />
+                    <stop offset="100%" stopColor="#E03800" />
+                  </linearGradient>
+                  <linearGradient id="accentCurveGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+                    <stop offset="0%" stopColor="#FFA64D" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#FF5500" stopOpacity="0.1" />
+                  </linearGradient>
+                </defs>
 
-          {/* Typography Section */}
-          <div className="text-center mb-8 px-2">
-            <h1 className="text-[28px] md:text-[32px] font-black text-[#3c2a21] dark:text-white leading-tight tracking-tight mb-2 font-['Outfit']">
-              Deliver smiles, <br/> earn on your schedule.
-            </h1>
-            <h2 className="text-[22px] text-[#5e4b3c] dark:text-gray-300 font-semibold mb-1">
-              Delivery Partner Login
-            </h2>
-            <p className="text-sm text-[#8c7a6b] dark:text-gray-400 font-medium">
-              Login with your mobile number
-            </p>
-          </div>
-
-          <form onSubmit={handleSendOTP} className="w-full space-y-6">
-            {/* Pill-shaped Glassmorphic Input */}
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-gray-800 dark:to-gray-800 rounded-full blur opacity-50 group-hover:opacity-100 transition duration-500"></div>
-              <div className="relative flex items-center bg-white/70 dark:bg-[#1a1a1a]/80 backdrop-blur-xl border border-white/50 dark:border-gray-800 rounded-[2rem] p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-                
-                {/* Prefix Section */}
-                <div className="flex items-center pl-4 pr-3 border-r border-gray-200 dark:border-gray-700">
-                  <img src="https://flagcdn.com/w20/in.png" alt="India" className="w-5 h-auto mr-2 rounded-sm" />
-                  <span className="text-base font-bold text-gray-800 dark:text-gray-200 mr-2">+91</span>
-                </div>
-                
-                <div className="pl-3 pr-2 text-gray-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                  </svg>
-                </div>
-
-                {/* Input Field */}
-                <input
-                  type="tel"
-                  required
-                  autoFocus
-                  value={phone}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                    setPhone(val);
-                    localStorage.setItem("delivery_draft_phone", val);
+                <motion.path
+                  animate={{
+                    d: [
+                      "M0 0 H500 V230 C420 270 340 180 230 220 C130 255 60 320 0 300 Z",
+                      "M0 0 H500 V240 C430 260 330 190 220 230 C120 270 50 310 0 310 Z",
+                      "M0 0 H500 V230 C420 270 340 180 230 220 C130 255 60 320 0 300 Z"
+                    ]
                   }}
-                  maxLength={10}
-                  className="flex-1 bg-transparent border-0 outline-none focus:border-transparent focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 text-gray-900 dark:text-white font-bold text-lg placeholder:text-gray-400 placeholder:font-medium placeholder:text-sm py-2 px-1"
-                  style={{ boxShadow: "none", border: "none", outline: "none" }}
-                  placeholder="Enter your 10-digit registered..."
+                  transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+                  fill="url(#accentCurveGrad)"
+                  opacity="0.3"
                 />
-              </div>
+
+                <motion.path
+                  animate={{
+                    d: [
+                      "M0 0 H500 V160 C400 160 320 215 220 250 C120 285 50 340 0 350 Z",
+                      "M0 0 H500 V170 C390 150 310 225 210 260 C110 295 40 330 0 360 Z",
+                      "M0 0 H500 V160 C400 160 320 215 220 250 C120 285 50 340 0 350 Z",
+                    ],
+                  }}
+                  transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                  fill="url(#orangeGlowGrad)"
+                />
+
+                <circle cx="90" cy="190" r="60" fill="white" fillOpacity="0.06" />
+                <circle cx="340" cy="110" r="45" fill="white" fillOpacity="0.04" />
+              </svg>
+            </motion.div>
+
+            {/* Ambient Delivery Micro Icons */}
+            <motion.div
+              animate={{ y: [-4, 6, -4], x: [-2, 3, -2], rotate: [0, 8, 0] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute top-12 right-8 text-white/35 pointer-events-none"
+            >
+              <Package className="w-6 h-6 stroke-[1.5]" />
+            </motion.div>
+
+            <motion.div
+              animate={{ y: [-5, 7, -5], scale: [1, 1.1, 1] }}
+              transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
+              className="absolute bottom-14 right-8 text-white/25 pointer-events-none"
+            >
+              <Navigation className="w-5 h-5 stroke-[1.5] rotate-45" />
+            </motion.div>
+
+            {/* Back Navigation Button */}
+            {currentScreen !== 'LOGIN' && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={() => {
+                  setCurrentScreen('LOGIN');
+                  setErrorMessage('');
+                }}
+                className="absolute top-10 left-6 z-20 w-9 h-9 rounded-full bg-black/30 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-black/50 transition-colors shadow-md cursor-pointer"
+                title="Go back"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </motion.button>
+            )}
+
+            {/* Brand Title & Logo */}
+            <div className="absolute top-10 left-6 z-10 max-w-[260px]">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.4 }}
+                className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white mb-2 shadow-lg shadow-black/10 overflow-hidden"
+              >
+                <img src={logoUrl} alt="Jharkhand Rasoi" className="w-9 h-9 object-contain" />
+              </motion.div>
+
+              <motion.h2
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="text-xl font-black tracking-tight text-white leading-tight drop-shadow-sm font-sans"
+              >
+                Jharkhand Rasoi<br />
+                <span className="text-orange-100 font-extrabold text-base">Delivery Partner</span>
+              </motion.h2>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-[11px] text-orange-100/90 font-medium tracking-wide mt-0.5 drop-shadow-xs"
+              >
+                Drive, Deliver &amp; Earn on schedule
+              </motion.p>
             </div>
+          </div>
 
-            {/* Gradient CTA Button */}
-            <button
-              type="submit"
-              disabled={loading || phone.length < 10}
-              className="w-full py-4.5 bg-gradient-to-r from-[#4CB8C4] to-[#3CD3AD] hover:from-[#3BA0AB] hover:to-[#2BB896] disabled:from-gray-300 disabled:to-gray-300 dark:disabled:from-gray-800 dark:disabled:to-gray-800 disabled:text-gray-500 text-white rounded-[2rem] font-bold text-[17px] shadow-[0_15px_30px_-10px_rgba(76,184,196,0.5)] transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
-              ) : (
-                "Send OTP to Register/Login"
+          {/* ========================================================= */}
+          {/* 2. BODY CONTENT: SCREENS (LOGIN -> OTP -> SUCCESS) */}
+          {/* ========================================================= */}
+          <div className="px-6 pb-6 pt-1 flex-1 flex flex-col justify-between relative z-10">
+            <AnimatePresence mode="wait">
+              
+              {/* SCREEN 1: PHONE NUMBER INPUT */}
+              {currentScreen === 'LOGIN' && (
+                <motion.div
+                  key="screen-login"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -16 }}
+                  transition={{ duration: 0.25 }}
+                  className="space-y-4"
+                >
+                  <div className="space-y-0.5">
+                    <h3 className="text-base font-bold text-white tracking-tight">
+                      Partner Sign In
+                    </h3>
+                    <p className="text-xs text-neutral-400">
+                      Enter your mobile number to sign in or register
+                    </p>
+                  </div>
+
+                  {/* Phone Input with Animated Error Shake */}
+                  <motion.form
+                    onSubmit={handleSendOtp}
+                    animate={errorShake ? { x: [-10, 10, -8, 8, -4, 4, 0] } : {}}
+                    transition={{ duration: 0.4 }}
+                    className="space-y-4"
+                  >
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider flex items-center justify-between">
+                        <span>Mobile Number</span>
+                        <span className="text-emerald-400 font-normal lowercase flex items-center gap-1 text-[10px]">
+                          <Zap className="w-2.5 h-2.5" /> Instant OTP
+                        </span>
+                      </label>
+
+                      <div className="flex items-center rounded-2xl bg-[#090C12] border border-neutral-800 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 transition-all p-1 shadow-inner">
+                        {/* Country Code Pill */}
+                        <div className="flex items-center space-x-1.5 px-3 py-2 bg-[#161B24] border-r border-neutral-800 rounded-xl text-neutral-200 text-xs font-semibold">
+                          <span className="font-bold">+91</span>
+                        </div>
+
+                        {/* Clean Number Input: Digits only, max 10 */}
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          maxLength={10}
+                          placeholder="Enter 10-digit number"
+                          value={phoneNumber}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            setPhoneNumber(val);
+                            if (errorMessage) setErrorMessage('');
+                          }}
+                          className="w-full bg-transparent px-3 py-2.5 text-base text-white placeholder-neutral-600 focus:outline-none font-bold tracking-wider"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+
+                    {/* SOLID COLOR ERROR ALERT */}
+                    {errorMessage && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="flex items-center space-x-2 text-rose-400 text-xs bg-rose-500/10 border border-rose-500/20 px-3 py-2.5 rounded-xl font-medium"
+                      >
+                        <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
+                        <span>{errorMessage}</span>
+                      </motion.div>
+                    )}
+
+                    {/* SEND OTP BUTTON */}
+                    <motion.button
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="submit"
+                      disabled={isLoading || phoneNumber.replace(/\D/g, "").length < 10}
+                      className="w-full relative group overflow-hidden rounded-2xl py-3.5 px-4 bg-gradient-to-r from-[#FF6600] to-[#FF4500] font-bold text-white text-sm shadow-lg shadow-orange-600/30 hover:shadow-orange-600/50 transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center space-x-2">
+                          <Loader2 className="w-4 h-4 animate-spin text-white" />
+                          <span>Sending Verification Code...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <span>SEND OTP</span>
+                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                    </motion.button>
+                  </motion.form>
+                </motion.div>
               )}
-            </button>
-          </form>
 
-          {/* Support Link */}
-          <div className="mt-6">
-            <Link 
-              to="/food/delivery/support"
-              className="flex items-center justify-center gap-2 px-6 py-2.5 bg-white/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm font-bold text-gray-700 dark:text-gray-300 shadow-sm transition-all"
-            >
-              <ShieldQuestion className="w-4 h-4 text-orange-500" />
-              Need Help? Support
-            </Link>
-          </div>
+              {/* SCREEN 2: 6-DIGIT OTP VERIFICATION */}
+              {currentScreen === 'OTP' && (
+                <motion.div
+                  key="screen-otp"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.25 }}
+                  className="space-y-4"
+                >
+                  <div className="space-y-0.5">
+                    <h3 className="text-base font-bold text-white tracking-tight">
+                      Verify OTP
+                    </h3>
+                    <p className="text-xs text-neutral-400">
+                      Enter the 6-digit code sent to{' '}
+                      <span className="text-neutral-200 font-semibold">+91 {phoneNumber}</span>
+                    </p>
+                  </div>
 
-          {/* Footer Terms */}
-          <div className="mt-8 text-center">
-            <p className="text-xs text-gray-500 font-medium">
-              By continuing, you agree to our <br className="sm:hidden" />
-              <Link to="/food/delivery/profile/terms" className="text-gray-800 dark:text-gray-300 font-bold hover:text-[#4CB8C4] underline underline-offset-2 mx-1">Terms</Link>
-              &
-              <Link to="/food/delivery/profile/privacy" className="text-gray-800 dark:text-gray-300 font-bold hover:text-[#4CB8C4] underline underline-offset-2 ml-1">Privacy Policy</Link>
-            </p>
+                  {/* 6 Digit Input Boxes */}
+                  <motion.div
+                    animate={errorShake ? { x: [-10, 10, -8, 8, -4, 4, 0] } : {}}
+                    transition={{ duration: 0.4 }}
+                    className="space-y-3.5"
+                  >
+                    <div className="flex justify-between items-center gap-1.5 my-1" onPaste={handlePaste}>
+                      {otpDigits.map((digit, idx) => (
+                        <input
+                          key={idx}
+                          ref={inputRefs[idx]}
+                          type="tel"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) => handleOtpChange(idx, e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(idx, e)}
+                          className={`w-11 h-14 text-center text-xl font-extrabold rounded-2xl bg-[#090C12] border transition-all duration-200 outline-none ${
+                            digit
+                              ? 'border-orange-500 text-orange-400 shadow-[0_0_12px_rgba(255,102,0,0.25)] ring-1 ring-orange-500/50'
+                              : 'border-neutral-800 text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20'
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    {/* SOLID COLOR ERROR ALERT */}
+                    {errorMessage && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex items-center justify-center space-x-1.5 text-rose-400 text-xs bg-rose-500/10 border border-rose-500/20 py-2.5 px-3 rounded-xl font-medium"
+                      >
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span>{errorMessage}</span>
+                      </motion.div>
+                    )}
+
+                    {/* Countdown and Resend */}
+                    <div className="flex items-center justify-between text-xs px-1 text-neutral-400">
+                      <div className="flex items-center space-x-1.5">
+                        <Clock className="w-3.5 h-3.5 text-neutral-500" />
+                        <span>
+                          Resend in{' '}
+                          <span className="font-mono text-neutral-200">
+                            00:{timer < 10 ? `0${timer}` : timer}
+                          </span>
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleSendOtp}
+                        disabled={isTimerActive || isLoading}
+                        className={`font-semibold transition-colors ${
+                          isTimerActive
+                            ? 'text-neutral-600 cursor-not-allowed'
+                            : 'text-orange-400 hover:text-orange-300 underline underline-offset-2 cursor-pointer'
+                        }`}
+                      >
+                        Resend Code
+                      </button>
+                    </div>
+
+                    {/* VERIFY BUTTON */}
+                    <motion.button
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleVerifyOtp}
+                      disabled={isLoading || otpDigits.join('').length < 6}
+                      className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#00D084] to-[#00A86B] font-bold text-black text-sm shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center space-x-2">
+                          <Loader2 className="w-4 h-4 animate-spin text-black" />
+                          <span>Verifying Passcode...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
+                          <span>VERIFY &amp; CONTINUE</span>
+                        </>
+                      )}
+                    </motion.button>
+                  </motion.div>
+                </motion.div>
+              )}
+
+              {/* SCREEN 3: VERIFIED TRANSITION */}
+              {currentScreen === 'SUCCESS' && (
+                <motion.div
+                  key="screen-success"
+                  initial={{ opacity: 0, scale: 0.94 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4 py-4 text-center"
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: [0, 1.25, 1] }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center mx-auto text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.35)]"
+                  >
+                    <Check className="w-8 h-8 stroke-[3]" />
+                  </motion.div>
+
+                  <div className="space-y-1">
+                    <h3 className="text-base font-bold text-white tracking-tight">
+                      Authentication Successful
+                    </h3>
+                    <p className="text-xs text-neutral-400">
+                      Redirecting to Delivery Partner Dashboard...
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+            </AnimatePresence>
+
+            {/* Bottom Footer Info */}
+            <div className="pt-4 border-t border-neutral-800/60 mt-4">
+              <div className="flex items-center justify-between text-[11px] text-neutral-400">
+                <span className="flex items-center space-x-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Encrypted Login</span>
+                </span>
+                <Link
+                  to="/food/delivery/support"
+                  className="flex items-center space-x-1 hover:text-white transition-colors"
+                >
+                  <Headphones className="w-3.5 h-3.5 text-orange-400" />
+                  <span>24/7 Support</span>
+                </Link>
+              </div>
+
+              <p className="text-[10px] text-neutral-500 text-center mt-2.5 leading-relaxed">
+                By continuing, you agree to Jharkhand Rasoi Partner{' '}
+                <Link to="/food/delivery/profile/terms" className="text-neutral-400 underline hover:text-white">Terms</Link>
+                {' & '}
+                <Link to="/food/delivery/profile/privacy" className="text-neutral-400 underline hover:text-white">Privacy Policy</Link>.
+              </p>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,12 +1,12 @@
 @import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@500;600;700;800&family=Sora:wght@600;700&display=swap");
 
 :root {
-  --dv-primary: #15498b;
-  --dv-primary-strong: #000000;
-  --dv-primary-soft: #e7effa;
-  --dv-accent: #000000;
+  --dv-primary: var(--primary, #F25A05);
+  --dv-primary-strong: #C93800;
+  --dv-primary-soft: #FFF4ED;
+  --dv-accent: #E84E00;
   --dv-surface: #ffffff;
-  --dv-bg: #eef3fb;
+  --dv-bg: #FAF5F0;
   --dv-text: #0f1724;
   --dv-muted: #4f5f77;
   --dv-border: #d1dceb;
