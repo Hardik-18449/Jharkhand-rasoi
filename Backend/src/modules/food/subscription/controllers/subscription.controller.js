@@ -153,7 +153,7 @@ export async function getActivePlansPublicController(req, res) {
 
 export async function getUserSubscriptionController(req, res) {
     try {
-        const userId = req.user?.id || req.user?._id;
+        const userId = req.user?.userId || req.user?.id || req.user?._id;
         const sub = await subscriptionService.getUserActiveSubscription(userId);
         return res.status(200).json({
             success: true,
@@ -169,7 +169,7 @@ export async function getUserSubscriptionController(req, res) {
 
 export async function createSubscriptionRazorpayOrderController(req, res) {
     try {
-        const userId = req.user?.id || req.user?._id;
+        const userId = req.user?.userId || req.user?.id || req.user?._id;
         const result = await subscriptionService.createSubscriptionRazorpayOrder(userId, req.body || {});
         return res.status(200).json({ success: true, data: result });
     } catch (err) {
@@ -182,7 +182,7 @@ export async function createSubscriptionRazorpayOrderController(req, res) {
 
 export async function subscribeUserController(req, res) {
     try {
-        const userId = req.user?.id || req.user?._id;
+        const userId = req.user?.userId || req.user?.id || req.user?._id;
         const result = await subscriptionService.subscribeUser(userId, req.body);
         return res.status(200).json(result);
     } catch (err) {
