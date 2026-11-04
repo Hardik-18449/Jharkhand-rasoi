@@ -7,16 +7,46 @@ import { toast } from 'sonner';
 let cachedBlazeFaceModel = null;
 let modelLoadingPromise = null;
 
+// Helper to dynamically load external scripts from CDN with caching
+const loadScript = (src) => {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') return resolve();
+    if (document.querySelector(`script[src="${src}"]`)) {
+      return resolve();
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.onload = () => resolve();
+    script.onerror = (e) => reject(new Error(`Failed to load script: ${src}`));
+    document.head.appendChild(script);
+  });
+};
+
 const loadBlazeFaceModel = async () => {
   if (cachedBlazeFaceModel) return cachedBlazeFaceModel;
   if (!modelLoadingPromise) {
     modelLoadingPromise = (async () => {
       try {
-        await import('@tensorflow/tfjs');
-        const blazeface = await import('@tensorflow-models/blazeface');
-        const model = await blazeface.load();
-        cachedBlazeFaceModel = model;
-        return model;
+        // 1. If already loaded globally on window
+        if (window.blazeface && typeof window.blazeface.load === 'function') {
+          const model = await window.blazeface.load();
+          cachedBlazeFaceModel = model;
+          return model;
+        }
+
+        // 2. Load TFJS and BlazeFace dynamically from high-speed reliable CDNs
+        await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.js');
+
+        if (window.blazeface && typeof window.blazeface.load === 'function') {
+          const model = await window.blazeface.load();
+          cachedBlazeFaceModel = model;
+          return model;
+        }
+
+        throw new Error('BlazeFace not available after loading scripts');
       } catch (err) {
         console.error('[FaceScanner] Failed to load BlazeFace:', err);
         modelLoadingPromise = null;

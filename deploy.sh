@@ -37,10 +37,8 @@ echo ""
 # 2. Build Frontend
 echo "📦 Building Frontend (Vite production bundle)..."
 cd Frontend
-if [ ! -d "node_modules" ]; then
-    echo "⚠️ node_modules missing in Frontend, installing dependencies..."
-    npm install
-fi
+echo "📥 Ensuring Frontend dependencies are up-to-date..."
+npm install --prefer-offline --no-audit --no-fund
 npm run build
 cd "$SCRIPT_DIR"
 echo "✅ Frontend build completed successfully."
@@ -76,6 +74,12 @@ echo ""
 
 # 4. Restart Backend via PM2
 echo "⚙️  Restarting Backend with PM2..."
+cd Backend
+if [ -f "package.json" ]; then
+    echo "📥 Ensuring Backend dependencies are up-to-date..."
+    npm install --prefer-offline --no-audit --no-fund 2>/dev/null || true
+fi
+cd "$SCRIPT_DIR"
 if command -v pm2 >/dev/null 2>&1; then
     pm2 restart Jharkhand-rasoi-backend || pm2 start Backend/server.js --name Jharkhand-rasoi-backend
     if pm2 list 2>/dev/null | grep -q "Jharkhand-rasoi-socket"; then
