@@ -40,7 +40,8 @@ const mapOptions = {
   ]
 };
 const LIBRARIES = ['places', 'geometry'];
-const DELIVERY_GOOGLE_MAPS_API_KEY = String(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '')
+const DEFAULT_FALLBACK_MAPS_KEY = 'AIzaSyCf99C2zeIaD6vR8nVsWbHOJONcdy67NAc';
+const DELIVERY_GOOGLE_MAPS_API_KEY = String(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || DEFAULT_FALLBACK_MAPS_KEY)
   .trim()
   .replace(/^['"]|['"]$/g, '');
 
@@ -293,7 +294,7 @@ const LiveMapWithApiKey = ({ googleMapsApiKey, onMapClick, onMapLoad, onPathRece
 
     if (!hasAnchors && parsedRiderLocation) {
       map.panTo(parsedRiderLocation);
-    } else {
+    } else if (window.google?.maps?.LatLngBounds) {
       const bounds = new window.google.maps.LatLngBounds();
       if (restaurantPoint) bounds.extend(restaurantPoint);
       if (customerPoint) bounds.extend(customerPoint);
@@ -368,6 +369,41 @@ const LiveMapWithApiKey = ({ googleMapsApiKey, onMapClick, onMapLoad, onPathRece
     destination: customerPoint,
     travelMode: 'DRIVING',
   } : null;
+
+  if (loadError) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-neutral-950 text-white px-6 text-center z-10">
+        <div className="max-w-md p-6 rounded-3xl bg-[#12161F] border border-neutral-800 shadow-2xl flex flex-col items-center">
+          <div className="w-12 h-12 rounded-2xl bg-orange-500/20 text-orange-400 flex items-center justify-center mb-3">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <p className="font-bold text-base text-white">Live Map Unavailable</p>
+          <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
+            Could not initialize Google Maps services. Your order queue and delivery actions remain fully operational.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:opacity-90 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-orange-500/20 cursor-pointer"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-[#0A0D13] text-white z-10">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-medium text-neutral-400">Loading delivery navigation map...</p>
+        </div>
+      </div>
+    );
+  }
 
   const isLocalDev = typeof window !== 'undefined' && (
     window.location.hostname === 'localhost' || 
@@ -449,8 +485,8 @@ const LiveMapWithApiKey = ({ googleMapsApiKey, onMapClick, onMapLoad, onPathRece
             position={restaurantPoint}
             icon={{
               url: restaurantMarkerUrl,
-              scaledSize: new window.google.maps.Size(44, 44),
-              anchor: new window.google.maps.Point(22, 22)
+              scaledSize: window.google?.maps?.Size ? new window.google.maps.Size(44, 44) : undefined,
+              anchor: window.google?.maps?.Point ? new window.google.maps.Point(22, 22) : undefined
             }}
           />
         )}
@@ -460,8 +496,8 @@ const LiveMapWithApiKey = ({ googleMapsApiKey, onMapClick, onMapLoad, onPathRece
             position={customerPoint}
             icon={{
               url: customerMarkerUrl,
-              scaledSize: new window.google.maps.Size(44, 44),
-              anchor: new window.google.maps.Point(22, 22)
+              scaledSize: window.google?.maps?.Size ? new window.google.maps.Size(44, 44) : undefined,
+              anchor: window.google?.maps?.Point ? new window.google.maps.Point(22, 22) : undefined
             }}
           />
         )}

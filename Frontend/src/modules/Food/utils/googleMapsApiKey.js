@@ -11,8 +11,11 @@ function sanitizeApiKey(value) {
   return String(value).trim().replace(/^['"]|['"]$/g, "");
 }
 
+const DEFAULT_FALLBACK_MAPS_KEY = "AIzaSyCf99C2zeIaD6vR8nVsWbHOJONcdy67NAc";
+
 function getBuildTimeKey() {
-  return sanitizeApiKey(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
+  const envKey = sanitizeApiKey(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
+  return envKey || DEFAULT_FALLBACK_MAPS_KEY;
 }
 
 /**

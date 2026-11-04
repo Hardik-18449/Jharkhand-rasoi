@@ -211,7 +211,7 @@ export const config = {
     petpoojaAppSecret: process.env.PETPOOJA_APP_SECRET,
 
     // Google Maps
-    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyCf99C2zeIaD6vR8nVsWbHOJONcdy67NAc',
 
     // OBD Call Alert Configuration
     obd: {
