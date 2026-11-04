@@ -37,7 +37,9 @@ const resolveMongoUri = () => {
 export const resolveRazorpayKeys = () => {
     const mongoEnv = (process.env.MONGO_ENV || '').toLowerCase().trim();
     const nodeEnv = (process.env.NODE_ENV || '').toLowerCase().trim();
-    const isProduction = mongoEnv === 'production' || mongoEnv === 'prod' || nodeEnv === 'production';
+    const razorpayMode = (process.env.RAZORPAY_MODE || '').toLowerCase().trim();
+    const testModeFlag = readEnvFlag('RAZORPAY_TEST_MODE');
+    const explicitKeyId = (process.env.RAZORPAY_KEY_ID || '').trim();
 
     const liveKeyId = process.env.RAZORPAY_LIVE_KEY_ID || 'rzp_live_Tu71kQFx3AofXH';
     const liveKeySecret = process.env.RAZORPAY_LIVE_KEY_SECRET || 'ixU3NeYyW5A6sXdzeC3GY090';
@@ -45,17 +47,43 @@ export const resolveRazorpayKeys = () => {
     const testKeyId = process.env.RAZORPAY_TEST_KEY_ID || 'rzp_test_SbjooFQK8nvU6V';
     const testKeySecret = process.env.RAZORPAY_TEST_KEY_SECRET || 'Av7Mz5DBxwD5C6sUGw66qAGE';
 
-    if (isProduction) {
+    // 1. Explicit TEST mode requested (via RAZORPAY_MODE=test or RAZORPAY_TEST_MODE=true)
+    if (razorpayMode === 'test' || testModeFlag === true) {
         return {
-            keyId: liveKeyId,
-            keySecret: liveKeySecret,
+            keyId: explicitKeyId.startsWith('rzp_test_') ? explicitKeyId : testKeyId,
+            keySecret: (explicitKeyId.startsWith('rzp_test_') && process.env.RAZORPAY_KEY_SECRET)
+                ? process.env.RAZORPAY_KEY_SECRET
+                : testKeySecret,
+            isLive: false,
+        };
+    }
+
+    // 2. Explicit LIVE mode requested (via RAZORPAY_MODE=live or RAZORPAY_TEST_MODE=false)
+    if (razorpayMode === 'live' || testModeFlag === false) {
+        return {
+            keyId: explicitKeyId.startsWith('rzp_live_') ? explicitKeyId : liveKeyId,
+            keySecret: (explicitKeyId.startsWith('rzp_live_') && process.env.RAZORPAY_KEY_SECRET)
+                ? process.env.RAZORPAY_KEY_SECRET
+                : liveKeySecret,
             isLive: true,
         };
     }
 
+    // 3. Key ID explicitly provided in environment
+    if (explicitKeyId) {
+        const isLive = explicitKeyId.startsWith('rzp_live_');
+        return {
+            keyId: explicitKeyId,
+            keySecret: process.env.RAZORPAY_KEY_SECRET || (isLive ? liveKeySecret : testKeySecret),
+            isLive,
+        };
+    }
+
+    // 4. Default: Use test keys for safe testing across all environments.
+    // To switch to live mode, set RAZORPAY_MODE=live in .env
     return {
-        keyId: process.env.RAZORPAY_KEY_ID || testKeyId,
-        keySecret: process.env.RAZORPAY_KEY_SECRET || testKeySecret,
+        keyId: testKeyId,
+        keySecret: testKeySecret,
         isLive: false,
     };
 };
@@ -287,8 +315,6 @@ export const updateConfig = () => {
     config.apnsVoipTopicDelivery = process.env.APNS_VOIP_TOPIC_DELIVERY || process.env.APNS_TOPIC_DELIVERY || config.apnsVoipTopicDelivery;
     config.apnsProduction = process.env.APNS_PRODUCTION || config.apnsProduction;
     config.socketCorsOrigin = process.env.SOCKET_CORS_ORIGIN || config.socketCorsOrigin;
-    config.razorpayKeyId = process.env.RAZORPAY_KEY_ID || config.razorpayKeyId;
-    config.razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET || config.razorpayKeySecret;
     config.razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || config.razorpayWebhookSecret;
     config.emailHost = process.env.EMAIL_HOST || config.emailHost;
     config.emailPort = Number(process.env.EMAIL_PORT) || config.emailPort;
