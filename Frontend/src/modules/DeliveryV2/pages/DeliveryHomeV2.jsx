@@ -383,13 +383,6 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       
       interval = setInterval(() => {
         setSimProgress(prev => {
-          const nextProgress = prev + 0.08; // 8% movement per tick
-          
-          if (nextProgress >= 1) {
-            setSimIndex(idx => idx + 1);
-            return 0; // Move to next segment
-          }
-
           const currentPoint = simPath[simIndex];
           const nextPoint = simPath[simIndex + 1];
 
@@ -403,6 +396,16 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
               setIsSimMode(false);
               toast.error('Simulation stopped', { description: 'The route contains invalid coordinates.' });
               return 0;
+            }
+
+            // Realistic cruising speed: ~35 km/h = 9.7 m/s = ~0.48 meters per 50ms tick
+            const segDist = getHaversineDistance(currentLat, currentLng, nextLat, nextLng);
+            const stepIncrement = segDist > 0 ? Math.min(0.04, Math.max(0.004, 0.48 / segDist)) : 0.02;
+
+            const nextProgress = prev + stepIncrement;
+            if (nextProgress >= 1) {
+              setSimIndex(idx => idx + 1);
+              return 0; // Move to next segment
             }
 
             // Linear Interpolation (LERP)
@@ -420,9 +423,9 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
               }
             }
 
-            // Sync with backend every 2.5 seconds during simulation so customer sees it
+            // Sync with backend every 2 seconds during simulation so customer sees it
             const now = Date.now();
-            if (now - lastSimUpdateSentAt.current >= 2000) { // Reduced to 2s to match backend throttle
+            if (now - lastSimUpdateSentAt.current >= 2000) {
               lastSimUpdateSentAt.current = now;
               const payload = { 
                 lat, 
@@ -435,8 +438,9 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
               };
               if (payload.orderId) emitLocation(payload);
             }
+            return nextProgress;
           }
-          return nextProgress;
+          return prev;
         });
       }, 50); // 20 FPS movement
     }
@@ -663,6 +667,13 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       setLocationError('');
       locationErrorToastShownRef.current = false;
       
+      // Auto-pan in-app map to follow real device movement
+      if (mapRef.current) {
+        try {
+          mapRef.current.panTo({ lat, lng });
+        } catch (e) {}
+      }
+
       // Calculate Rolling Average Speed for Smart ETA
       if (speed && speed > 0) {
         rollingSpeedRef.current = [...rollingSpeedRef.current.slice(-4), speed]; // keep last 5 points
@@ -687,14 +698,12 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
         lastAutoArrivalRef.current[tripStatus] = false;
       }
 
-      // Check threshold for Socket Sync (distance-based or 10s time-based)
-      // NOTE: Customer tracking UI uses 60 FPS interpolation (Glide), so 10s intervals
-      // still appear perfectly smooth on the map. This reduces server load by ~70%.
+      // Responsive socket sync: 10 meters movement or every 4 seconds
       const distMoved = lastCoordRef.current 
         ? getHaversineDistance(lat, lng, lastCoordRef.current.lat, lastCoordRef.current.lng) 
         : 1000;
 
-      if (distMoved >= 50 || (now - lastLocationSentAt.current >= 10000)) {
+      if (distMoved >= 10 || (now - lastLocationSentAt.current >= 4000)) {
         lastLocationSentAt.current = now;
         lastCoordRef.current = { lat, lng };
         
@@ -750,9 +759,12 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       }
 
       const isTimeout = error?.code === 3;
-      const message = isTimeout
-        ? 'Unable to get your current location. Retrying GPS…'
-        : 'Location is off or unavailable. Enable precise location to go online.';
+      if (isTimeout) {
+        // High accuracy GPS took a few seconds; keep last known location while retrying
+        return;
+      }
+
+      const message = 'Location is off or unavailable. Enable precise location to go online.';
 
       // Never retain or inject a city fallback when the real GPS position is unavailable.
       setRiderLocation(null);
@@ -766,14 +778,12 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       }
 
       // Permission denial / unavailable GPS must make the rider ineligible for new orders.
-      if (!isTimeout) {
-        setOnline(false);
-        deliveryAPI.updateOnlineStatus(false).catch(() => {});
-      }
+      setOnline(false);
+      deliveryAPI.updateOnlineStatus(false).catch(() => {});
     }, { 
       enableHighAccuracy: true,
-      maximumAge: 3000,
-      timeout: 10000
+      maximumAge: 1000,
+      timeout: 25000
     });
     
     return () => navigator.geolocation.clearWatch(watchId);
