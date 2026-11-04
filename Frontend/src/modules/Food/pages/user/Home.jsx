@@ -182,6 +182,7 @@ export default function Home() {
   const [adsBannerImages, setAdsBannerImages] = useState(() => homePageCache.adsBannerImages ?? []);
   const [adsBannersData, setAdsBannersData] = useState(() => homePageCache.adsBannersData ?? []);
   const [loadingAdsBanners, setLoadingAdsBanners] = useState(() => !homePageCache.adsBannersFetched);
+  const [advertisements, setAdvertisements] = useState([]);
   const [hasScrolledPastBanner, setHasScrolledPastBanner] = useState(false);
   const [landingCategories, setLandingCategories] = useState([]);
   const [landingExploreMore, setLandingExploreMore] = useState(() => homePageCache.landingExploreMore || []);
@@ -886,6 +887,24 @@ export default function Home() {
       cancelled = true;
     };
   }, [effectiveZoneId, effectiveZoneLoading]);
+
+  
+  // Fetch admin-managed advertisements for home carousel
+  useEffect(() => {
+    let cancelled = false;
+    publicGetOnce("/food/advertisements/public")
+      .then((response) => {
+        if (cancelled) return;
+        const list = response?.data?.data?.advertisements || [];
+        setAdvertisements(list);
+      })
+      .catch((err) => {
+        if (!cancelled) debugError("Failed to fetch advertisements", err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Fetch ads banners from public API (no auth required)
   useEffect(() => {
@@ -2406,7 +2425,10 @@ export default function Home() {
           </motion.section>
         )}
 
-        {/* Ads Banner Section Removed as requested */}
+        {/* Advertisements Banner Carousel (Admin Managed) */}
+        {advertisements.length > 0 && (
+          <AdsBannerCarousel advertisements={advertisements} />
+        )}
 
         <ExploreMoreSection
           heading={exploreMoreHeading}

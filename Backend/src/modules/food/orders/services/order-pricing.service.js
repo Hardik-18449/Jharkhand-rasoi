@@ -332,7 +332,8 @@ export async function calculateOrderPricing(userId, dto) {
 
   const couponDiscount = discount;
   const totalDiscount = couponDiscount;
-  const totalBeforeDiscount = subtotal + deliveryFee + tax + platformFee + packagingFee;
+  const deliveryTip = Math.max(0, Number(dto.deliveryTip ?? dto.pricing?.deliveryTip ?? 0));
+  const totalBeforeDiscount = subtotal + deliveryFee + tax + platformFee + packagingFee + deliveryTip;
   const total = Math.max(0, totalBeforeDiscount - totalDiscount);
 
   return {
@@ -350,6 +351,7 @@ export async function calculateOrderPricing(userId, dto) {
       deliveryFeeBreakdown: deliveryFeeBreakdown || undefined,
       freeDeliveryUpTo: Number.isFinite(freeUpTo) ? freeUpTo : undefined,
       platformFee,
+      deliveryTip,
       discount: totalDiscount,
       itemDiscount: itemDiscountTotal > 0 ? itemDiscountTotal : undefined,
       couponDiscount: couponDiscount > 0 ? couponDiscount : undefined,

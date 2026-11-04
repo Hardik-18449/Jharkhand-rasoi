@@ -1,5 +1,13 @@
 import mongoose from 'mongoose';
 
+const orderItemAddonSchema = new mongoose.Schema(
+    {
+        name: { type: String, required: true, trim: true },
+        price: { type: Number, required: true, min: 0 }
+    },
+    { _id: false }
+);
+
 const orderItemSchema = new mongoose.Schema(
     {
         itemId: { type: String, required: true, trim: true },
@@ -14,7 +22,8 @@ const orderItemSchema = new mongoose.Schema(
         quantity: { type: Number, required: true, min: 1 },
         isVeg: { type: Boolean, default: true },
         image: { type: String, default: '' },
-        notes: { type: String, default: '' }
+        notes: { type: String, default: '' },
+        addons: { type: [orderItemAddonSchema], default: [] }
     },
     { _id: false }
 );
@@ -45,6 +54,7 @@ const pricingSchema = new mongoose.Schema(
         packagingFee: { type: Number, default: 0, min: 0 },
         deliveryFee: { type: Number, default: 0, min: 0 },
         platformFee: { type: Number, default: 0, min: 0 },
+        deliveryTip: { type: Number, default: 0, min: 0 },
         restaurantCommission: { type: Number, default: 0, min: 0 },
         gstOnItem: { type: Number, default: 0, min: 0 },
         gstOnCommission: { type: Number, default: 0, min: 0 },

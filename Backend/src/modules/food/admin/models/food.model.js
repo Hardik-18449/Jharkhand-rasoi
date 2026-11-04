@@ -10,6 +10,14 @@ const foodVariantSchema = new mongoose.Schema(
     { _id: true }
 );
 
+const foodAddonSchema = new mongoose.Schema(
+    {
+        name: { type: String, required: true, trim: true },
+        price: { type: Number, required: true, min: 0 }
+    },
+    { _id: true }
+);
+
 const foodSchema = new mongoose.Schema(
     {
         restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodRestaurant', required: true, index: true },
@@ -23,6 +31,7 @@ const foodSchema = new mongoose.Schema(
         priceOnOtherPlatforms: { type: Number, default: null, min: 0 },
         otherPlatformGst: { type: Number, default: null, min: 0, max: 100 },
         variants: { type: [foodVariantSchema], default: [] },
+        addons: { type: [foodAddonSchema], default: [] },
         image: { type: String, trim: true, default: '' },
         foodType: { type: String, enum: ['Veg', 'Non-Veg'], default: 'Non-Veg' },
         isAvailable: { type: Boolean, default: true, index: true },

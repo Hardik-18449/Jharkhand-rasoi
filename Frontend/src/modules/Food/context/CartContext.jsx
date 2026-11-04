@@ -103,6 +103,7 @@ const normalizeCartData = (rawCart) => {
         variantId: variantId ? String(variantId) : "",
         variantName,
         variantPrice: Number.isFinite(parsedVariantPrice) ? parsedVariantPrice : 0,
+        addons: normalizedAddons,
         name: item.name || item.product?.name || "Item",
         quantity:
           Number.isFinite(parsedQuantity) && parsedQuantity > 0

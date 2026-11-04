@@ -58,6 +58,7 @@ const buildMenuFromFoods = async (foods = []) => {
             otherPlatformGst: food.otherPlatformGst ?? null,
             variants: serializeFoodVariants(food.variants),
             variations: serializeFoodVariants(food.variants),
+            addons: Array.isArray(food.addons) ? food.addons.map(a => ({ _id: String(a._id || a.id || ''), id: String(a._id || a.id || ''), name: String(a.name || '').trim(), price: Number(a.price || 0) })) : [],
             image: resolveStoredUploadPath(food.image || ''),
             foodType: food.foodType || 'Non-Veg',
             isAvailable: food.isAvailable !== false,

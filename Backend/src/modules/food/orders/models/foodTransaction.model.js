@@ -30,6 +30,7 @@ const foodTransactionSchema = new mongoose.Schema({
         packagingFee: { type: Number, default: 0 },
         deliveryFee: { type: Number, default: 0 },
         platformFee: { type: Number, default: 0 },
+        deliveryTip: { type: Number, default: 0 },
         restaurantCommission: { type: Number, default: 0 },
         discount: { type: Number, default: 0 },
         total: { type: Number, default: 0 },

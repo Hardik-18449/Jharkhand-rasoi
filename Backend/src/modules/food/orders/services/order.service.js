@@ -222,9 +222,13 @@ export async function createOrder(userId, dto) {
     } else if (!isCashOrder && item?.prepaidPrice != null && Number(item.prepaidPrice) > 0) {
       price = Number(item.prepaidPrice);
     }
+    const addons = Array.isArray(item?.addons)
+      ? item.addons.map(a => ({ name: String(a?.name || '').trim(), price: Math.max(0, Number(a?.price || 0)) })).filter(a => Boolean(a.name))
+      : [];
     return {
       ...item,
-      price
+      price,
+      addons
     };
   });
 
@@ -241,6 +245,7 @@ export async function createOrder(userId, dto) {
     packagingFee: Number(dto.pricing?.packagingFee ?? 0),
     deliveryFee: Number(dto.pricing?.deliveryFee ?? 0),
     platformFee: Number(dto.pricing?.platformFee ?? 0),
+    deliveryTip: Math.max(0, Number(dto.pricing?.deliveryTip ?? dto.deliveryTip ?? 0)),
     discount: Number(dto.pricing?.discount ?? 0),
     total: Number(dto.pricing?.total ?? 0),
     currency: String(dto.pricing?.currency || "INR"),
@@ -257,9 +262,8 @@ export async function createOrder(userId, dto) {
       (Number.isFinite(normalizedPricing.deliveryFee)
         ? normalizedPricing.deliveryFee
         : 0) +
-      (Number.isFinite(normalizedPricing.platformFee)
-        ? normalizedPricing.platformFee
-        : 0) -
+      (Number.isFinite(normalizedPricing.platformFee) ? normalizedPricing.platformFee : 0) +
+      (Number.isFinite(normalizedPricing.deliveryTip) ? normalizedPricing.deliveryTip : 0) -
       (Number.isFinite(normalizedPricing.discount)
         ? normalizedPricing.discount
         : 0),
@@ -315,6 +319,9 @@ export async function createOrder(userId, dto) {
   const deliveryBonusAmount = Number(feeSettings?.deliveryBonusAmount || 0);
   if (deliveryBonusAmount > 0) {
     riderEarning += deliveryBonusAmount;
+  }
+  if (normalizedPricing.deliveryTip > 0) {
+    riderEarning += normalizedPricing.deliveryTip;
   }
   
   // Calculate restaurant commission and taxes from subtotal

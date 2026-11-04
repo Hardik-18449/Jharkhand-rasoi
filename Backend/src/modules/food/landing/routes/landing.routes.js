@@ -1,3 +1,4 @@
+import { getPublicAdvertisements } from '../../admin/controllers/advertisement.controller.js';
 ﻿import express from 'express';
 import { upload } from '../../../../middleware/upload.js';
 import {
@@ -140,6 +141,9 @@ router.get('/app-intro-ads/public', getPublicActiveAds);
 // Admin landing settings (old paths used by admin UI)
 router.get('/hero-banners/landing/settings', getAdminLandingSettingsController);
 router.patch('/hero-banners/landing/settings', updateAdminLandingSettingsController);
+
+// Public Advertisements for Home Carousel
+router.get('/advertisements/public', getPublicAdvertisements);
 
 export default router;
 

@@ -296,6 +296,7 @@ export async function createRestaurantFood(restaurantId, body = {}) {
             ? Number(body.otherPlatformGst)
             : null,
         variants,
+        addons: Array.isArray(body.addons) ? body.addons.map(a => ({ name: toStr(a?.name), price: Math.max(0, Number(a?.price || 0)) })).filter(a => Boolean(a.name)) : [],
         image,
         foodType,
         isAvailable,
@@ -373,7 +374,10 @@ export async function updateRestaurantFood(restaurantId, foodId, body = {}) {
         update.categoryName = categoryName || '';
     }
 
-    const approvalRequiredKeys = ['name', 'description', 'price', 'variants', 'image', 'priceOnOtherPlatforms', 'otherPlatformGst', 'foodType', 'categoryId', 'categoryName'];
+    if (body.addons !== undefined) {
+        update.addons = Array.isArray(body.addons) ? body.addons.map(a => ({ name: toStr(a?.name), price: Math.max(0, Number(a?.price || 0)) })).filter(a => Boolean(a.name)) : [];
+    }
+    const approvalRequiredKeys = ['name', 'description', 'price', 'variants', 'addons', 'image', 'priceOnOtherPlatforms', 'otherPlatformGst', 'foodType', 'categoryId', 'categoryName'];
     const shouldResubmitForApproval = Object.keys(update).some(key => approvalRequiredKeys.includes(key));
 
     if (shouldResubmitForApproval) {
@@ -557,6 +561,8 @@ export async function listRestaurantFoods(restaurantId, query = {}) {
         prepaidPrice: f.prepaidPrice != null ? Number(f.prepaidPrice) : getFoodDisplayPrice(f),
         codPrice: f.codPrice != null ? Number(f.codPrice) : null,
         image: resolveStoredUploadPath(f.image || ''),
+        variants: serializeFoodVariants(f.variants),
+        addons: Array.isArray(f.addons) ? f.addons : [],
         foodType: f.foodType || 'Non-Veg',
         isAvailable: f.isAvailable !== false,
         isRecommended: Boolean(f.isRecommended),

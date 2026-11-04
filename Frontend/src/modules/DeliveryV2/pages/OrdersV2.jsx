@@ -690,6 +690,11 @@ export default function OrdersV2({
                         0
                     )}
                   </p>
+                  {Number(selectedOrderDetails?.pricing?.deliveryTip || 0) > 0 && (
+                    <p className="text-[11px] font-bold text-emerald-600 mt-0.5 flex items-center gap-1">
+                      <span>❤️ Incl. ₹{selectedOrderDetails.pricing.deliveryTip} Customer Tip</span>
+                    </p>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Order Bill</p>
@@ -794,10 +799,17 @@ export default function OrdersV2({
                   </p>
                   <div className="space-y-1.5">
                     {(selectedOrderDetails?.items || selectedOrderDetails?.orderItems || []).map((it, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-xs">
-                        <span className="font-semibold text-gray-800">
-                          {it.quantity || it.qty || 1}x {it.name || it.title || it.foodName || 'Item'}
-                        </span>
+                      <div key={idx} className="flex justify-between items-start text-xs py-1 border-b border-gray-100 last:border-0">
+                        <div>
+                          <span className="font-semibold text-gray-800">
+                            {it.quantity || it.qty || 1}x {it.name || it.title || it.foodName || 'Item'}
+                          </span>
+                          {Array.isArray(it.addons) && it.addons.length > 0 && (
+                            <p className="text-[10px] text-gray-500 font-medium mt-0.5">
+                              + {it.addons.map(a => `${a.name} (₹${a.price})`).join(', ')}
+                            </p>
+                          )}
+                        </div>
                         {(it.price || it.itemPrice) && (
                           <span className="text-gray-500 font-mono">
                             ₹{Number(it.price || it.itemPrice).toFixed(0)}

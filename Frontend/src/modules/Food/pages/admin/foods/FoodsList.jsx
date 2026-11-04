@@ -23,12 +23,19 @@ const createFoodForm = () => ({
   codPrice: "",
   prepaidPrice: "",
   variants: [],
+  addons: [],
   description: "",
   image: "",
   foodType: "Non-Veg",
   isAvailable: true,
   isRecommended: false,
   preparationTime: "",
+})
+
+const createAddonDraft = (addon = {}) => ({
+  id: String(addon?.id || addon?._id || `addon-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
+  name: String(addon?.name || ""),
+  price: addon?.price != null ? String(addon.price) : "",
 })
 
 const createVariantDraft = (variant = {}) => ({
@@ -286,6 +293,7 @@ export default function FoodsList() {
       price: String(food.price || ""),
       codPrice: food.codPrice != null ? String(food.codPrice) : "",
       variants: getFoodVariants(food).map(createVariantDraft),
+        addons: (food.addons || []).map(createAddonDraft),
       description: String(food.description || ""),
       image: String(food.image || ""),
       foodType: String(food.foodType || "Non-Veg"),
@@ -348,6 +356,30 @@ export default function FoodsList() {
     }))
   }
 
+  
+  const handleAddonChange = (addonId, field, value) => {
+    setFoodForm((prev) => ({
+      ...prev,
+      addons: (Array.isArray(prev.addons) ? prev.addons : []).map((addon) =>
+        addon.id === addonId ? { ...addon, [field]: value } : addon,
+      ),
+    }))
+  }
+
+  const handleAddAddon = () => {
+    setFoodForm((prev) => ({
+      ...prev,
+      addons: [...(Array.isArray(prev.addons) ? prev.addons : []), createAddonDraft()],
+    }))
+  }
+
+  const handleRemoveAddon = (addonId) => {
+    setFoodForm((prev) => ({
+      ...prev,
+      addons: (Array.isArray(prev.addons) ? prev.addons : []).filter((addon) => addon.id !== addonId),
+    }))
+  }
+
   const handleRemoveVariant = (variantId) => {
     setFoodForm((prev) => ({
       ...prev,
@@ -366,6 +398,25 @@ export default function FoodsList() {
     }
     if (!foodForm.name.trim()) {
       toast.error("Food name is required")
+      return
+    }
+
+    
+    const normalizedAddons = (Array.isArray(foodForm.addons) ? foodForm.addons : [])
+      .map((addon) => ({
+        id: String(addon?.id || addon?._id || "").trim(),
+        name: String(addon?.name || "").trim(),
+        price: Number(addon?.price),
+      }))
+      .filter((addon) => addon.id || addon.name || addon.price)
+
+    if (normalizedAddons.some((addon) => !addon.name)) {
+      toast.error("Each add-on must have a name")
+      return
+    }
+
+    if (normalizedAddons.some((addon) => !Number.isFinite(addon.price) || addon.price < 0)) {
+      toast.error("Each add-on price must be 0 or greater")
       return
     }
 
@@ -423,6 +474,10 @@ export default function FoodsList() {
         price: hasVariants ? undefined : parsedPrice,
         prepaidPrice: hasVariants ? undefined : parsedPrice,
         codPrice: hasVariants ? undefined : (foodForm.codPrice && Number.isFinite(Number(foodForm.codPrice)) ? Number(foodForm.codPrice) : null),
+        addons: normalizedAddons.map((addon) => ({
+          name: addon.name,
+          price: addon.price,
+        })),
         variants: normalizedVariants.map((variant) => ({
           ...(variant.id && !variant.id.startsWith("variant-") ? { _id: variant.id } : {}),
           name: variant.name,
@@ -807,7 +862,22 @@ export default function FoodsList() {
                 <p><span className="font-semibold text-slate-700">Food Type:</span> <span className="text-slate-900">{selectedFood.foodType || "-"}</span></p>
                 <p><span className="font-semibold text-slate-700">Approval:</span> <span className="text-slate-900 capitalize">{selectedFood.approvalStatus || "-"}</span></p>
               </div>
-              {selectedFood.variants?.length ? (
+              
+                {selectedFood.addons?.length ? (
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-800 mb-2">Add-ons</p>
+                    <div className="space-y-1">
+                      {selectedFood.addons.map((addon, index) => (
+                        <div key={addon.id || addon._id || index} className="flex items-center justify-between text-sm text-slate-600">
+                          <span>{addon.name}</span>
+                          <span className="font-semibold text-slate-900">{"\u20B9"}{addon.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {selectedFood.variants?.length ? (
                 <div className="rounded-lg border border-slate-200 bg-white p-4">
                   <p className="text-sm font-semibold text-slate-800 mb-2">Variants</p>
                   <div className="space-y-2">
@@ -1102,6 +1172,67 @@ export default function FoodsList() {
                 <p className="text-sm text-slate-500">No variants added. This food will use the single base price.</p>
               )}
             </div>
+
+            {/* Add-ons Section */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Add-ons (Optional)</p>
+                  <p className="text-xs text-slate-500">Provide extra add-on items like Extra Cheese, Ketchup, Water Bottle, etc. with their price.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddAddon}
+                  className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-white px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add add-on
+                </button>
+              </div>
+              {(foodForm.addons || []).length ? (
+                <div className="space-y-3">
+                  {(foodForm.addons || []).map((addon, index) => (
+                    <div key={addon.id} className="grid grid-cols-[1fr_auto] gap-3 rounded-lg border border-slate-200 bg-white p-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">Add-on name</label>
+                          <input
+                            type="text"
+                            value={addon.name}
+                            onChange={(e) => handleAddonChange(addon.id, "name", e.target.value)}
+                            placeholder={index === 0 ? "Extra Cheese" : index === 1 ? "Ketchup" : "Water Bottle"}
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">Add-on price ({"\u20B9"})</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={addon.price}
+                            onChange={(e) => handleAddonChange(addon.id, "price", e.target.value)}
+                            placeholder="30"
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAddon(addon.id)}
+                        className="self-start rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-rose-500"
+                        aria-label="Remove add-on"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">No add-ons added for this food item.</p>
+              )}
+            </div>
+
             <div className="flex justify-end">
               <button
                 type="button"

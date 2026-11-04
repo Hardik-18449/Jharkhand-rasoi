@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, Fragment } from "react"
+import { Heart,  useState, useEffect, useRef, useMemo, Fragment } from "react"
 import { createPortal } from "react-dom"
 import { Link, useNavigate } from "react-router-dom"
 import { Plus, Minus, ArrowLeft, ChevronRight, Clock, MapPin, Phone, FileText, Utensils, Tag, Percent, Share2, ChevronUp, ChevronDown, X, Check, Settings, CreditCard, Wallet, Building2, Sparkles, Banknote, Zap, CheckCircle2, MessageCircle, Send, Mail, Copy } from "lucide-react"
@@ -247,6 +247,9 @@ export default function Cart() {
   const [restaurantData, setRestaurantData] = useState(null)
   const [loadingRestaurant, setLoadingRestaurant] = useState(false)
   const [pricing, setPricing] = useState(null)
+  const [deliveryTip, setDeliveryTip] = useState(0)
+  const [customTipInput, setCustomTipInput] = useState("")
+  const [showCustomTip, setShowCustomTip] = useState(false)
   const [loadingPricing, setLoadingPricing] = useState(false)
 
   // Addons state
@@ -919,7 +922,8 @@ export default function Cart() {
           restaurantId: resolvedRestaurantId,
           deliveryAddress: defaultAddress,
           couponCode: resolvedCouponCode,
-          paymentMethod: selectedPaymentMethod
+          paymentMethod: selectedPaymentMethod,
+          deliveryTip: deliveryTip || 0
         })
 
         if (response?.data?.success && response?.data?.data?.pricing) {
@@ -1118,8 +1122,8 @@ export default function Cart() {
   const itemDiscount = pricing?.itemDiscount || 0;
   const couponDiscount = pricing?.couponDiscount || (appliedCoupon ? Math.min(appliedCoupon.discount, subtotal * 0.5) : 0);
   const discount = pricing?.discount || couponDiscount;
-  const totalBeforeDiscount = subtotal + deliveryFee + platformFee + packagingFee + gstCharges;
-  const total = pricing?.total || Math.max(0, totalBeforeDiscount - discount);
+  const totalBeforeDiscount = subtotal + deliveryFee + platformFee + packagingFee + gstCharges + (Number(deliveryTip) || 0);
+  const total = pricing?.total != null ? (pricing.total + (pricing.deliveryTip != null ? 0 : (Number(deliveryTip) || 0))) : Math.max(0, totalBeforeDiscount - discount);
   const savings = pricing?.savings ?? Math.max(0, totalBeforeDiscount - total)
 
   // Determine if COD should be hidden
@@ -1605,7 +1609,11 @@ export default function Cart() {
       debugLog("?? Delivery address:", defaultAddress?.label || defaultAddress?.city)
 
       // Ensure couponCode is included in pricing
-      const orderPricing = pricing || {
+      const orderPricing = pricing ? {
+        ...pricing,
+        deliveryTip: Number(deliveryTip) || 0,
+        total: pricing.total + (pricing.deliveryTip != null ? 0 : (Number(deliveryTip) || 0))
+      } : {
         subtotal,
         deliveryFee,
         tax: gstCharges,
@@ -2886,7 +2894,107 @@ export default function Cart() {
                   </div>
                 )}
               </div>
-{/* Bill Details */}
+
+              {/* Tip your delivery partner */}
+              <div className="bg-white dark:bg-[#1a1a1a] px-4 md:px-6 py-4 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-rose-50 dark:bg-rose-950/40 text-rose-500 rounded-xl">
+                    <Heart className="w-5 h-5 fill-rose-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                      Tip your delivery partner
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      100% of your tip goes directly to your delivery partner
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  {[10, 20, 30, 50].map((amount) => {
+                    const isSelected = deliveryTip === amount;
+                    return (
+                      <button
+                        key={amount}
+                        type="button"
+                        onClick={() => {
+                          setDeliveryTip(isSelected ? 0 : amount);
+                          setShowCustomTip(false);
+                        }}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                          isSelected
+                            ? "bg-primary text-white border-primary shadow-sm"
+                            : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-primary/40"
+                        }`}
+                      >
+                        {RUPEE_SYMBOL}{amount}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomTip(!showCustomTip)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                      showCustomTip || (deliveryTip > 0 && ![10, 20, 30, 50].includes(deliveryTip))
+                        ? "bg-primary text-white border-primary shadow-sm"
+                        : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-primary/40"
+                    }`}
+                  >
+                    {deliveryTip > 0 && ![10, 20, 30, 50].includes(deliveryTip)
+                      ? `${RUPEE_SYMBOL}${deliveryTip} (Custom)`
+                      : "Custom"}
+                  </button>
+
+                  {deliveryTip > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeliveryTip(0);
+                        setCustomTipInput("");
+                        setShowCustomTip(false);
+                      }}
+                      className="text-xs text-rose-500 font-semibold hover:underline ml-auto"
+                    >
+                      Clear Tip
+                    </button>
+                  )}
+                </div>
+
+                {showCustomTip && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-500">
+                        {RUPEE_SYMBOL}
+                      </span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="1000"
+                        placeholder="Enter tip amount"
+                        value={customTipInput}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCustomTipInput(val);
+                          const num = Math.max(0, parseInt(val, 10) || 0);
+                          setDeliveryTip(num);
+                        }}
+                        className="w-full pl-7 pr-3 py-1.5 text-xs rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomTip(false)}
+                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                    >
+                      Done
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Bill Details */}
               <div className="bg-white dark:bg-[#1a1a1a] px-4 md:px-6 py-5 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800">
                 <button
                   onClick={() => setShowBillDetails(!showBillDetails)}
@@ -2939,6 +3047,18 @@ export default function Cart() {
                         >
                           Pay Online
                         </button>
+                      </div>
+                    )}
+
+                    {deliveryTip > 0 && (
+                      <div className="flex justify-between text-sm py-0.5">
+                        <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
+                          <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+                          Delivery Partner Tip
+                        </span>
+                        <span className="text-gray-800 dark:text-gray-200 font-medium">
+                          {RUPEE_SYMBOL}{Number(deliveryTip).toFixed(2)}
+                        </span>
                       </div>
                     )}
 

@@ -3328,6 +3328,7 @@ export async function getFoods(query) {
         prepaidPrice: f.prepaidPrice != null ? Number(f.prepaidPrice) : getFoodDisplayPrice(f),
         codPrice: f.codPrice != null ? Number(f.codPrice) : null,
         variants: serializeFoodVariants(f.variants),
+        addons: Array.isArray(f.addons) ? f.addons : [],
         variations: serializeFoodVariants(f.variants),
         image: f.image || '',
         foodType: f.foodType || 'Non-Veg',
@@ -3487,6 +3488,7 @@ export async function createFood(body) {
             ? Number(body.otherPlatformGst)
             : null,
         variants,
+        addons: Array.isArray(body.addons) ? body.addons.map(a => ({ name: String(a?.name || '').trim(), price: Math.max(0, Number(a?.price || 0)) })).filter(a => Boolean(a.name)) : [],
         image: normalizeStoredUploadPath(body.image),
         foodType,
         isAvailable: body.isAvailable !== false,
@@ -3516,6 +3518,9 @@ export async function updateFood(id, body) {
     const pricingUpdate = getAdminFoodUpdatedPricing(doc.toObject(), body);
     if (pricingUpdate.price !== undefined) doc.price = pricingUpdate.price;
     if (pricingUpdate.variants !== undefined) doc.variants = pricingUpdate.variants;
+    if (body.addons !== undefined) {
+        doc.addons = Array.isArray(body.addons) ? body.addons.map(a => ({ name: String(a?.name || '').trim(), price: Math.max(0, Number(a?.price || 0)) })).filter(a => Boolean(a.name)) : [];
+    }
     if (pricingUpdate.codPrice !== undefined) doc.codPrice = pricingUpdate.codPrice;
     if (pricingUpdate.prepaidPrice !== undefined) doc.prepaidPrice = pricingUpdate.prepaidPrice;
     if (body.codPrice !== undefined) doc.codPrice = body.codPrice != null && body.codPrice !== '' ? Number(body.codPrice) : null;

@@ -1,3 +1,4 @@
+import * as adController from '../controllers/advertisement.controller.js';
 import {
     getAdminFranchiseStockController,
     allocateAdminFranchiseStockController,
@@ -313,5 +314,12 @@ router.get('/franchise/:restaurantId/stock', getAdminFranchiseStockController);
 router.post('/franchise/:restaurantId/stock/allocate', allocateAdminFranchiseStockController);
 router.delete('/franchise/:restaurantId/stock/:stockId', removeAdminFranchiseStockController);
 router.get('/franchise/:restaurantId/reports', getAdminFranchiseReportsController);
+
+// ----- Advertisements Management -----
+router.get('/advertisements', adController.getAdminAdvertisements);
+router.post('/advertisements', adController.createAdvertisement);
+router.put('/advertisements/:id', adController.updateAdvertisement);
+router.patch('/advertisements/:id/toggle', adController.toggleAdvertisementStatus);
+router.delete('/advertisements/:id', adController.deleteAdvertisement);
 
 export default router;

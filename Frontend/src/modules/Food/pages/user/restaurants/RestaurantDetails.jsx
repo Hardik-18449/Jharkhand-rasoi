@@ -135,6 +135,7 @@ function RestaurantDetailsContent() {
   const [showItemDetail, setShowItemDetail] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
   const [selectedVariantId, setSelectedVariantId] = useState("")
+  const [selectedAddons, setSelectedAddons] = useState([])
   const [showFilterSheet, setShowFilterSheet] = useState(false)
   const [showLocationSheet, setShowLocationSheet] = useState(false)
   const [showScheduleSheet, setShowScheduleSheet] = useState(false)
@@ -1203,10 +1204,11 @@ function RestaurantDetailsContent() {
     }
     const defaultVariant = getDefaultFoodVariant(selectedItem)
     setSelectedVariantId(defaultVariant?.id || "")
+    setSelectedAddons([])
   }, [selectedItem])
 
   // Helper function to update item quantity in both local state and cart
-  const updateItemQuantity = (item, newQuantity, event = null, preferredVariant = null) => {
+  const updateItemQuantity = (item, newQuantity, event = null, preferredVariant = null, preferredAddons = []) => {
     // Check authentication
     if (!isModuleAuthenticated('user')) {
       toast.error("Please login to add items to cart")
@@ -1281,7 +1283,8 @@ function RestaurantDetailsContent() {
       originalPrice: priceNum, // Store original base price
       variantId: resolvedVariant?.id || "",
       variantName: resolvedVariant?.name || "",
-      variantPrice: finalPrice, // Use discounted price for variant
+      variantPrice: finalPrice,
+      addons: Array.isArray(preferredAddons) ? preferredAddons.map(a => ({ id: String(a.id || a._id || a.name), name: a.name, price: Number(a.price || 0) })) : [],
       image: item.image,
       restaurant: restaurant.name, // Use restaurant.name directly (already validated)
       restaurantId: validRestaurantId, // Use validated restaurantId
@@ -3230,6 +3233,52 @@ function RestaurantDetailsContent() {
 
 
                   </div>
+
+
+                    {/* Choose Add-ons */}
+                    {hasFoodAddons(selectedItem) && (
+                      <div className="mb-4">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Choose Add-ons</p>
+                        <div className="space-y-2">
+                          {getFoodAddons(selectedItem).map((addon) => {
+                            const isSelected = selectedAddons.some((a) => String(a.id || a._id) === String(addon.id || addon._id));
+                            return (
+                              <label
+                                key={addon.id || addon._id}
+                                className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                                  isSelected
+                                    ? "border-primary bg-primary/5 dark:bg-primary/10"
+                                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#252525]"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setSelectedAddons((prev) => [...prev, addon]);
+                                      } else {
+                                        setSelectedAddons((prev) =>
+                                          prev.filter((a) => String(a.id || a._id) !== String(addon.id || addon._id))
+                                        );
+                                      }
+                                    }}
+                                    className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                                  />
+                                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                                    {addon.name}
+                                  </span>
+                                </div>
+                                <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                  +{RUPEE_SYMBOL}{Math.round(addon.price)}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
                   {/* Bottom Action Bar */}
                   <div className="border-t border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between bg-white dark:bg-[#1a1a1a]">

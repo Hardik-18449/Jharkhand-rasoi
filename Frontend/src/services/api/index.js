@@ -236,6 +236,13 @@ const withdrawalRequestId = (kind, amount) => `${kind}-${Number(amount) || 0}-${
 
 export const adminAPI = {
   saveFcmToken: saveAdminFcmTokenOnce,
+  // Advertisements Management
+  getAdvertisements: () => adminClient.get("/food/admin/advertisements"),
+  createAdvertisement: (data) => adminClient.post("/food/admin/advertisements", data),
+  updateAdvertisement: (id, data) => adminClient.put(`/food/admin/advertisements/${id}`, data),
+  toggleAdvertisementStatus: (id) => adminClient.patch(`/food/admin/advertisements/${id}/toggle`),
+  deleteAdvertisement: (id) => adminClient.delete(`/food/admin/advertisements/${id}`),
+
   // Subscription Plans Management
   getSubscriptionPlans: () => adminClient.get("/food/admin/subscriptions/plans"),
   createSubscriptionPlan: (data) => adminClient.post("/food/admin/subscriptions/plans", data),
@@ -2224,3 +2231,7 @@ export const publicAPI = {
 
 
 
+
+export const advertisementAPI = {
+  getPublicAdvertisements: () => userClient.get("/food/advertisements/public"),
+};

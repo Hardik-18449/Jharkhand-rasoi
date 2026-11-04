@@ -40,6 +40,13 @@ const getUploadErrorMessage = (error, fileName = "image") => {
   return `Failed to upload ${fileName}: ${message}`
 }
 
+const createAddonDraft = (addon = {}) => ({
+  localId: String(addon?.id || addon?._id || `addon-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
+  persistedId: String(addon?.id || addon?._id || ""),
+  name: String(addon?.name || ""),
+  price: addon?.price != null ? String(addon.price) : "",
+})
+
 const createVariantDraft = (variant = {}) => ({
   localId: String(variant?.id || variant?._id || `variant-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
   persistedId: String(variant?.id || variant?._id || ""),
@@ -72,6 +79,7 @@ export default function ItemDetailsPage() {
   const [basePrice, setBasePrice] = useState("")
   const [codPrice, setCodPrice] = useState("")
   const [variants, setVariants] = useState([])
+  const [addons, setAddons] = useState([])
   const [preparationTime, setPreparationTime] = useState("")
   const [gst, setGst] = useState("5.0")
   const [isRecommended, setIsRecommended] = useState(false)
@@ -127,6 +135,7 @@ export default function ItemDetailsPage() {
     setFoodType(item.foodType === "Veg" ? "Veg" : "Non-Veg")
     const itemVariants = getFoodVariants(item)
     setVariants(itemVariants.map(createVariantDraft))
+    setAddons((item.addons || []).map(createAddonDraft))
     setBasePrice(itemVariants.length === 0 ? (item.prepaidPrice?.toString() || item.price?.toString() || "") : "")
     setCodPrice(itemVariants.length === 0 && item.codPrice != null ? item.codPrice.toString() : "")
     setPreparationTime(item.preparationTime || "")
@@ -635,6 +644,32 @@ export default function ItemDetailsPage() {
         return
       }
 
+      
+      const normalizedAddons = addons
+        .map((addon) => ({
+          persistedId: String(addon.persistedId || "").trim(),
+          name: String(addon.name || "").trim(),
+          price: Number(addon.price),
+        }))
+        .filter((addon) => addon.name || addon.persistedId || addon.price)
+
+      if (normalizedAddons.some((addon) => !addon.name)) {
+        toast.error("Each add-on must have a name")
+        setUploadingImages(false)
+        return
+      }
+
+      if (normalizedAddons.some((addon) => !Number.isFinite(addon.price) || addon.price < 0)) {
+        toast.error("Each add-on price must be 0 or greater")
+        setUploadingImages(false)
+        return
+      }
+
+      const addonPayload = normalizedAddons.map((addon) => ({
+        name: addon.name,
+        price: addon.price,
+      }))
+
       const normalizedVariants = variants
         .map((variant) => ({
           persistedId: String(variant.persistedId || "").trim(),
@@ -767,6 +802,23 @@ export default function ItemDetailsPage() {
 
   const handleAddVariant = () => {
     setVariants((prev) => [...prev, createVariantDraft()])
+  }
+
+  
+  const handleAddAddon = () => {
+    setAddons((prev) => [...prev, createAddonDraft()])
+  }
+
+  const handleRemoveAddon = (localId) => {
+    setAddons((prev) => prev.filter((addon) => addon.localId !== localId))
+  }
+
+  const handleAddonChange = (localId, field, value) => {
+    setAddons((prev) =>
+      prev.map((addon) =>
+        addon.localId === localId ? { ...addon, [field]: value } : addon,
+      ),
+    )
   }
 
   const handleRemoveVariant = (localId) => {
@@ -1167,6 +1219,69 @@ export default function ItemDetailsPage() {
                   </div>
                 ) : (
                   <p className="text-xs text-gray-500">No variants added. This item will use the base price only.</p>
+                )}
+              </div>
+
+
+              {/* Add-ons */}
+              <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50/70 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700">Add-ons (Optional)</label>
+                    <p className="text-xs text-gray-500">Add options like Extra Cheese, Ketchup, Water Bottle, etc. with their price.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddAddon}
+                    className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add add-on
+                  </button>
+                </div>
+
+                {addons.length > 0 ? (
+                  <div className="space-y-3">
+                    {addons.map((addon, index) => (
+                      <div key={addon.localId} className="grid grid-cols-[1fr_auto] gap-3 rounded-lg border border-gray-200 bg-white p-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">Add-on name</label>
+                            <input
+                              type="text"
+                              value={addon.name}
+                              onChange={(e) => handleAddonChange(addon.localId, "name", e.target.value)}
+                              placeholder={index === 0 ? "Extra Cheese" : index === 1 ? "Ketchup" : "Water Bottle"}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">Add-on price ({"\u20B9"})</label>
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={addon.price}
+                              onChange={(e) => {
+                                const cleanedValue = e.target.value.replace(/[^0-9.]/g, '')
+                                handleAddonChange(addon.localId, "price", cleanedValue)
+                              }}
+                              placeholder="30"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAddon(addon.localId)}
+                          className="h-10 w-10 rounded-full border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 flex items-center justify-center self-start"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500">No add-ons added for this item.</p>
                 )}
               </div>
 
