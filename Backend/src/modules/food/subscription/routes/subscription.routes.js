@@ -12,6 +12,9 @@ subscriptionUserRouter.get('/plans', subCtrl.getActivePlansPublicController);
 // User-Authenticated: Get my subscription status
 subscriptionUserRouter.get('/my', authMiddleware, requireRoles('USER'), subCtrl.getUserSubscriptionController);
 
+// User-Authenticated: Create Razorpay order for online payment
+subscriptionUserRouter.post('/create-razorpay-order', authMiddleware, requireRoles('USER'), subCtrl.createSubscriptionRazorpayOrderController);
+
 // User-Authenticated: Subscribe to a plan
 subscriptionUserRouter.post('/subscribe', authMiddleware, requireRoles('USER'), subCtrl.subscribeUserController);
 

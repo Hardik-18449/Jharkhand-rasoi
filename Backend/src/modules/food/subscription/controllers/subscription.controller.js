@@ -167,6 +167,19 @@ export async function getUserSubscriptionController(req, res) {
     }
 }
 
+export async function createSubscriptionRazorpayOrderController(req, res) {
+    try {
+        const userId = req.user?.id || req.user?._id;
+        const result = await subscriptionService.createSubscriptionRazorpayOrder(userId, req.body || {});
+        return res.status(200).json({ success: true, data: result });
+    } catch (err) {
+        return res.status(err.status || 400).json({
+            success: false,
+            message: err.message || 'Failed to create subscription payment order'
+        });
+    }
+}
+
 export async function subscribeUserController(req, res) {
     try {
         const userId = req.user?.id || req.user?._id;

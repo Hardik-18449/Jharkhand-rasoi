@@ -24,6 +24,8 @@ import {
 import confetti from "canvas-confetti";
 import { userAPI } from "@food/api";
 import { toast } from "sonner";
+import { initRazorpayPayment } from "@food/utils/razorpay";
+import { CreditCard, Smartphone } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@food/components/ui/dialog";
 import { Button } from "@food/components/ui/button";
 import { Card, CardContent } from "@food/components/ui/card";
@@ -89,6 +91,7 @@ export default function SubscriptionPage() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("online"); // "online" | "wallet"
 
   // FAQs open state
   const [openFaq, setOpenFaq] = useState(null);
@@ -131,51 +134,124 @@ export default function SubscriptionPage() {
 
   const handleOpenSubscribe = (plan) => {
     setSelectedPlan(plan);
+    setPaymentMethod(walletBalance >= (plan.price || 0) ? "wallet" : "online");
     setIsModalOpen(true);
   };
 
   const handleConfirmSubscribe = async () => {
     if (!selectedPlan) return;
 
-    if (walletBalance < (selectedPlan.price || 0)) {
-      toast.error(
-        `Insufficient wallet balance. You need ₹${selectedPlan.price - walletBalance} more to activate this plan.`
-      );
+    // 1. Pay via Wallet
+    if (paymentMethod === "wallet") {
+      if (walletBalance < (selectedPlan.price || 0)) {
+        toast.error(
+          `Insufficient wallet balance (₹${walletBalance}). Please choose Online Payment or recharge wallet.`
+        );
+        setPaymentMethod("online");
+        return;
+      }
+
+      try {
+        setIsSubscribing(true);
+        const res = await userAPI.subscribePlan({
+          planId: selectedPlan._id,
+          paymentMethod: "wallet",
+        });
+
+        try {
+          confetti({
+            particleCount: 90,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ["#7e3866", "#F59E0B", "#10B981", "#3B82F6"],
+          });
+        } catch (e) {
+          // ignore confetti errors
+        }
+
+        toast.success(res?.data?.message || `Welcome to ${cleanText(selectedPlan.name)}! VIP benefits active.`);
+        setIsModalOpen(false);
+        loadData();
+      } catch (err) {
+        const msg = err?.response?.data?.message || err?.message || "Failed to activate subscription";
+        toast.error(cleanText(msg) || msg);
+      } finally {
+        setIsSubscribing(false);
+      }
       return;
     }
 
+    // 2. Pay via Razorpay (UPI, GPay, PhonePe, Paytm, Cards, Netbanking)
     try {
       setIsSubscribing(true);
-      const res = await userAPI.subscribePlan({
-        planId: selectedPlan._id,
-        paymentMethod: "wallet",
-      });
+      const orderRes = await userAPI.createSubscriptionRazorpayOrder({ planId: selectedPlan._id });
+      const { razorpay } = orderRes?.data?.data || orderRes?.data || {};
 
+      if (!razorpay?.orderId || !razorpay?.key) {
+        throw new Error("Failed to initialize payment gateway. Please try again or use wallet.");
+      }
+
+      let userInfo = {};
       try {
-        confetti({
-          particleCount: 90,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#7e3866", "#F59E0B", "#10B981", "#3B82F6"],
-        });
-      } catch (e) {
-        // ignore confetti errors
-      }
+        const userRes = await userAPI.getProfile();
+        userInfo = userRes?.data?.data?.user || userRes?.data?.user || {};
+      } catch (e) {}
 
-      toast.success(res?.data?.message || `Welcome to ${cleanText(selectedPlan.name)}! VIP benefits active.`);
-      setIsModalOpen(false);
-      loadData();
-    } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || "Failed to activate subscription";
-      toast.error(cleanText(msg) || msg);
-      if (msg.toLowerCase().includes("insufficient") || msg.toLowerCase().includes("wallet")) {
-        setTimeout(() => {
-          if (window.confirm("Would you like to recharge your wallet now?")) {
-            navigate("/user/wallet");
+      await initRazorpayPayment({
+        key: razorpay.key,
+        amount: razorpay.amount,
+        currency: razorpay.currency || "INR",
+        order_id: razorpay.orderId,
+        name: companyName,
+        description: `${cleanText(selectedPlan.name)} VIP Membership`,
+        prefill: {
+          name: userInfo.name || "",
+          email: userInfo.email || "",
+          contact: (userInfo.phone || "").replace(/\D/g, "").slice(-10),
+        },
+        notes: {
+          type: "subscription_purchase",
+          planId: String(selectedPlan._id),
+        },
+        handler: async (response) => {
+          try {
+            setIsSubscribing(true);
+            const subRes = await userAPI.subscribePlan({
+              planId: selectedPlan._id,
+              paymentMethod: "razorpay",
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+
+            try {
+              confetti({
+                particleCount: 100,
+                spread: 80,
+                origin: { y: 0.6 },
+                colors: ["#7e3866", "#F59E0B", "#10B981", "#3B82F6"],
+              });
+            } catch (e) {}
+
+            toast.success(subRes?.data?.message || `Welcome to ${cleanText(selectedPlan.name)}! VIP membership active.`);
+            setIsModalOpen(false);
+            loadData();
+          } catch (verErr) {
+            toast.error(verErr?.response?.data?.message || verErr?.message || "Payment verification failed");
+          } finally {
+            setIsSubscribing(false);
           }
-        }, 600);
-      }
-    } finally {
+        },
+        onError: (err) => {
+          setIsSubscribing(false);
+          if (err?.description) toast.error(err.description);
+        },
+        onClose: () => {
+          setIsSubscribing(false);
+        },
+      });
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || "Failed to initialize online payment");
       setIsSubscribing(false);
     }
   };
@@ -463,7 +539,7 @@ export default function SubscriptionPage() {
                         {/* 5. One-time payment */}
                         <li className="flex items-start gap-2.5 leading-snug">
                           <span className="text-white/60 font-black text-base leading-none select-none">•</span>
-                          <span>One-time wallet payment or auto-extend</span>
+                          <span>One-time payment via UPI, Cards, Netbanking or Wallet</span>
                         </li>
                       </ul>
                     </div>
@@ -654,125 +730,229 @@ export default function SubscriptionPage() {
         </Card>
       </div>
 
-      {/* 9. CONFIRMATION / PURCHASE MODAL */}
+      {/* 9. CONFIRMATION / PURCHASE MODAL (Redesigned with Full Mobile Responsiveness + Razorpay Online & Wallet) */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white border border-gray-100 dark:border-gray-800 rounded-2xl p-6 shadow-xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <Crown className="h-5 w-5 text-amber-500 fill-amber-500" />
+        <DialogContent className="w-[calc(100vw-1.5rem)] sm:w-full max-w-md bg-white dark:bg-[#121212] text-gray-900 dark:text-white border border-gray-200 dark:border-zinc-800 rounded-[28px] sm:rounded-3xl p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+          {/* Mobile Drag Pill */}
+          <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-zinc-700 mx-auto -mt-1 mb-2.5 sm:hidden" />
+
+          <DialogHeader className="text-left pb-1">
+            <DialogTitle className="text-lg sm:text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 flex-shrink-0">
+                <Crown className="h-4.5 w-4.5 fill-amber-500" />
+              </div>
               <span>Confirm VIP Pass</span>
             </DialogTitle>
           </DialogHeader>
 
           {selectedPlan && (
-            <div className="space-y-4 pt-2">
+            <div className="space-y-3.5 pt-1">
               {/* Selected Plan Summary Card */}
               <div
-                className="p-4 rounded-xl text-white shadow-xs space-y-1"
+                className="p-4 sm:p-5 rounded-2xl text-white shadow-sm space-y-2 relative overflow-hidden"
                 style={{ backgroundColor: selectedPlan.badgeColor || "#7e3866" }}
               >
                 <div className="flex items-center justify-between">
-                  <Badge className="bg-black/20 text-white font-bold text-[10px] uppercase">
+                  <Badge className="bg-black/25 text-white font-extrabold text-[10px] uppercase tracking-wider px-2.5 py-0.5 border border-white/20">
                     {cleanText(selectedPlan.badgeText) || "VIP"}
                   </Badge>
-                  <span className="text-xs font-semibold text-white/90">
+                  <span className="text-xs font-bold text-white/95 bg-white/15 px-2.5 py-0.5 rounded-full border border-white/10">
                     {selectedPlan.durationDays} Days Validity
                   </span>
                 </div>
-                <div className="text-lg font-bold text-white pt-1">
-                  {cleanText(selectedPlan.name)}
-                </div>
-                <div className="flex items-baseline gap-2 pt-0.5">
-                  <span className="text-2xl font-extrabold text-white">
-                    ₹{selectedPlan.price}
-                  </span>
-                  {selectedPlan.originalPrice > selectedPlan.price && (
-                    <span className="text-xs font-semibold text-white/70 line-through">
-                      ₹{selectedPlan.originalPrice}
+                <div>
+                  <div className="text-lg sm:text-xl font-black text-white">
+                    {cleanText(selectedPlan.name)}
+                  </div>
+                  <div className="flex items-baseline gap-2 pt-0.5">
+                    <span className="text-2xl sm:text-3xl font-black text-white">
+                      ₹{selectedPlan.price}
                     </span>
-                  )}
+                    {selectedPlan.originalPrice > selectedPlan.price && (
+                      <span className="text-xs font-bold text-white/70 line-through">
+                        ₹{selectedPlan.originalPrice}
+                      </span>
+                    )}
+                    {selectedPlan.originalPrice > selectedPlan.price && (
+                      <span className="text-[10px] font-extrabold bg-white text-black px-1.5 py-0.5 rounded-md ml-1">
+                        Save {Math.round(((selectedPlan.originalPrice - selectedPlan.price) / selectedPlan.originalPrice) * 100)}%
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Kitchen Priority Callout */}
-              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex items-start gap-2.5">
-                <Flame className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                <div className="text-xs text-amber-900 dark:text-amber-300">
-                  <span className="font-bold block">
+              <div className="bg-amber-500/10 border border-amber-500/25 rounded-2xl p-3 flex items-start gap-2.5">
+                <div className="h-7 w-7 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Flame className="h-4 w-4 fill-amber-500 text-amber-500" />
+                </div>
+                <div className="text-xs text-amber-950 dark:text-amber-200 leading-snug">
+                  <span className="font-extrabold block text-amber-900 dark:text-amber-300">
                     Priority Preparation Rank #{selectedPlan.priorityLevel || 1}
                   </span>
-                  Your orders will be tagged <strong>VIP PRIORITY - SERVE FIRST</strong> on restaurant POS screens.
+                  Your orders will be tagged <strong>VIP PRIORITY - COOK &amp; SERVE FIRST</strong> on restaurant POS screens.
                 </div>
               </div>
 
-              {/* Wallet Balance Verification */}
-              <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-3.5 border border-gray-200 dark:border-gray-700 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600 dark:text-gray-400 font-semibold flex items-center gap-1.5">
-                    <Wallet className="h-4 w-4 text-primary" />
-                    Wallet Balance:
-                  </span>
-                  <span className="font-bold text-gray-900 dark:text-white">
-                    ₹{walletBalance.toLocaleString("en-IN")}
-                  </span>
+              {/* PAYMENT METHOD SELECTOR */}
+              <div className="space-y-2 pt-0.5">
+                <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Choose Payment Method
+                </label>
+
+                {/* Option 1: Online Payment (UPI, Cards, Netbanking) */}
+                <div
+                  onClick={() => setPaymentMethod("online")}
+                  className={`relative p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                    paymentMethod === "online"
+                      ? "border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10 shadow-xs"
+                      : "border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 bg-gray-50/50 dark:bg-zinc-900/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      paymentMethod === "online"
+                        ? "bg-emerald-500 text-white shadow-xs"
+                        : "bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-gray-300"
+                    }`}>
+                      <CreditCard className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                          Pay Online (UPI / Card)
+                        </span>
+                        <span className="text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">
+                          Instant
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                        Google Pay, PhonePe, Paytm, Cards, Netbanking
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    paymentMethod === "online"
+                      ? "border-emerald-500 bg-emerald-500 text-white"
+                      : "border-gray-300 dark:border-zinc-600"
+                  }`}>
+                    {paymentMethod === "online" && <Check className="h-3 w-3 stroke-[3]" />}
+                  </div>
                 </div>
 
-                {walletBalance >= (selectedPlan.price || 0) ? (
-                  <div className="text-[11px] font-semibold text-green-600 dark:text-green-400 flex items-center gap-1 pt-1 border-t border-gray-200 dark:border-gray-700">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    <span>Balance sufficient. Instant activation.</span>
-                  </div>
-                ) : (
-                  <div className="space-y-2 pt-1 border-t border-gray-200 dark:border-gray-700">
-                    <div className="text-[11px] font-semibold text-red-600 dark:text-red-400 flex items-center gap-1">
-                      <AlertCircle className="h-3.5 w-3.5" />
-                      <span>
-                        Need ₹{(selectedPlan.price || 0) - walletBalance} more to activate.
-                      </span>
+                {/* Option 2: Wallet Balance */}
+                <div
+                  onClick={() => setPaymentMethod("wallet")}
+                  className={`relative p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                    paymentMethod === "wallet"
+                      ? "border-amber-500 bg-amber-500/5 dark:bg-amber-500/10 shadow-xs"
+                      : "border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 bg-gray-50/50 dark:bg-zinc-900/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      paymentMethod === "wallet"
+                        ? "bg-amber-500 text-black shadow-xs"
+                        : "bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-gray-300"
+                    }`}>
+                      <Wallet className="h-5 w-5" />
                     </div>
-                    <Button
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                          Jharkhand Rasoi Wallet
+                        </span>
+                        {walletBalance >= (selectedPlan.price || 0) ? (
+                          <span className="text-[10px] font-extrabold bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full">
+                            Sufficient
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">
+                            Low Balance
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                        Available Balance: <strong className="text-gray-900 dark:text-white">₹{walletBalance.toLocaleString("en-IN")}</strong>
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    paymentMethod === "wallet"
+                      ? "border-amber-500 bg-amber-500 text-black"
+                      : "border-gray-300 dark:border-zinc-600"
+                  }`}>
+                    {paymentMethod === "wallet" && <Check className="h-3 w-3 stroke-[3]" />}
+                  </div>
+                </div>
+
+                {/* If Wallet selected and low balance, show helper message */}
+                {paymentMethod === "wallet" && walletBalance < (selectedPlan.price || 0) && (
+                  <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex items-center justify-between gap-2 text-xs">
+                    <span className="text-amber-900 dark:text-amber-300 font-medium">
+                      Need ₹{(selectedPlan.price || 0) - walletBalance} more in wallet.
+                    </span>
+                    <button
                       type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate("/user/wallet")}
-                      className="w-full text-xs font-bold text-primary border-primary/30 hover:bg-primary/5 flex items-center justify-center gap-1.5"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPaymentMethod("online");
+                      }}
+                      className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline whitespace-nowrap cursor-pointer"
                     >
-                      <span>Recharge Wallet</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </Button>
+                      Pay Online Instead →
+                    </button>
                   </div>
                 )}
               </div>
 
-              {/* Action Buttons */}
-              <DialogFooter className="pt-2 flex items-center justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsModalOpen(false)}
-                  className="rounded-xl text-xs font-semibold"
-                >
-                  Cancel
-                </Button>
+              {/* ACTION BUTTONS */}
+              <div className="pt-2 space-y-2">
                 <Button
                   type="button"
                   onClick={handleConfirmSubscribe}
-                  disabled={isSubscribing || walletBalance < (selectedPlan.price || 0)}
-                  className="bg-primary hover:bg-primary/90 text-black rounded-xl text-xs font-extrabold shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+                  disabled={isSubscribing || (paymentMethod === "wallet" && walletBalance < (selectedPlan.price || 0))}
+                  className="w-full h-12 rounded-2xl bg-amber-500 hover:bg-amber-600 text-black font-black text-sm shadow-md transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isSubscribing ? (
                     <>
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin text-black" />
-                      <span>Activating...</span>
+                      <RefreshCw className="h-4 w-4 animate-spin text-black" />
+                      <span>Processing Activation...</span>
+                    </>
+                  ) : paymentMethod === "online" ? (
+                    <>
+                      <Zap className="h-4 w-4 fill-black text-black" />
+                      <span>Pay ₹{selectedPlan.price} via Online &amp; Join VIP</span>
+                    </>
+                  ) : walletBalance >= (selectedPlan.price || 0) ? (
+                    <>
+                      <Zap className="h-4 w-4 fill-black text-black" />
+                      <span>Pay ₹{selectedPlan.price} from Wallet &amp; Join VIP</span>
                     </>
                   ) : (
                     <>
-                      <Zap className="h-3.5 w-3.5 fill-black text-black" />
-                      <span>Pay ₹{selectedPlan.price} &amp; Join VIP</span>
+                      <AlertCircle className="h-4 w-4 text-black" />
+                      <span>Wallet Insufficient - Choose Online</span>
                     </>
                   )}
                 </Button>
-              </DialogFooter>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-full h-10 rounded-xl text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                >
+                  Cancel
+                </Button>
+              </div>
+
+              {/* Security & Guarantee Trust Line */}
+              <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500 font-medium text-center">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                <span>100% Secure • Instant Kitchen Priority Guaranteed</span>
+              </div>
             </div>
           )}
         </DialogContent>

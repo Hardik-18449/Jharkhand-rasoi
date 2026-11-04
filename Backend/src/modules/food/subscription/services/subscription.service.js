@@ -4,6 +4,7 @@ import { UserSubscription } from '../models/userSubscription.model.js';
 import { FoodUser } from '../../../../core/users/user.model.js';
 import { ValidationError, NotFoundError } from '../../../../core/auth/errors.js';
 import { deductWalletBalance, getUserWallet } from '../../user/services/userWallet.service.js';
+import { createRazorpayOrder, getRazorpayKeyId, isRazorpayConfigured, verifyPaymentSignature } from '../../orders/helpers/razorpay.helper.js';
 
 /**
  * =====================================================================
@@ -259,7 +260,62 @@ export async function getUserActiveSubscription(userId) {
     };
 }
 
-export async function subscribeUser(userId, { planId, paymentMethod = 'wallet' }) {
+export async function createSubscriptionRazorpayOrder(userId, { planId }) {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+        throw new ValidationError('Invalid user ID');
+    }
+    if (!planId || !mongoose.Types.ObjectId.isValid(planId)) {
+        throw new ValidationError('Valid Plan ID is required');
+    }
+
+    const plan = await SubscriptionPlan.findById(planId);
+    if (!plan || !plan.isActive) {
+        throw new ValidationError('Selected subscription plan is not available');
+    }
+
+    const price = Number(plan.price) || 0;
+    if (price <= 0) {
+        throw new ValidationError('This plan is free. You can activate it directly.');
+    }
+
+    const amountPaise = Math.round(price * 100);
+
+    if (!isRazorpayConfigured()) {
+        const orderId = `order_sub_dev_${Date.now()}`;
+        return {
+            razorpay: {
+                key: getRazorpayKeyId() || 'rzp_test_dummy',
+                orderId,
+                amount: amountPaise,
+                currency: 'INR'
+            },
+            plan: {
+                id: plan._id,
+                name: plan.name,
+                price: plan.price
+            }
+        };
+    }
+
+    const receipt = `sub_${String(userId).slice(-6)}_${Date.now()}`;
+    const order = await createRazorpayOrder(amountPaise, 'INR', receipt);
+
+    return {
+        razorpay: {
+            key: getRazorpayKeyId(),
+            orderId: String(order.id),
+            amount: Number(order.amount) || amountPaise,
+            currency: order.currency || 'INR'
+        },
+        plan: {
+            id: plan._id,
+            name: plan.name,
+            price: plan.price
+        }
+    };
+}
+
+export async function subscribeUser(userId, { planId, paymentMethod = 'wallet', razorpayPaymentId, razorpayOrderId, razorpaySignature }) {
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
         throw new ValidationError('Invalid user ID');
     }
@@ -295,7 +351,18 @@ export async function subscribeUser(userId, { planId, paymentMethod = 'wallet' }
             );
             paymentTransactionId = `SUB-WLT-${Date.now()}`;
         } else if (paymentMethod === 'razorpay') {
-            paymentTransactionId = `SUB-RZP-${Date.now()}`;
+            if (isRazorpayConfigured()) {
+                if (!razorpayPaymentId || !razorpayOrderId) {
+                    throw new ValidationError('Razorpay payment details are missing');
+                }
+                if (razorpaySignature) {
+                    const isValid = verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
+                    if (!isValid) {
+                        throw new ValidationError('Invalid payment signature from Razorpay');
+                    }
+                }
+            }
+            paymentTransactionId = razorpayPaymentId || `SUB-RZP-${Date.now()}`;
         } else {
             paymentTransactionId = `SUB-${paymentMethod.toUpperCase()}-${Date.now()}`;
         }

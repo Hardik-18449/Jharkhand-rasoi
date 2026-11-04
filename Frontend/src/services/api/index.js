@@ -1809,6 +1809,7 @@ export const userAPI = {
   // Subscriptions
   getPublicSubscriptionPlans: () => userClient.get("/food/subscriptions/plans"),
   getMySubscription: () => userClient.get("/food/subscriptions/my"),
+  createSubscriptionRazorpayOrder: (data) => userClient.post("/food/subscriptions/create-razorpay-order", data),
   subscribePlan: (data) => userClient.post("/food/subscriptions/subscribe", data),
 
   /** Get current user profile (Bearer USER). */
