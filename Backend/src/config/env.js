@@ -47,19 +47,10 @@ export const resolveRazorpayKeys = () => {
     const testKeyId = process.env.RAZORPAY_TEST_KEY_ID || 'rzp_test_SbjooFQK8nvU6V';
     const testKeySecret = process.env.RAZORPAY_TEST_KEY_SECRET || 'Av7Mz5DBxwD5C6sUGw66qAGE';
 
-    // 1. Explicit TEST mode requested (via RAZORPAY_MODE=test or RAZORPAY_TEST_MODE=true)
-    if (razorpayMode === 'test' || testModeFlag === true) {
-        return {
-            keyId: explicitKeyId.startsWith('rzp_test_') ? explicitKeyId : testKeyId,
-            keySecret: (explicitKeyId.startsWith('rzp_test_') && process.env.RAZORPAY_KEY_SECRET)
-                ? process.env.RAZORPAY_KEY_SECRET
-                : testKeySecret,
-            isLive: false,
-        };
-    }
+    // Only switch to LIVE mode if explicitly configured via RAZORPAY_MODE=live
+    const isLive = razorpayMode === 'live' && testModeFlag !== true;
 
-    // 2. Explicit LIVE mode requested (via RAZORPAY_MODE=live or RAZORPAY_TEST_MODE=false)
-    if (razorpayMode === 'live' || testModeFlag === false) {
+    if (isLive) {
         return {
             keyId: explicitKeyId.startsWith('rzp_live_') ? explicitKeyId : liveKeyId,
             keySecret: (explicitKeyId.startsWith('rzp_live_') && process.env.RAZORPAY_KEY_SECRET)
@@ -69,21 +60,13 @@ export const resolveRazorpayKeys = () => {
         };
     }
 
-    // 3. Key ID explicitly provided in environment
-    if (explicitKeyId) {
-        const isLive = explicitKeyId.startsWith('rzp_live_');
-        return {
-            keyId: explicitKeyId,
-            keySecret: process.env.RAZORPAY_KEY_SECRET || (isLive ? liveKeySecret : testKeySecret),
-            isLive,
-        };
-    }
-
-    // 4. Default: Use test keys for safe testing across all environments.
-    // To switch to live mode, set RAZORPAY_MODE=live in .env
+    // Default: Always use TEST mode everywhere across the platform.
+    // Zero real money, safe simulation, no real SMS OTPs sent to phones.
     return {
-        keyId: testKeyId,
-        keySecret: testKeySecret,
+        keyId: explicitKeyId.startsWith('rzp_test_') ? explicitKeyId : testKeyId,
+        keySecret: (explicitKeyId.startsWith('rzp_test_') && process.env.RAZORPAY_KEY_SECRET)
+            ? process.env.RAZORPAY_KEY_SECRET
+            : testKeySecret,
         isLive: false,
     };
 };
