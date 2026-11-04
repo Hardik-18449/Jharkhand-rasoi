@@ -132,30 +132,59 @@ export function PhotoUploadModal({ isOpen, onClose, onUpload }) {
             const face = faces[0];
             let width = 0;
             let height = 0;
+            let centerX = 0;
+            let centerY = 0;
             let prob = 1;
 
             if (face.topLeft && face.bottomRight) {
-              width = Math.abs(face.bottomRight[0] - face.topLeft[0]);
-              height = Math.abs(face.bottomRight[1] - face.topLeft[1]);
+              const x1 = face.topLeft[0];
+              const y1 = face.topLeft[1];
+              const x2 = face.bottomRight[0];
+              const y2 = face.bottomRight[1];
+              width = Math.abs(x2 - x1);
+              height = Math.abs(y2 - y1);
+              centerX = (x1 + x2) / 2;
+              centerY = (y1 + y2) / 2;
               prob = Array.isArray(face.probability) ? face.probability[0] : (face.probability ?? 1);
             } else if (face.boundingBox) {
               width = face.boundingBox.width;
               height = face.boundingBox.height;
+              centerX = face.boundingBox.x + width / 2;
+              centerY = face.boundingBox.y + height / 2;
             }
 
-            // Real Face Validation: confidence must be high, face size must be reasonable (not a speck or tiny reflection)
-            if (prob >= 0.75 && width >= 45 && height >= 45) {
+            const vWidth = videoRef.current.videoWidth || 640;
+            const vHeight = videoRef.current.videoHeight || 640;
+
+            // Strict Human Face Verification:
+            // 1. Face size must be substantial (at least 20% of video width and height) so far-away objects or tiny pictures fail
+            const isFaceCloseEnough = width >= (vWidth * 0.20) && height >= (vHeight * 0.20);
+            // 2. Face must be centered within the central oval guide (within central 70% of video)
+            const isFaceCentered = Math.abs(centerX - vWidth / 2) < (vWidth * 0.35) &&
+                                   Math.abs(centerY - vHeight / 2) < (vHeight * 0.35);
+
+            if (prob >= 0.85 && isFaceCloseEnough && isFaceCentered) {
               consecutiveFaceFrames++;
-              // Require 2 consecutive frames with confirmed face to avoid false flickers
-              if (consecutiveFaceFrames >= 2) {
+              // Require 3 consecutive frames with confirmed face to prevent accidental flashes
+              if (consecutiveFaceFrames >= 3) {
                 setFaceDetected(true);
                 setFaceStatusText('Face Detected & Verified');
                 setDetecting(false);
               }
+            } else if (!isFaceCloseEnough) {
+              consecutiveFaceFrames = 0;
+              setFaceDetected(false);
+              setFaceStatusText('Please bring your face closer');
+              setDetecting(true);
+            } else if (!isFaceCentered) {
+              consecutiveFaceFrames = 0;
+              setFaceDetected(false);
+              setFaceStatusText('Center your face inside the circle');
+              setDetecting(true);
             } else {
               consecutiveFaceFrames = 0;
               setFaceDetected(false);
-              setFaceStatusText('Move closer to the camera');
+              setFaceStatusText('Keep your face steady');
               setDetecting(true);
             }
           } else if (faces && faces.length > 1) {

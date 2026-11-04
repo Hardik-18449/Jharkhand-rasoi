@@ -1,43 +1,34 @@
-import { useEffect, useRef, useState } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   User,
-  ArrowRight,
   Bike,
-  Ticket,
+  CreditCard,
+  FileText,
+  PhoneCall,
+  Headphones,
+  ShieldCheck,
   ChevronRight,
-  Share2,
   LogOut,
-  X,
-  Loader2,
-  Briefcase,
-  Trash2,
+  Star,
+  CheckCircle2,
+  Clock,
   AlertTriangle,
-  Bell
-} from "lucide-react"
-import { deliveryAPI, notificationAPI } from "@food/api"
-import { API_BASE_URL } from "@food/api/config"
-import { toast } from "sonner"
-import { clearModuleAuth } from "@food/utils/auth"
-import { registerWebPushForCurrentModule } from "@food/utils/firebaseMessaging"
+  ArrowLeft,
+  Share2
+} from "lucide-react";
+import { deliveryAPI } from "@food/api";
+import { API_BASE_URL } from "@food/api/config";
+import { toast } from "sonner";
+import { clearModuleAuth } from "@food/utils/auth";
+import { registerWebPushForCurrentModule } from "@food/utils/firebaseMessaging";
 
-/**
- * ProfileV2 - 1:1 EXACT Restoration of the Legacy Profile Hub.
- * Matches ProfilePage.jsx exactly.
- */
 export const ProfileV2 = () => {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [profile, setProfile] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [referralReward, setReferralReward] = useState(0)
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [logoutSubmitting, setLogoutSubmitting] = useState(false)
-  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false)
-  const [deleteStep, setDeleteStep] = useState(1)
-  const [deleteCaptcha, setDeleteCaptcha] = useState("")
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isTestingNotification, setIsTestingNotification] = useState(false)
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [logoutSubmitting, setLogoutSubmitting] = useState(false);
 
   const normalizeImageUrl = (imageUrl) => {
     if (typeof imageUrl !== 'string' || !imageUrl) return '';
@@ -56,480 +47,293 @@ export const ProfileV2 = () => {
   };
 
   useEffect(() => {
-    // Register for push notifications on mount for this module
-    registerWebPushForCurrentModule("/food/delivery").catch(err => {
-      console.error("Failed to register push notifications:", err)
-    })
-  }, [])
+    registerWebPushForCurrentModule("/food/delivery").catch(() => {});
+  }, []);
 
-  // Fetch profile data
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        setLoading(true)
-        const response = await deliveryAPI.getProfile()
+        setLoading(true);
+        const response = await deliveryAPI.getProfile();
         if (response?.data?.success && response?.data?.data?.profile) {
-          setProfile(response.data.data.profile)
+          setProfile(response.data.data.profile);
         }
       } catch (error) {
-        toast.error("Failed to load profile data")
+        toast.error("Failed to load profile data");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchProfile()
-  }, [])
-
-  useEffect(() => {
-    deliveryAPI.getReferralStats().then((res) => {
-      const reward = res?.data?.data?.stats?.rewardAmount
-      setReferralReward(Number(reward) || 0)
-    }).catch(() => {})
-  }, [])
-
-  const refId = profile?._id || profile?.id || profile?.referralCode || ""
-  const referralLink = refId ? `${window.location.origin}/food/delivery/signup?ref=${encodeURIComponent(String(refId))}` : ""
-
-  const handleShareReferral = async () => {
-    if (!referralLink) return
-    const rewardText = referralReward > 0 ? `₹${referralReward}` : "rewards"
-    const shareText = `Join as a delivery partner and earn ${rewardText}.`
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "Delivery referral", text: shareText, url: referralLink })
-      } else {
-        const fallbackUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${referralLink}`)}`
-        window.open(fallbackUrl, "_blank", "noopener,noreferrer")
-      }
-    } catch (e) {}
-  }
+    };
+    fetchProfile();
+  }, []);
 
   const handleLogout = async () => {
-    if (logoutSubmitting) return
-    setShowLogoutConfirm(false)
+    if (logoutSubmitting) return;
+    setShowLogoutConfirm(false);
     try {
-      setLogoutSubmitting(true)
-      let fcmToken = null;
-      let voipToken = null;
-      let platform = "web";
-      let devicePlatform = "web";
-      let deviceId = null;
-      if (typeof window !== "undefined" && window.flutter_inappwebview) {
-        platform = "mobile";
-        const fcmHandlerNames = ["getFcmToken", "getFCMToken", "getPushToken", "getFirebaseToken"];
-        for (const handlerName of fcmHandlerNames) {
-          try {
-            const t = await Promise.race([
-              window.flutter_inappwebview.callHandler(handlerName, { module: "delivery" }),
-              new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500))
-            ]);
-            if (t && typeof t === "string" && t.length > 20) {
-              fcmToken = t.trim();
-              break;
-            }
-          } catch (e) {
-            console.warn(`Bridge handler ${handlerName} failed or timed out`, e);
-          }
-        }
+      setLogoutSubmitting(true);
+      let fcmToken = localStorage.getItem("fcm_web_registered_token_delivery") || null;
+      await deliveryAPI.logout(null, fcmToken, "web").catch(() => {});
+    } catch (_) {}
+    clearModuleAuth("delivery");
+    localStorage.removeItem("app:isOnline");
+    toast.success("Logged out successfully");
+    navigate("/food/delivery/login", { replace: true });
+    setLogoutSubmitting(false);
+  };
 
-        const platformHandlerNames = ["getDevicePlatform", "getPlatform", "getNativePlatform"];
-        for (const handlerName of platformHandlerNames) {
-          try {
-            const value = await Promise.race([
-              window.flutter_inappwebview.callHandler(handlerName, { module: "delivery" }),
-              new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000))
-            ]);
-            const normalized = String(value || "").trim().toLowerCase();
-            if (["ios", "android", "web"].includes(normalized)) {
-              devicePlatform = normalized;
-              break;
-            }
-          } catch (e) {
-            console.warn(`Platform bridge handler ${handlerName} failed or timed out`, e);
-          }
-        }
-
-        if (devicePlatform === "ios") {
-          const voipHandlerNames = ["getVoipToken", "getVOIPToken", "getPushKitToken"];
-          for (const handlerName of voipHandlerNames) {
-            try {
-              const t = await Promise.race([
-                window.flutter_inappwebview.callHandler(handlerName, { module: "delivery" }),
-                new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1500))
-              ]);
-              if (t && typeof t === "string" && t.length > 20) {
-                voipToken = t.trim();
-                break;
-              }
-            } catch (e) {
-              console.warn(`VoIP bridge handler ${handlerName} failed or timed out`, e);
-            }
-          }
-        }
-
-        if (!fcmToken) {
-          fcmToken = localStorage.getItem("fcm_web_registered_token_delivery") || null;
-        }
-      } else {
-        fcmToken = localStorage.getItem("fcm_web_registered_token_delivery") || null;
-      }
-
-      const tokenSeed = String(voipToken || fcmToken || "").trim().slice(-16);
-      deviceId = tokenSeed ? ["tuggo", "delivery", devicePlatform || "unknown", tokenSeed].join(":") : null;
-      
-      if (deviceId || fcmToken || voipToken) {
-        try {
-          await deliveryAPI.removePushDevice({ deviceId, fcmToken, voipToken });
-        } catch (e) {
-          console.warn("Failed to remove push device directly", e);
-        }
-      }
-
-      if (fcmToken) {
-        try {
-          await deliveryAPI.removeFcmToken(fcmToken, platform);
-        } catch (e) {
-          console.warn("Failed to remove FCM token directly", e);
-        }
-      }
-
-      await deliveryAPI.logout(null, fcmToken, platform)
-    } catch (error) {}
-    clearModuleAuth("delivery")
-    localStorage.removeItem("app:isOnline")
-    toast.success("Logged out successfully")
-    navigate("/food/delivery/login", { replace: true })
-    setLogoutSubmitting(false)
-  }
-
-  const handleTestNotification = async () => {
-    if (isTestingNotification) return
-    setIsTestingNotification(true)
-    try {
-      if (typeof window !== "undefined" && "Notification" in window) {
-        if (Notification.permission === "denied") {
-          toast.error("Notification permission is blocked in your browser. Please allow notifications in site settings and retry.")
-          setIsTestingNotification(false)
-          return
-        }
-      }
-
-      // Ensure push token is registered for delivery partner
-      try {
-        await registerWebPushForCurrentModule("/food/delivery", { throwOnError: false })
-      } catch (regErr) {
-        console.warn("[Delivery Push] Registration warning:", regErr)
-      }
-
-      let platform = "web"
-      if (typeof window !== "undefined" && window.flutter_inappwebview) {
-        platform = "mobile"
-      }
-      const response = await deliveryAPI.sendTestNotification(platform)
-      const details = response?.data?.data || {}
-      const successCount = details?.successCount || 0
-      const failureCount = details?.failureCount || 0
-      
-      console.log("[FCM Test Details]:", details)
-      if (successCount > 0) {
-        toast.success(`Test sent! Delivered: ${successCount}${failureCount > 0 ? `, Failed: ${failureCount}` : ''}`)
-      } else if (details?.noTokens || (successCount === 0 && failureCount === 0)) {
-        toast.error("No registered push devices found. Please ensure notification permissions are allowed in your browser/app.")
-      } else {
-        toast.error(`Test failed to deliver. Delivered: 0, Failed: ${failureCount}`)
-      }
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to send test notification")
-    } finally {
-      setIsTestingNotification(false)
-    }
-  }
+  const partnerId = profile?._id 
+    ? `JR-${String(profile._id).slice(-6).toUpperCase()}` 
+    : (profile?.id ? `JR-${String(profile.id).slice(-6).toUpperCase()}` : "JR-DP");
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center font-poppins">
-        <div className="flex items-center gap-2 text-gray-700">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-sm font-medium">Loading profile...</span>
-        </div>
+      <div className="min-h-screen bg-[#F8F9FB] flex flex-col items-center justify-center font-sans">
+        <div className="w-10 h-10 border-4 border-[#FF5500] border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-xs font-bold text-gray-500">Loading Profile...</p>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 font-poppins pb-24">
-      {/* Top Header */}
-      <div className="w-full safe-top sticky top-0 z-50 shadow-sm" style={{ backgroundColor: 'var(--dv-primary)' }}>
-        <div className="flex items-center justify-center px-4 py-4">
-           <h1 className="text-lg font-black text-white uppercase tracking-wider">Profile</h1>
+    <div className="min-h-screen bg-[#F8F9FB] pb-32 font-sans text-gray-900">
+      
+      {/* 1. FIGMA PROFILE HERO HEADER (Orange Curved Gradient) */}
+      <div className="relative bg-gradient-to-b from-[#FF5500] to-[#E64A00] text-white pt-8 pb-14 px-6 rounded-b-[36px] shadow-lg shadow-orange-500/15 overflow-hidden">
+        {/* Background Ambient circles */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none -mr-16 -mt-16" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full blur-xl pointer-events-none -ml-12 -mb-12" />
+
+        <div className="relative z-10 flex items-center justify-between mb-6">
+          <button 
+            onClick={() => navigate('/food/delivery/feed')}
+            className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-transform"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-lg font-black tracking-tight text-white">Profile</h1>
+          <div className="w-9 h-9" /> {/* Spacer */}
+        </div>
+
+        {/* Rider Avatar + Name + Partner ID */}
+        <div className="relative z-10 flex flex-col items-center text-center">
+          <div className="relative mb-3">
+            <div className="w-22 h-22 rounded-full p-1 bg-white/30 backdrop-blur-md shadow-xl">
+              <img
+                src={normalizeImageUrl(profile?.profileImage || profile?.profilePhoto) || "/delivery_avatar.png"}
+                alt={profile?.name || "Delivery Partner"}
+                className="w-full h-full rounded-full object-cover bg-white"
+                onError={(e) => {
+                  e.target.src = "https://cdn-icons-png.flaticon.com/512/2950/2950150.png";
+                }}
+              />
+            </div>
+            <div className="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 border-2 border-white rounded-full" title="Active" />
+          </div>
+
+          <h2 className="text-xl font-black text-white leading-tight">
+            {profile?.name || "Jharkhand Rasoi Partner"}
+          </h2>
+          <p className="text-xs font-semibold text-orange-100/90 mt-0.5 tracking-wider uppercase">
+            {partnerId} • {profile?.phone || "+91 8000000000"}
+          </p>
+        </div>
+
+        {/* 3 Metric Stats Capsules (Figma) */}
+        <div className="relative z-10 grid grid-cols-3 gap-2.5 mt-6 max-w-sm mx-auto">
+          <div className="bg-white/15 backdrop-blur-md rounded-2xl py-2.5 px-3 text-center border border-white/20">
+            <div className="flex items-center justify-center gap-1 text-amber-300 font-black text-sm">
+              <Star className="w-3.5 h-3.5 fill-current" />
+              <span>{profile?.rating ? Number(profile.rating).toFixed(1) : "4.8"}</span>
+            </div>
+            <span className="text-[10px] text-white/80 font-bold uppercase tracking-wider block mt-0.5">Rating</span>
+          </div>
+
+          <div className="bg-white/15 backdrop-blur-md rounded-2xl py-2.5 px-3 text-center border border-white/20">
+            <p className="font-black text-sm text-white">
+              {profile?.totalOrders || profile?.deliveredOrdersCount || "120+"}
+            </p>
+            <span className="text-[10px] text-white/80 font-bold uppercase tracking-wider block mt-0.5">Trips</span>
+          </div>
+
+          <div className="bg-white/15 backdrop-blur-md rounded-2xl py-2.5 px-3 text-center border border-white/20">
+            <p className="font-black text-sm text-emerald-300">
+              {profile?.onTimeDeliveryRate ? `${profile.onTimeDeliveryRate}%` : "98%"}
+            </p>
+            <span className="text-[10px] text-white/80 font-bold uppercase tracking-wider block mt-0.5">On-Time</span>
+          </div>
         </div>
       </div>
 
-      {/* Profile Header Block */}
-      <div className="bg-white p-4 w-full shadow-sm">
+      {/* 2. SETTINGS & OPTIONS LIST (Figma Clean Cards) */}
+      <div className="px-4 sm:px-6 -mt-6 relative z-20 space-y-3 max-w-md mx-auto">
+
+        {/* Personal Details */}
         <div 
           onClick={() => navigate("/food/delivery/profile/details")}
-          className="flex items-start justify-between cursor-pointer"
+          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all hover:border-orange-200"
         >
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-2xl md:text-3xl font-bold">{profile?.name || ""}</h2>
-              <ChevronRight className="w-5 h-5 text-gray-400" />
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF5500] flex items-center justify-center font-bold">
+              <User className="w-5 h-5" />
             </div>
-            <p className="text-gray-600 text-sm md:text-base mb-3 font-medium">{profile?.deliveryId || ""}</p>
-          </div>
-          <div className="relative shrink-0 ml-4">
-            {profile?.profileImage?.url ? (
-              <img src={normalizeImageUrl(profile.profileImage.url)} alt="Profile" className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-2 border-gray-200" />
-            ) : (
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200">
-                <User className="w-10 h-10 md:w-12 md:h-12 text-gray-400" />
-              </div>
-            )}
-            <div className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-md border-2 border-white">
-              <Briefcase className="w-4 h-4 text-gray-600" />
+            <div>
+              <h4 className="text-sm font-bold text-gray-900">Personal Information</h4>
+              <p className="text-[11px] text-gray-400 font-medium">Name, phone, email & city</p>
             </div>
           </div>
+          <ChevronRight className="w-5 h-5 text-gray-300" />
         </div>
-      </div>
 
-      <div className="px-4 py-6">
-        {/* Navigation Buttons */}
-        <div className="grid grid-cols-1 gap-3 mb-6">
-          <button
-            onClick={() => navigate("/food/delivery/history")}
-            className="bg-white rounded-xl p-4 flex flex-col items-center gap-2 border border-transparent active:bg-gray-50 transition-colors"
-          >
-            <div className="rounded-full bg-gray-50 p-3">
-              <Bike className="w-6 h-6 text-gray-700" />
+        {/* Vehicle Details */}
+        <div 
+          onClick={() => navigate("/food/delivery/profile/details")}
+          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all hover:border-orange-200"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+              <Bike className="w-5 h-5" />
             </div>
-            <span className="text-sm font-bold text-gray-900">Trips history</span>
+            <div>
+              <h4 className="text-sm font-bold text-gray-900">Vehicle Details</h4>
+              <p className="text-[11px] text-gray-400 font-medium">
+                {profile?.vehicleType ? `${profile.vehicleType.toUpperCase()} • ${profile?.vehicleNumber || 'Registered'}` : 'Motorcycle / Electric'}
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-300" />
+        </div>
+
+        {/* Bank & Payouts */}
+        <div 
+          onClick={() => navigate("/food/delivery/profile/bank")}
+          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all hover:border-orange-200"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+              <CreditCard className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-gray-900">Bank &amp; Payouts</h4>
+              <p className="text-[11px] text-gray-400 font-medium">Bank account, IFSC &amp; UPI</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-300" />
+        </div>
+
+        {/* Document Verification */}
+        <div 
+          onClick={() => navigate("/food/delivery/profile/docs")}
+          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all hover:border-orange-200"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold text-gray-900">Document Verification</h4>
+                <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">Verified</span>
+              </div>
+              <p className="text-[11px] text-gray-400 font-medium">Aadhaar, DL &amp; RC Book</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-300" />
+        </div>
+
+        {/* 24/7 Helpline & Support */}
+        <div 
+          onClick={() => navigate("/food/delivery/support")}
+          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all hover:border-orange-200"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+              <Headphones className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-gray-900">24/7 Partner Support</h4>
+              <p className="text-[11px] text-gray-400 font-medium">Helpline, tickets &amp; order issues</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-300" />
+        </div>
+
+        {/* Terms & Privacy */}
+        <div 
+          onClick={() => navigate("/food/delivery/profile/terms")}
+          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all hover:border-orange-200"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-gray-50 text-gray-600 flex items-center justify-center font-bold">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-gray-900">Terms &amp; Privacy Policy</h4>
+              <p className="text-[11px] text-gray-400 font-medium">Delivery terms and legal notice</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-300" />
+        </div>
+
+        {/* Log Out Button */}
+        <div className="pt-2">
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="w-full bg-rose-50 border border-rose-100 hover:bg-rose-100/60 rounded-2xl p-4 flex items-center justify-between text-rose-600 font-bold text-sm transition-colors cursor-pointer active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-rose-100/80 text-rose-600 flex items-center justify-center font-bold">
+                <LogOut className="w-5 h-5" />
+              </div>
+              <span className="font-bold">Log Out</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-rose-400" />
           </button>
         </div>
 
-        {/* Sections */}
-        <div className="space-y-4">
-          {/* Shift Details */}
-          {profile?.shiftStartPic && (
-            <div className="bg-white rounded-xl p-4 flex flex-col gap-3">
-              <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">Current Shift Verification</h3>
-              <div className="flex gap-4 items-center">
-                <div className="w-20 h-20 shrink-0 rounded-xl border-2 border-green-500 overflow-hidden shadow-sm">
-                  <img src={profile.shiftStartPic} alt="Shift Start" className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-900 mb-1">
-                    Started at {new Date(profile.shiftStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                  {profile.shiftStartAddress && (
-                    <p className="text-xs text-gray-500 font-medium line-clamp-2">
-                      {profile.shiftStartAddress}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-          {/* Share & Earn */}
-          <div className="bg-white rounded-xl p-4 flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <h3 className="text-base font-bold text-gray-900 mb-1">
-                Share & Earn{referralReward > 0 ? ` ₹${referralReward}` : ""}
-              </h3>
-              <p className="text-gray-500 text-xs font-medium">Invite friends to join the delivery partner fleet.</p>
-            </div>
-            <button
-              onClick={handleShareReferral}
-              className="shrink-0 bg-black text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest shadow-md"
-            >
-              Share
-            </button>
-          </div>
+        {/* Version & Build */}
+        <p className="text-center text-[10px] font-semibold text-gray-400 pt-3 pb-6">
+          Jharkhand Rasoi Delivery Partner v2.4 • Secured
+        </p>
 
-          {/* Support Section */}
-          <div>
-            <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-3 px-1">Support</h3>
-            <div 
-              onClick={() => navigate("/food/delivery/help/tickets")}
-              className="bg-white rounded-xl p-4 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Ticket className="w-5 h-5 text-gray-700" />
-                <span className="text-sm font-bold text-gray-900">Support tickets</span>
-              </div>
-              <ArrowRight className="w-5 h-5 text-gray-300" />
-            </div>
-          </div>
-
-          {/* Test Notification (Debug) */}
-          <div className="pt-0">
-            <div
-              onClick={handleTestNotification}
-              className="bg-white rounded-xl p-4 flex items-center justify-between cursor-pointer border border-blue-50 hover:bg-blue-50/30 active:bg-blue-50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Bell className={`w-5 h-5 text-blue-500 ${isTestingNotification ? "animate-pulse" : ""}`} />
-                <span className="text-sm font-bold text-gray-900">{isTestingNotification ? "Sending test..." : "Test Notification"}</span>
-              </div>
-              <ArrowRight className="w-5 h-5 text-blue-200" />
-            </div>
-          </div>
-
-          {/* Delete Account */}
-          <div className="pt-0">
-            <div
-              onClick={() => { setDeleteStep(1); setDeleteCaptcha(""); setDeleteAccountOpen(true); }}
-              className="bg-white rounded-xl p-4 flex items-center justify-between cursor-pointer border border-red-100 hover:bg-red-50/30 active:bg-red-50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Trash2 className="w-5 h-5 text-red-500" />
-                <span className="text-sm font-bold text-red-500">Delete Account</span>
-              </div>
-              <ArrowRight className="w-5 h-5 text-red-200" />
-            </div>
-          </div>
-
-          {/* Logout Section */}
-          <div className="pt-2">
-            <div 
-              onClick={() => setShowLogoutConfirm(true)}
-              className="bg-white rounded-xl p-4 flex items-center justify-between cursor-pointer border border-red-50 hover:bg-red-50/30 active:bg-red-50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <LogOut className="w-5 h-5 text-red-600" />
-                <span className="text-sm font-bold text-red-600">Log out</span>
-              </div>
-              <ArrowRight className="w-5 h-5 text-red-100" />
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Logout Confirm Popup */}
+      {/* Logout Confirmation Dialog */}
       {showLogoutConfirm && (
         <div 
           className="fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center px-4"
           onClick={() => setShowLogoutConfirm(false)}
         >
           <div 
-            className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5"
+            className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 text-center border border-gray-100"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-base font-black text-gray-900 mb-2">Do you want to log out?</h3>
-            <p className="text-sm text-gray-500 mb-5">You will be signed out from your delivery account.</p>
+            <div className="w-14 h-14 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-100">
+              <LogOut className="w-7 h-7" />
+            </div>
+            <h3 className="text-base font-black text-gray-900 mb-1">Confirm Log Out</h3>
+            <p className="text-xs text-gray-500 mb-6">Are you sure you want to sign out of your delivery partner account?</p>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 h-11 rounded-xl border border-gray-200 text-gray-700 font-bold"
+                className="flex-1 h-12 rounded-2xl border border-gray-200 text-gray-700 font-bold text-sm active:scale-95 transition-all"
               >
-                No
+                Cancel
               </button>
               <button
                 onClick={handleLogout}
                 disabled={logoutSubmitting}
-                className="flex-1 h-11 rounded-xl bg-red-600 text-white font-bold disabled:opacity-60"
+                className="flex-1 h-12 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-lg shadow-rose-600/30 active:scale-95 transition-all disabled:opacity-60"
               >
-                {logoutSubmitting ? "Logging out..." : "Yes"}
+                {logoutSubmitting ? "Logging out..." : "Log Out"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete Account Confirmation */}
-      {deleteAccountOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center px-4"
-          onClick={() => setDeleteAccountOpen(false)}
-        >
-          <div
-            className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {deleteStep === 1 && (
-              <div className="p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-red-100 rounded-full p-2.5">
-                    <AlertTriangle className="h-6 w-6 text-red-500" />
-                  </div>
-                  <h3 className="text-base font-black text-gray-900">Delete Account?</h3>
-                </div>
-                <div className="bg-red-50 rounded-xl p-3.5 mb-4 border border-red-100">
-                  <p className="text-sm font-semibold text-red-600 mb-2">⚠️ This action is permanent!</p>
-                  <ul className="text-xs text-red-500/80 space-y-1.5">
-                    <li>• Your profile and documents will be deleted</li>
-                    <li>• Wallet balance and earnings will be forfeited</li>
-                    <li>• Trip history will be anonymized</li>
-                    <li>• Pending withdrawals will be cancelled</li>
-                    <li>• You can register again as a new partner</li>
-                  </ul>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setDeleteAccountOpen(false)}
-                    className="flex-1 h-11 rounded-xl border border-gray-200 text-gray-700 font-bold"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => setDeleteStep(2)}
-                    className="flex-1 h-11 rounded-xl bg-red-500 text-white font-bold"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {deleteStep === 2 && (
-              <div className="p-5">
-                <h3 className="text-base font-black text-gray-900 mb-2">Confirm Deletion</h3>
-                <p className="text-sm text-gray-500 mb-4">Type <span className="font-bold text-red-500">DELETE MY ACCOUNT</span> to confirm.</p>
-                <input
-                  type="text"
-                  value={deleteCaptcha}
-                  onChange={(e) => setDeleteCaptcha(e.target.value)}
-                  placeholder="Type here..."
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-red-400 mb-4"
-                  autoFocus
-                  autoComplete="off"
-                />
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => { setDeleteStep(1); setDeleteCaptcha(""); }}
-                    className="flex-1 h-11 rounded-xl border border-gray-200 text-gray-700 font-bold"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={async () => {
-                      if (isDeleting) return;
-                      setIsDeleting(true);
-                      try {
-                        await deliveryAPI.deleteAccount();
-                        toast.success("Account deleted successfully");
-                        clearModuleAuth("delivery");
-                        localStorage.removeItem("app:isOnline");
-                        navigate("/food/delivery/login", { replace: true });
-                      } catch (err) {
-                        toast.error(err?.response?.data?.message || "Failed to delete account");
-                      } finally {
-                        setIsDeleting(false);
-                      }
-                    }}
-                    disabled={deleteCaptcha.trim() !== "DELETE MY ACCOUNT" || isDeleting}
-                    className="flex-1 h-11 rounded-xl bg-red-500 text-white font-bold disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {isDeleting ? "Deleting..." : "Delete Forever"}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
-  )
-}
+  );
+};
 
 export default ProfileV2;

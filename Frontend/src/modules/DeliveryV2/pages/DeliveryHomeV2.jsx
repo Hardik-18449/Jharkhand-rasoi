@@ -36,7 +36,7 @@ import OrdersV2 from '@/modules/DeliveryV2/pages/OrdersV2';
 // Icons
 import { 
   Bell, HelpCircle, AlertTriangle, 
-  Wallet, User as UserIcon, LayoutGrid,
+  Wallet, User as UserIcon, LayoutGrid, Home, TrendingUp,
   Plus, Minus, Navigation2, Navigation, Target, Play, CheckCircle2, Clock, ChevronDown,
   Contact, Package, Phone, MapPin
 } from 'lucide-react';
@@ -2162,19 +2162,71 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       )}
 
       {/* â”€â”€â”€ 3. BOTTOM NAV (Fixed - Compact Pro) â”€â”€â”€ */}
-      <div className="bg-white border-t border-gray-100 px-6 sm:px-8 py-3 pb-6 z-[200] shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-         <div className="max-w-lg mx-auto w-full flex justify-between items-center">
-           <button onClick={() => navigate('/food/delivery/feed')} className={`flex flex-col items-center gap-1 transition-all touch-manipulation active:scale-95 ${currentTab === 'feed' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-              <LayoutGrid className="w-5 h-5 sm:w-6 sm:h-6" /><span className="text-[10px] sm:text-[11px] font-medium font-sans">Feed</span>
+      <div className="bg-white border-t border-gray-100/80 px-4 sm:px-8 py-2.5 pb-6 z-[200] shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
+         <div className="max-w-md mx-auto w-full grid grid-cols-4 items-center">
+           <button 
+             onClick={() => navigate('/food/delivery/feed')} 
+             className={`flex flex-col items-center gap-1 py-1 transition-all touch-manipulation active:scale-95 ${
+               currentTab === 'feed' ? 'text-[#FF5500]' : 'text-gray-400 hover:text-gray-600'
+             }`}
+           >
+              <div className="relative">
+                <Home className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
+                {currentTab === 'feed' && (
+                  <motion.div layoutId="navDot" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#FF5500]" />
+                )}
+              </div>
+              <span className={`text-[10px] sm:text-[11px] font-sans ${currentTab === 'feed' ? 'font-black' : 'font-semibold'}`}>Home</span>
            </button>
-           <button onClick={() => navigate('/food/delivery/pocket')} className={`flex flex-col items-center gap-1 transition-all touch-manipulation active:scale-95 ${currentTab === 'pocket' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-              <Wallet className="w-5 h-5 sm:w-6 sm:h-6" /><span className="text-[10px] sm:text-[11px] font-medium font-sans">Pocket</span>
+
+           <button 
+             onClick={() => navigate('/food/delivery/pocket')} 
+             className={`flex flex-col items-center gap-1 py-1 transition-all touch-manipulation active:scale-95 ${
+               currentTab === 'pocket' ? 'text-[#FF5500]' : 'text-gray-400 hover:text-gray-600'
+             }`}
+           >
+              <div className="relative">
+                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
+                {currentTab === 'pocket' && (
+                  <motion.div layoutId="navDot" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#FF5500]" />
+                )}
+              </div>
+              <span className={`text-[10px] sm:text-[11px] font-sans ${currentTab === 'pocket' ? 'font-black' : 'font-semibold'}`}>Earnings</span>
            </button>
-           <button onClick={() => navigate('/food/delivery/orders')} className={`flex flex-col items-center gap-1 transition-all touch-manipulation active:scale-95 ${currentTab === 'orders' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-              <Package className="w-5 h-5 sm:w-6 sm:h-6" /><span className="text-[10px] sm:text-[11px] font-medium font-sans">Orders</span>
+
+           <button 
+             onClick={() => navigate('/food/delivery/orders')} 
+             className={`flex flex-col items-center gap-1 py-1 transition-all touch-manipulation active:scale-95 ${
+               currentTab === 'orders' ? 'text-[#FF5500]' : 'text-gray-400 hover:text-gray-600'
+             }`}
+           >
+              <div className="relative">
+                <Package className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
+                {(acceptedOrders?.length > 0 || incomingOrders?.length > 0) && (
+                  <span className="absolute -top-1 -right-2 px-1 min-w-[16px] h-4 rounded-full bg-[#FF5500] text-white text-[9px] font-black flex items-center justify-center">
+                    {acceptedOrders?.length || incomingOrders?.length}
+                  </span>
+                )}
+                {currentTab === 'orders' && (
+                  <motion.div layoutId="navDot" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#FF5500]" />
+                )}
+              </div>
+              <span className={`text-[10px] sm:text-[11px] font-sans ${currentTab === 'orders' ? 'font-black' : 'font-semibold'}`}>Orders</span>
            </button>
-           <button onClick={() => navigate('/food/delivery/profile')} className={`flex flex-col items-center gap-1 transition-all touch-manipulation active:scale-95 ${currentTab === 'profile' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-              <UserIcon className="w-5 h-5 sm:w-6 sm:h-6" /><span className="text-[10px] sm:text-[11px] font-medium font-sans">Profile</span>
+
+           <button 
+             onClick={() => navigate('/food/delivery/profile')} 
+             className={`flex flex-col items-center gap-1 py-1 transition-all touch-manipulation active:scale-95 ${
+               currentTab === 'profile' ? 'text-[#FF5500]' : 'text-gray-400 hover:text-gray-600'
+             }`}
+           >
+              <div className="relative">
+                <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
+                {currentTab === 'profile' && (
+                  <motion.div layoutId="navDot" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#FF5500]" />
+                )}
+              </div>
+              <span className={`text-[10px] sm:text-[11px] font-sans ${currentTab === 'profile' ? 'font-black' : 'font-semibold'}`}>Profile</span>
            </button>
          </div>
       </div>
