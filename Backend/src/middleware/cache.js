@@ -13,6 +13,11 @@ export const cacheResponse = (ttlInSeconds = 300, prefix = 'api_cache') => {
         // Skip caching if Redis is disabled or not a GET request
         if (!config.redisEnabled || req.method !== 'GET') return next();
 
+        // Respect client cache-bypass requests
+        if (req.headers['cache-control']?.includes('no-cache') || req.headers['pragma']?.includes('no-cache') || req.query?._ts) {
+            return next();
+        }
+
         const redis = getRedisClient();
         if (!redis || !redis.isReady) return next();
 

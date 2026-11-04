@@ -1321,7 +1321,12 @@ const getPublicRestaurantsOnce = (params = {}, config = {}) => {
   const { noCache, ...axiosConfig } = config || {};
   if (noCache) {
     return userClient.get("/food/restaurant/restaurants", {
-      params: { limit: 1000, ...params },
+      params: { limit: 1000, ...params, _ts: Date.now() },
+      headers: {
+        ...(axiosConfig.headers || {}),
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+      },
       ...axiosConfig,
     });
   }
