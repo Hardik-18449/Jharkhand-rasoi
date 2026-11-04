@@ -123,10 +123,7 @@ export default function DeliveryOTP() {
       inputRefs.current[index + 1]?.focus()
     }
 
-    // Auto-submit when all 6 digits are entered and we are in OTP step
-    if (!showNameInput && newOtp.every((digit) => digit !== "") && newOtp.length === 6) {
-      handleVerify(newOtp.join(""))
-    }
+// Auto-submit removed - manual submission via Verify button or Enter key
   }
 
   const handleKeyDown = (index, e) => {
@@ -145,6 +142,13 @@ export default function DeliveryOTP() {
         setOtp(newOtp)
       }
     }
+    // Handle Enter key for manual submit
+    if (e.key === "Enter" && !showNameInput && otp.join("").length === 6) {
+      e.preventDefault()
+      handleVerify(otp.join(""))
+      return
+    }
+
     // Handle paste
     if (e.key === "v" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault()
@@ -157,11 +161,7 @@ export default function DeliveryOTP() {
           }
         })
         setOtp(newOtp)
-        if (digits.length === 6) {
-          handleVerify(newOtp.join(""))
-        } else {
-          inputRefs.current[digits.length]?.focus()
-        }
+        inputRefs.current[Math.min(digits.length, 5)]?.focus()
       })
     }
   }
@@ -177,11 +177,7 @@ export default function DeliveryOTP() {
       }
     })
     setOtp(newOtp)
-    if (!showNameInput && digits.length === 6) {
-      handleVerify(newOtp.join(""))
-      return
-    }
-    inputRefs.current[digits.length]?.focus()
+    inputRefs.current[Math.min(digits.length, 5)]?.focus()
   }
 
   const handleVerify = async (otpValue = null) => {
@@ -632,6 +628,20 @@ export default function DeliveryOTP() {
                   />
                 ))}
               </div>
+
+              {/* Verify & Login Button */}
+              <button
+                type="button"
+                onClick={() => handleVerify(otp.join(""))}
+                disabled={isLoading || otp.join("").length < 6}
+                className="w-full py-4.5 bg-gradient-to-r from-[#4CB8C4] to-[#3CD3AD] hover:from-[#3BA0AB] hover:to-[#2BB896] disabled:from-gray-300 disabled:to-gray-300 dark:disabled:from-gray-800 dark:disabled:to-gray-800 disabled:text-gray-500 text-white rounded-[2rem] font-bold text-[17px] shadow-[0_15px_30px_-10px_rgba(76,184,196,0.5)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  "Verify & Login"
+                )}
+              </button>
 
               {/* Resend Section */}
               <div className="text-center space-y-2">
