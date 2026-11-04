@@ -220,7 +220,7 @@ export default function AddressSelectorPage() {
           zoom: 16,
           disableDefaultUI: true,
           zoomControl: true,
-          gestureHandling: "greedy",
+          gestureHandling: "cooperative",
           styles: [
             { featureType: "poi", stylers: [{ visibility: "off" }] },
             { featureType: "transit", stylers: [{ visibility: "off" }] }
@@ -730,10 +730,10 @@ export default function AddressSelectorPage() {
   if (showAddressForm) {
     const mapHeight = baseMapHeight
     return (
-      <AnimatedPage
-        className="fixed inset-0 z-50 bg-white dark:bg-[#0a0a0a] flex flex-col h-screen overflow-hidden"
+      <div
+        className="fixed inset-0 z-50 bg-white dark:bg-[#0a0a0a] flex flex-col h-full h-[100dvh] max-h-[100dvh] overflow-hidden scrollbar-hide"
       >
-        <div className="flex-shrink-0 bg-white dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center gap-4">
+        <div className="flex-shrink-0 bg-white dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center gap-4 z-20">
           <Button variant="ghost" size="icon" onClick={handleCancelAddressForm} className="rounded-full">
             <ChevronLeft className="h-6 w-6" />
           </Button>
@@ -742,19 +742,17 @@ export default function AddressSelectorPage() {
 
         <div
           ref={formBodyRef}
-          onScroll={(e) => {
-            setFormScrollTop(e.currentTarget.scrollTop)
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide touch-pan-y"
+          style={{
+            paddingBottom: `${120 + keyboardInset}px`,
+            WebkitOverflowScrolling: "touch",
           }}
-          className="flex-1 overflow-y-auto"
-          style={{ paddingBottom: `${96 + keyboardInset}px` }}
         >
-          {/* Map Section - Parallax enabled */}
+          {/* Map Section */}
           <div
-            className="flex-shrink-0 relative z-0"
+            className="flex-shrink-0 relative z-0 w-full"
             style={{
               height: `${mapHeight}px`,
-              transform: `translateY(${formScrollTop * 0.4}px)`,
-              opacity: clamp(1 - (formScrollTop / 500), 0.4, 1)
             }}
           >
             <div className="absolute top-4 left-4 right-4 z-20">
@@ -937,32 +935,32 @@ export default function AddressSelectorPage() {
         </div>
 
         <div
-          className="fixed left-0 right-0 p-4 bg-white dark:bg-[#1a1a1a] border-t dark:border-gray-800 transition-[bottom] duration-150"
+          className="fixed left-0 right-0 p-4 bg-white dark:bg-[#1a1a1a] border-t dark:border-gray-800 transition-[bottom] duration-150 z-30 shadow-lg"
           style={{ bottom: `${keyboardInset}px` }}
         >
           <Button
-            className="w-full h-12 font-black text-lg text-black hover:bg-yellow-400 border-none"
+            className="w-full h-12 font-black text-lg text-black hover:bg-yellow-400 border-none shadow-md"
             style={{ backgroundColor: '#FEC600', color: '#000000' }}
             onClick={handleAddressFormSubmit}
             disabled={loadingAddress}
           >
-            {loadingAddress ? "Saving..." : "Save Address \u0026 Proceed"}
+            {loadingAddress ? "Saving..." : "Save Address & Proceed"}
           </Button>
         </div>
-      </AnimatedPage>
+      </div>
     )
   }
 
   return (
-    <AnimatedPage className="min-h-screen bg-white dark:bg-[#0a0a0a] flex flex-col">
-      <div className="flex-shrink-0 bg-white dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center gap-4">
+    <div className="min-h-screen min-h-[100dvh] bg-white dark:bg-[#0a0a0a] flex flex-col scrollbar-hide">
+      <div className="sticky top-0 z-30 flex-shrink-0 bg-white dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center gap-4 shadow-xs">
         <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full">
           <ChevronLeft className="h-6 w-6" />
         </Button>
         <h1 className="text-xl font-bold">Select Location</h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-10">
+      <div className="flex-1 pb-16 scrollbar-hide">
         <div className="p-4 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-800">
           <button
             onClick={handleUseCurrentLocation}
@@ -1035,7 +1033,7 @@ export default function AddressSelectorPage() {
           animation: bounce-short 1s infinite ease-in-out;
         }
       `}</style>
-    </AnimatedPage>
+    </div>
   )
 }
 
