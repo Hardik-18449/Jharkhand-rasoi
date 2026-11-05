@@ -90,9 +90,18 @@ export async function applyPaymentModePrices(items, { restaurantId, paymentMetho
         if (!food) return applyClientHints(item, isCod);
 
         const { base, prepaid, cod } = modePricesFor(pickCatalogEntry(food, item));
+        // The cart may send the base, prepaid or COD price (checkout sends the price of the
+        // selected mode). Measure any item discount against the closest catalog price, and
+        // never let the client raise a price above the catalog.
         const clientPrice = Number(item?.price);
-        // Difference the cart applied on top of the catalog price (item discount, usually <= 0).
-        const adjustment = Number.isFinite(clientPrice) ? clientPrice - base : 0;
+        let adjustment = 0;
+        if (Number.isFinite(clientPrice) && clientPrice >= 0) {
+            const reference = [base, prepaid, cod].reduce(
+                (best, p) => (Math.abs(clientPrice - p) < Math.abs(clientPrice - best) ? p : best),
+                base
+            );
+            adjustment = Math.min(0, clientPrice - reference);
+        }
         const prepaidUnit = round2(Math.max(0, prepaid + adjustment));
         const codUnit = round2(Math.max(0, cod + adjustment));
 
