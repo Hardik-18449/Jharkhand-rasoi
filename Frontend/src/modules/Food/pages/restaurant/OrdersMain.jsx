@@ -2875,7 +2875,7 @@ export default function OrdersMain() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}>
               <motion.div
-                className="restaurant-modal-panel max-w-md max-h-[85vh] bg-white rounded-[2rem] shadow-2xl overflow-hidden p-1 flex flex-col"
+                className="restaurant-modal-panel max-w-md max-h-[calc(100dvh-142px)] bg-white rounded-[2rem] shadow-2xl overflow-hidden p-1 !flex flex-col"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -2909,7 +2909,7 @@ export default function OrdersMain() {
                 </div>
 
                 {/* Content */}
-                <div className="px-4 pt-3 pb-3 flex-1 overflow-y-auto min-h-0">
+                <div className="px-4 pt-3 pb-3 flex-1 overflow-y-auto min-h-0 overscroll-contain [-webkit-overflow-scrolling:touch]">
                   {/* Scheduled Indicator */}
                   {(popupOrder || newOrder)?.scheduledAt && (
                     <div className="mb-3 bg-green-50 border border-green-200 rounded-lg p-2.5 flex items-center gap-3">
@@ -3255,7 +3255,7 @@ export default function OrdersMain() {
               exit={{ opacity: 0 }}
               onClick={handleRejectCancel}>
               <motion.div
-                className="restaurant-modal-panel max-w-md max-h-[85vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                className="restaurant-modal-panel max-w-md max-h-[calc(100dvh-142px)] bg-white rounded-2xl shadow-2xl overflow-hidden !flex flex-col"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -3272,7 +3272,7 @@ export default function OrdersMain() {
                 </div>
 
                 {/* Content */}
-                <div className="px-4 py-4 flex-1 overflow-y-auto min-h-0">
+                <div className="px-4 py-4 flex-1 overflow-y-auto min-h-0 overscroll-contain [-webkit-overflow-scrolling:touch]">
                   <div className="space-y-2">
                     {rejectReasons.map((reason) => (
                       <button
@@ -3346,7 +3346,7 @@ export default function OrdersMain() {
               exit={{ opacity: 0 }}
               onClick={handleCancelPopupClose}>
               <motion.div
-                className="restaurant-modal-panel max-w-md max-h-[85vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                className="restaurant-modal-panel max-w-md max-h-[calc(100dvh-142px)] bg-white rounded-2xl shadow-2xl overflow-hidden !flex flex-col"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -3363,7 +3363,7 @@ export default function OrdersMain() {
                 </div>
 
                 {/* Content */}
-                <div className="px-4 py-4 flex-1 overflow-y-auto min-h-0">
+                <div className="px-4 py-4 flex-1 overflow-y-auto min-h-0 overscroll-contain [-webkit-overflow-scrolling:touch]">
                   <div className="space-y-3">
                     {rejectReasons.map((reason) => (
                       <button
