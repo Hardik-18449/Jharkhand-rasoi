@@ -1091,7 +1091,7 @@ export default function Cart() {
 
   const cashlessSavings = useMemo(() => {
     if (pricing && Number.isFinite(Number(pricing.codSubtotal)) && Number.isFinite(Number(pricing.prepaidSubtotal))) {
-      return Math.max(0, Number(pricing.codSubtotal) - Number(pricing.prepaidSubtotal));
+      return Math.max(0, Math.round((Number(pricing.codSubtotal) - Number(pricing.prepaidSubtotal)) * 100) / 100);
     }
     return cart.reduce((sum, item) => {
       const codP = (item.codPrice != null && Number(item.codPrice) > 0) ? Number(item.codPrice) : null;
@@ -3139,7 +3139,7 @@ export default function Cart() {
 
                     {cashlessSavings > 0 && isCodSelected && (
                       <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between">
-                        <span>💡 Save {RUPEE_SYMBOL}{cashlessSavings.toFixed(0)} with Cashless Payment</span>
+                        <span>💡 Save {RUPEE_SYMBOL}{Number.isInteger(cashlessSavings) ? cashlessSavings : cashlessSavings.toFixed(2)} with Cashless Payment</span>
                         <button
                           type="button"
                           onClick={() => setSelectedPaymentMethod("razorpay")}

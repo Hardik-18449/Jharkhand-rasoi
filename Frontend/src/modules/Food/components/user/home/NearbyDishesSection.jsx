@@ -91,6 +91,9 @@ export default function NearbyDishesSection({
             const price = Number(dish.prepaidPrice || dish.price) || 0;
             const codPrice = Number(dish.codPrice) || 0;
             const hasCashlessDiscount = codPrice > price;
+            // Round away floating-point noise (70 - 50.18 = 19.819999...).
+            const onlineSaving = Math.round((codPrice - price) * 100) / 100;
+            const onlineSavingLabel = Number.isInteger(onlineSaving) ? String(onlineSaving) : onlineSaving.toFixed(2);
 
             const isRestaurantOpen = dish.restaurant
               ? getRestaurantAvailabilityStatus(dish.restaurant).isOpen
@@ -159,7 +162,7 @@ export default function NearbyDishesSection({
                     ) : (
                       hasCashlessDiscount && (
                         <span className="absolute bottom-2 left-2 rounded-md bg-emerald-600/90 text-white text-[10px] font-bold px-1.5 py-0.5 shadow-sm">
-                          Save ₹{codPrice - price} online
+                          Save ₹{onlineSavingLabel} online
                         </span>
                       )
                     )}

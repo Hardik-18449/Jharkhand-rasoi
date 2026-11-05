@@ -1006,7 +1006,8 @@ export default function FoodsList() {
                   <input
                     type="number"
                     min="0"
-                    step="0.01"
+                    step="any"
+                    onWheel={(e) => e.currentTarget.blur()}
                     value={foodForm.price}
                     onChange={(e) => setFoodForm((prev) => ({ ...prev, price: e.target.value }))}
                     disabled={(foodForm.variants || []).length > 0}
@@ -1019,7 +1020,8 @@ export default function FoodsList() {
                   <input
                     type="number"
                     min="0"
-                    step="0.01"
+                    step="any"
+                    onWheel={(e) => e.currentTarget.blur()}
                     value={foodForm.codPrice || ""}
                     onChange={(e) => setFoodForm((prev) => ({ ...prev, codPrice: e.target.value }))}
                     disabled={(foodForm.variants || []).length > 0}
@@ -1150,7 +1152,8 @@ export default function FoodsList() {
                           <input
                             type="number"
                             min="0"
-                            step="0.01"
+                            step="any"
+                            onWheel={(e) => e.currentTarget.blur()}
                             value={variant.price}
                             onChange={(e) => handleVariantChange(variant.id, "price", e.target.value)}
                             className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
@@ -1209,7 +1212,8 @@ export default function FoodsList() {
                           <input
                             type="number"
                             min="0"
-                            step="0.01"
+                            step="any"
+                            onWheel={(e) => e.currentTarget.blur()}
                             value={addon.price}
                             onChange={(e) => handleAddonChange(addon.id, "price", e.target.value)}
                             placeholder="30"
