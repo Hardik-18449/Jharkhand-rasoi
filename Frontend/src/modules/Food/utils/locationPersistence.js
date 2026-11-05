@@ -63,7 +63,20 @@ const migrateLegacyLocationState = () => {
 migrateLegacyLocationState()
 
 export function readStoredUserLocation() {
-  return readScopedCachedValue(LOCATION_SCOPE, 'current', { fallback: null })
+  const loc = readScopedCachedValue(LOCATION_SCOPE, 'current', { fallback: null });
+  if (loc) {
+    const isBarlong =
+      (loc.city && /barlong|ramgarh|chitarpur/i.test(loc.city)) ||
+      (loc.area && /barlong|ramgarh|chitarpur|hmf3/i.test(loc.area)) ||
+      (loc.address && /barlong|ramgarh|chitarpur|hmf3/i.test(loc.address)) ||
+      (loc.formattedAddress && /barlong|ramgarh|chitarpur|hmf3/i.test(loc.formattedAddress));
+    if (isBarlong) {
+      clearStoredUserLocation();
+      clearStoredZoneContext();
+      return null;
+    }
+  }
+  return loc;
 }
 
 export function persistUserLocation(location, { mode } = {}) {
@@ -125,6 +138,20 @@ export function readStoredZoneContext() {
   const location = readStoredUserLocation()
   const latitude = location?.latitude ?? null
   const longitude = location?.longitude ?? null
+
+  // If user location is in Indore area (lat ~22.7, lng ~75.8) but cached zone is Ramgarh/Chitarpur, purge stale zone
+  const isJharkhandZone = zoneId === '6ae4b7c55a61b5a44a0e0cb0' || zoneId === '6ae5906eb29ee7eff14b807c';
+  const isIndoreLocation = latitude && longitude && Math.abs(latitude - 22.7) < 1 && Math.abs(longitude - 75.8) < 1;
+  if (isJharkhandZone && isIndoreLocation) {
+    clearStoredZoneContext();
+    return {
+      zoneId: null,
+      zoneStatus: null,
+      zone: null,
+      latitude,
+      longitude,
+    };
+  }
 
   return {
     zoneId,

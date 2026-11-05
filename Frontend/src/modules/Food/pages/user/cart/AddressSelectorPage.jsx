@@ -49,14 +49,7 @@ const getAddressIcon = (address) => {
 }
 
 export default function AddressSelectorPage() {
-  const activeRestaurant = useMemo(() => {
-    try {
-      const raw = sessionStorage.getItem("cart_restaurant");
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }, []);
+
   const navigate = useNavigate()
   const goBack = useAppBackNavigation()
   const { location, loading, requestLocation } = useGeoLocation()
@@ -275,13 +268,7 @@ export default function AddressSelectorPage() {
           googleMapRef.current.setZoom(17)
         }
 
-        if (activeRestaurant) {
-          const deliverability = checkAddressDeliverability(loc, activeRestaurant);
-          if (!deliverability.isDeliverable) {
-            toast.error(deliverability.reason || "Your current location is outside the restaurant's delivery zone.", { id: "geo" });
-            return;
-          }
-        }
+
 
         persistDeliveryAddressMode("current")
         persistUserLocation(loc, { mode: "current" })
@@ -302,13 +289,7 @@ export default function AddressSelectorPage() {
     const id = getAddressId(address)
     if (!id) return
 
-    if (activeRestaurant) {
-      const deliverability = checkAddressDeliverability(address, activeRestaurant)
-      if (!deliverability.isDeliverable) {
-        toast.error(deliverability.reason || "Restaurant cannot deliver to this address")
-        return
-      }
-    }
+
 
     const locationData = buildLocationDataFromAddress(address)
     if (!locationData) {
@@ -1019,45 +1000,21 @@ export default function AddressSelectorPage() {
             ) : (
               addresses.map((addr, idx) => {
                 const Icon = getAddressIcon(addr)
-                const deliverability = activeRestaurant ? checkAddressDeliverability(addr, activeRestaurant) : { isDeliverable: true }
-                const isDeliverable = deliverability.isDeliverable
 
                 return (
                   <div
                     key={getAddressId(addr) || idx}
-                    onClick={() => {
-                      if (!isDeliverable) {
-                        toast.error(deliverability.reason || "Restaurant cannot deliver to this address")
-                        return
-                      }
-                      handleSelectSavedAddress(addr)
-                    }}
-                    className={`w-full flex items-start gap-4 p-4 rounded-xl text-left group transition-colors ${
-                      !isDeliverable
-                        ? "bg-red-50/20 dark:bg-red-950/10 border border-red-200/50 dark:border-red-900/30 opacity-60 cursor-not-allowed"
-                        : "bg-slate-50 dark:bg-[#1a1a1a] hover:bg-[#7e386610] dark:hover:bg-[#7e386620] cursor-pointer"
-                    }`}
+                    onClick={() => handleSelectSavedAddress(addr)}
+                    className="w-full flex items-start gap-4 p-4 bg-slate-50 dark:bg-[#1a1a1a] rounded-xl hover:bg-[#7e386610] dark:hover:bg-[#7e386620] transition-colors text-left group cursor-pointer"
                   >
                     <div className="h-10 w-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm">
                       <Icon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-gray-900 dark:text-white capitalize">{addr.label || "Address"}</p>
-                        {!isDeliverable && (
-                          <span className="text-[10px] bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 px-2 py-0.5 rounded font-bold whitespace-nowrap">
-                            Out of Zone
-                          </span>
-                        )}
-                      </div>
+                      <p className="font-bold text-gray-900 dark:text-white capitalize">{addr.label || "Address"}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-0.5">
                         {[addr.additionalDetails, addr.street, addr.city, addr.state].filter(Boolean).join(", ")}
                       </p>
-                      {!isDeliverable && (
-                        <p className="text-[11px] text-red-500 dark:text-red-400 font-medium mt-1 flex items-center gap-1">
-                          <span>⚠️ Restaurant cannot deliver here {deliverability.distanceKm ? `(${deliverability.distanceKm.toFixed(0)} km away)` : "(Out of delivery area)"}</span>
-                        </p>
-                      )}
                     </div>
                     <div className="flex items-center gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
                       <button onClick={(e) => handleEditAddress(e, addr)} className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">

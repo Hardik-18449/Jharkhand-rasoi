@@ -43,14 +43,14 @@ export default function DesktopNavbar({ showLogo = true }) {
     const cityName = userLocation?.city || "Indore"
     const fullAddress = userLocation?.address || userLocation?.formattedAddress || ""
     
-    // Main location name: Show area
+    // Main location name: Show area or city
     const mainLocationName = useMemo(() => {
-        let name = areaName || "Select Location"
+        let name = areaName || cityName || "Indore"
         if (/^-?\d+(\.\d+)?$/.test(name.trim())) {
             return "Current Location"
         }
         return name
-    }, [areaName])
+    }, [areaName, cityName])
     
     // Middle location: Show full address (base address) - Cleaned up
     const baseAddress = useMemo(() => {
@@ -154,7 +154,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                         <div className="flex items-center gap-4 lg:gap-6 flex-shrink-0">
                             {/* Logo */}
                             {showLogo && (
-                                <Link to="/" className="flex items-center justify-center flex-shrink-0">
+                                <Link to="/food/user" className="flex items-center justify-center flex-shrink-0">
                                     {logoUrl ? (
                                         <img
                                             src={logoUrl}

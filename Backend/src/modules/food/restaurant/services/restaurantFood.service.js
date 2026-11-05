@@ -620,11 +620,25 @@ export async function listPublicApprovedFoods(query = {}) {
     const restaurantIds = Array.from(
         new Set(list.map((f) => String(f.restaurantId)).filter(Boolean))
     );
-    const restaurants = restaurantIds.length
-        ? await FoodRestaurant.find({ _id: { $in: restaurantIds } })
-            .select('restaurantName slug isAcceptingOrders isActive status openingTime closingTime deliveryTimings openDays operatingHours isOperating')
-            .lean()
-        : [];
+    const [restaurants, outletTimingsDocs] = await Promise.all([
+        restaurantIds.length
+            ? FoodRestaurant.find({ _id: { $in: restaurantIds } })
+                .select('restaurantName slug isAcceptingOrders isActive status openingTime closingTime deliveryTimings openDays operatingHours isOperating')
+                .lean()
+            : Promise.resolve([]),
+        restaurantIds.length
+            ? (async () => {
+                try {
+                    const { FoodRestaurantOutletTimings } = await import('../models/outletTimings.model.js');
+                    return await FoodRestaurantOutletTimings.find({ restaurantId: { $in: restaurantIds } }).lean();
+                } catch {
+                    return [];
+                }
+            })()
+            : Promise.resolve([])
+    ]);
+
+    const outletTimingsMap = new Map((outletTimingsDocs || []).map(doc => [String(doc.restaurantId), doc.timings || []]));
 
     const isRestaurantOpenNow = (r) => {
         if (!r) return false;
@@ -636,10 +650,49 @@ export async function listPublicApprovedFoods(query = {}) {
         const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const currentDay = dayNames[now.getDay()];
+        const currentAbbr = currentDay.slice(0, 3).toLowerCase();
 
+        // 1. Check explicit outlet timings if configured
+        const outletTimings = outletTimingsMap.get(String(r._id));
+        if (Array.isArray(outletTimings) && outletTimings.length > 0) {
+            const todayTiming = outletTimings.find((t) => {
+                const dayStr = String(t?.day || '').trim().toLowerCase();
+                return dayStr === currentDay.toLowerCase() || dayStr.startsWith(currentAbbr);
+            });
+            if (todayTiming) {
+                if (todayTiming.isOpen === false) return false;
+                const openTime = todayTiming.openingTime;
+                const closeTime = todayTiming.closingTime;
+                if (openTime && closeTime) {
+                    const parseMins = (t) => {
+                        if (!t || typeof t !== 'string') return null;
+                        const parts = t.trim().split(':').map(Number);
+                        return (parts.length >= 2 && !Number.isNaN(parts[0]) && !Number.isNaN(parts[1]))
+                            ? parts[0] * 60 + parts[1]
+                            : null;
+                    };
+                    const openM = parseMins(openTime);
+                    const closeM = parseMins(closeTime);
+                    if (openM !== null && closeM !== null) {
+                        const nowM = now.getHours() * 60 + now.getMinutes();
+                        if (openM < closeM) {
+                            if (nowM < openM || nowM > closeM) return false;
+                        } else if (openM > closeM) {
+                            if (nowM < openM && nowM > closeM) return false;
+                        }
+                    }
+                }
+                return true;
+            }
+        }
+
+        // 2. Fallback to openDays and openingTime/closingTime on restaurant doc
         if (Array.isArray(r.openDays) && r.openDays.length > 0) {
-            const normDays = r.openDays.map((d) => String(d).trim().toLowerCase());
-            if (!normDays.includes(currentDay.toLowerCase())) return false;
+            const isOpenToday = r.openDays.some((d) => {
+                const s = String(d).trim().toLowerCase();
+                return s === currentDay.toLowerCase() || s === currentAbbr || currentDay.toLowerCase().startsWith(s);
+            });
+            if (!isOpenToday) return false;
         }
 
         const openTime = r.deliveryTimings?.openingTime || r.openingTime;
@@ -649,7 +702,7 @@ export async function listPublicApprovedFoods(query = {}) {
             const parseMins = (t) => {
                 if (!t || typeof t !== 'string') return null;
                 const raw = t.trim().toLowerCase();
-                const ampm = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap]m)$/);
+                const ampm = raw.match(/^(\d{1,2}):(\d{2})(?:::(\d{2}))?\s*([ap]m)$/);
                 if (ampm) {
                     let h = Number(ampm[1]);
                     const m = Number(ampm[2]);
@@ -704,6 +757,7 @@ export async function listPublicApprovedFoods(query = {}) {
                 closingTime: rest.closingTime,
                 openDays: rest.openDays,
                 deliveryTimings: rest.deliveryTimings,
+                outletTimings: outletTimingsMap.get(String(rest._id)) || []
             } : null,
             categoryId: f.categoryId || null,
             categoryName: f.categoryName || '',

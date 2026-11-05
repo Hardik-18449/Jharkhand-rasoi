@@ -6,6 +6,8 @@ export const getOutletTimingsByRestaurantIdController = async (req, res, next) =
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
+        delete req.headers['if-none-match'];
+        delete req.headers['if-modified-since'];
         const data = await getOutletTimingsForRestaurant(req.params.id);
         return sendResponse(res, 200, 'Outlet timings fetched successfully', data);
     } catch (error) {

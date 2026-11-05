@@ -1144,9 +1144,13 @@ export function useLocationEngine() {
                 // No fallback available - set a default location so UI doesn't hang
                 debugWarn("?? No fallback location available, setting default")
                 const defaultLocation = {
-                  city: "Select location",
-                  address: "Select location",
-                  formattedAddress: "Select location"
+                  city: "Indore",
+                  area: "South Tukoganj",
+                  state: "Madhya Pradesh",
+                  address: "South Tukoganj, Indore",
+                  formattedAddress: "South Tukoganj, Indore, Madhya Pradesh 452001, India",
+                  latitude: 22.7196,
+                  longitude: 75.8577
                 }
                 setLocation(defaultLocation)
                 setError(err.code === 3 ? "Location request timed out. Please try again." : err.message)
@@ -1539,9 +1543,13 @@ export function useLocationEngine() {
               (currentLocation.formattedAddress === "Select location" &&
                 !currentLocation.latitude && !currentLocation.city)) {
               return {
-                city: "Select location",
-                address: "Select location",
-                formattedAddress: "Select location"
+                city: "Indore",
+                area: "South Tukoganj",
+                state: "Madhya Pradesh",
+                address: "South Tukoganj, Indore",
+                formattedAddress: "South Tukoganj, Indore, Madhya Pradesh 452001, India",
+                latitude: 22.7196,
+                longitude: 75.8577
               }
             }
             return currentLocation
