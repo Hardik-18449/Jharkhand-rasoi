@@ -376,7 +376,7 @@ export default function RestaurantNavbar({
     <div className="w-full bg-gradient-to-r from-[#B80B3D] to-[#66001D] rounded-b-[24px] shadow-lg px-3 pt-4 pb-4 sm:px-4 sm:pt-5 sm:pb-5 flex items-center justify-between gap-2 relative">
       {/* Search Overlay */}
       {isSearchActive && (
-        <div className="absolute inset-0 bg-white z-50 flex items-center px-4 gap-3">
+        <div className="absolute inset-0 bg-white dark:bg-zinc-900 rounded-b-[24px] z-50 flex items-center px-4 gap-3 shadow-lg">
           <div className="flex-1 relative flex items-center">
             <Search className="absolute left-0 w-5 h-5 text-gray-400" />
             <input
@@ -384,13 +384,13 @@ export default function RestaurantNavbar({
               value={searchValue}
               onChange={handleSearchChange}
               placeholder={isInventoryPage ? "Search menu items or categories" : "Search by order ID, dish or customer"}
-              className="w-full pl-8 pr-4 py-2 text-gray-900 placeholder-gray-500 font-medium focus:outline-none"
+              className="w-full pl-8 pr-4 py-2 text-gray-900 dark:text-white placeholder-gray-400 bg-transparent font-medium focus:outline-none"
               autoFocus
             />
           </div>
           <button
             onClick={handleSearchClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 transition-colors shrink-0"
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors shrink-0"
             aria-label="Close search"
           >
             <X className="w-5 h-5 text-gray-700" />

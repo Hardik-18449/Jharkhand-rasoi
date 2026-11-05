@@ -24,6 +24,7 @@ import {
   Bike,
   Phone,
   MapPin,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import notificationSound from "@food/assets/audio/restaurant-order-ring.wav";
@@ -1074,7 +1075,7 @@ function SearchResults({ query, results, isLoading, onSelectOrder }) {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center p-20">
-        <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500 mb-4" />
         <p className="text-gray-500 text-sm">Searching for "{query}"...</p>
       </div>
     );

@@ -20,7 +20,14 @@ export class ErrorBoundary extends React.Component {
   }
 
   handleGoHome = () => {
-    window.location.href = '/food/user'
+    const path = window.location.pathname || ''
+    if (path.includes('/restaurant')) {
+      window.location.href = '/food/restaurant'
+    } else if (path.includes('/admin')) {
+      window.location.href = '/food/admin'
+    } else {
+      window.location.href = '/food/user'
+    }
   }
 
   render() {
@@ -39,7 +46,7 @@ export class ErrorBoundary extends React.Component {
           <div className="flex gap-3">
             <button
               onClick={this.handleReload}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm shadow-md hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-md shadow-orange-500/25 transition-all active:scale-95"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Refresh Page</span>
