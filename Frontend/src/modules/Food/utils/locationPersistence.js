@@ -102,6 +102,34 @@ export function clearStoredUserLocation() {
   cleanupLegacyLocationKeys()
 }
 
+const getAddressLatLng = (address) => {
+  if (!address) return null
+  const coords = address.location?.coordinates
+  const lat = Number(Array.isArray(coords) ? coords[1] : address.latitude ?? address.lat)
+  const lng = Number(Array.isArray(coords) ? coords[0] : address.longitude ?? address.lng)
+  return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null
+}
+
+/**
+ * Called after a saved address is deleted. If the active stored location was that
+ * address, forget it and switch back to "current location" so it stops resurfacing.
+ */
+export function clearLocationMatchingAddress(address) {
+  const target = getAddressLatLng(address)
+  const stored = readScopedCachedValue(LOCATION_SCOPE, 'current', { fallback: null })
+  if (!target || !stored) return false
+  const matches =
+    Math.abs(Number(stored.latitude) - target.lat) < 0.001 &&
+    Math.abs(Number(stored.longitude) - target.lng) < 0.001
+  if (!matches) return false
+  clearStoredUserLocation()
+  clearStoredZoneContext()
+  persistDeliveryAddressMode('current')
+  notifyDeliveryModeUpdated('current')
+  window.dispatchEvent(new CustomEvent('userLocationCleared'))
+  return true
+}
+
 export function persistDeliveryAddressMode(mode) {
   if (mode === 'saved' || mode === 'current') {
     writeScopedValue(LOCATION_SCOPE, 'mode', mode)

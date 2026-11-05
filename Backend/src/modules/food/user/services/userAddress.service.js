@@ -126,14 +126,28 @@ export const deleteAddress = async (userId, addressId) => {
     if (!mongoose.Types.ObjectId.isValid(addressId)) {
         throw new ValidationError('Invalid address id');
     }
-    const user = await FoodUser.findById(userId).select('addresses');
+    const user = await FoodUser.findById(userId).select('addresses lastKnownLocation');
     if (!user) throw new ValidationError('User not found');
 
     const address = user.addresses.id(addressId);
     if (!address) throw new ValidationError('Address not found');
 
     const wasDefault = !!address.isDefault;
+    const [addrLng, addrLat] = address.location?.coordinates || [];
     address.deleteOne();
+
+    // If the user's last-known location was set by selecting this address, clear it too.
+    // Otherwise the deleted address keeps coming back as "current location".
+    let clearedLocation = false;
+    const last = user.lastKnownLocation;
+    if (
+        Number.isFinite(addrLat) && Number.isFinite(addrLng) &&
+        Number.isFinite(last?.latitude) && Number.isFinite(last?.longitude) &&
+        Math.abs(last.latitude - addrLat) < 0.001 && Math.abs(last.longitude - addrLng) < 0.001
+    ) {
+        user.lastKnownLocation = undefined;
+        clearedLocation = true;
+    }
 
     // If deleting default, promote the newest remaining address to default
     if (wasDefault) {
@@ -147,7 +161,7 @@ export const deleteAddress = async (userId, addressId) => {
     }
 
     await user.save();
-    return { success: true };
+    return { success: true, clearedLocation };
 };
 
 export const setDefaultAddress = async (userId, addressId) => {

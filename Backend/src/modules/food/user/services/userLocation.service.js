@@ -49,6 +49,17 @@ export async function getUserLocation(userId) {
     return { location: toClientLocation(user) };
 }
 
+/** Remove the stored last-known location so stale coordinates can never be served again. */
+export async function clearUserLocation(userId) {
+    const user = await FoodUser.findByIdAndUpdate(
+        userId,
+        { $unset: { lastKnownLocation: 1 } },
+        { new: true },
+    ).select('_id');
+    if (!user) throw new ValidationError('User not found');
+    return { location: null };
+}
+
 export async function updateUserLocation(userId, body = {}) {
     let payload = normalizeLocationPayload(body);
 

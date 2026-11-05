@@ -281,7 +281,7 @@ export default function AddressSelectorPage() {
         }, 200)
       }
     } catch (e) {
-      toast.error("Failed to get location", { id: "geo" })
+      toast.error(e?.message || "Failed to get location", { id: "geo" })
     }
   }
 
@@ -364,7 +364,7 @@ export default function AddressSelectorPage() {
         toast.error("Could not obtain GPS location", { id: "geo-form" })
       }
     } catch (e) {
-      toast.error("Failed to get location", { id: "geo-form" })
+      toast.error(e?.message || "Failed to get location", { id: "geo-form" })
     }
   }
 

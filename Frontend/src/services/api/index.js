@@ -1952,6 +1952,8 @@ export const userAPI = {
   /** PUT /food/user/location (Bearer USER) */
   updateLocation: (payload) =>
     userClient.put("/food/user/location", payload ?? {}),
+  /** DELETE /food/user/location (Bearer USER) - forget the stored last-known location */
+  clearLocation: () => userClient.delete("/food/user/location"),
   saveFcmToken: (token, options = {}) => {
     const platform = options?.platform === "mobile" ? "mobile" : "web";
     return saveUserFcmTokenOnce(token, platform);

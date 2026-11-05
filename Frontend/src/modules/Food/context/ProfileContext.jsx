@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react"
 import { authAPI, userAPI } from "@food/api"
-import { persistUserLocation, notifyLocationUpdated, notifyDeliveryModeUpdated } from "@food/utils/locationPersistence"
+import { persistUserLocation, notifyLocationUpdated, notifyDeliveryModeUpdated, clearLocationMatchingAddress } from "@food/utils/locationPersistence"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -266,7 +266,10 @@ export function ProfileProvider({ children }) {
 
   const deleteAddress = useCallback(async (id) => {
     try {
+      const deletedAddress = addresses.find((addr) => String(getAddressId(addr)) === String(id))
       await userAPI.deleteAddress(id)
+      // If the deleted address was the active delivery location, stop using it.
+      try { clearLocationMatchingAddress(deletedAddress) } catch (_) {}
       setAddresses((prev) => {
         const newAddresses = prev.filter((addr) => String(getAddressId(addr)) !== String(id))
         localStorage.setItem("userAddresses", JSON.stringify(newAddresses))
@@ -276,7 +279,7 @@ export function ProfileProvider({ children }) {
       debugError("Error deleting address:", error)
       throw error
     }
-  }, [])
+  }, [addresses])
 
   const setDefaultAddress = useCallback(async (id) => {
     // Optimistic UI update first

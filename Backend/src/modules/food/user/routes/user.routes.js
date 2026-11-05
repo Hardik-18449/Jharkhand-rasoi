@@ -33,7 +33,8 @@ import {
 import { deleteUserAccountController } from '../controllers/deleteAccount.controller.js';
 import {
     getUserLocationController,
-    updateUserLocationController
+    updateUserLocationController,
+    clearUserLocationController
 } from '../controllers/userLocation.controller.js';
 
 const router = express.Router();
@@ -68,6 +69,7 @@ router.patch('/addresses/:addressId/default', setDefaultAddressController);
 // Delete account (Bearer USER)
 router.get('/location', getUserLocationController);
 router.put('/location', updateUserLocationController);
+router.delete('/location', clearUserLocationController);
 
 router.delete('/account', deleteUserAccountController);
 

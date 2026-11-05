@@ -60,11 +60,17 @@ export function LocationProvider({ children }) {
         setSavedLocationOverride(e.detail.location);
       }
     };
+    const onCleared = () => {
+      setSavedLocationOverride(null);
+      setDeliveryAddressModeState('current');
+    };
     window.addEventListener('deliveryAddressModeUpdated', onMode);
     window.addEventListener('userLocationUpdated', onLocation);
+    window.addEventListener('userLocationCleared', onCleared);
     return () => {
       window.removeEventListener('deliveryAddressModeUpdated', onMode);
       window.removeEventListener('userLocationUpdated', onLocation);
+      window.removeEventListener('userLocationCleared', onCleared);
     };
   }, []);
 

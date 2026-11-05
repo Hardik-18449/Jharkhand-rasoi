@@ -323,6 +323,7 @@ export function useLocationEngine() {
         longitude: locationPayload.longitude
       }
       lastDbUpdateAtRef.current = Date.now()
+      lastDbLocationRef.current = null
 
       debugLog("? Live location successfully stored in database")
     } catch (err) {
@@ -851,10 +852,35 @@ export function useLocationEngine() {
     return null
   }
 
+  // Save a real GPS fix even when client-side geocoding failed. The server reverse-geocodes
+  // it, and the stale stored location gets overwritten instead of coming back later.
+  const saveRawCoordsToDB = async (latitude, longitude, accuracy) => {
+    const userToken = localStorage.getItem('user_accessToken') || localStorage.getItem('accessToken')
+    if (!userToken || userToken === 'null' || userToken === 'undefined') return null
+    try {
+      const res = await userAPI.updateLocation({
+        latitude,
+        longitude,
+        ...(Number.isFinite(accuracy) ? { accuracy } : {}),
+      })
+      lastDbLocationRef.current = null
+      lastDbUpdatedCoordsRef.current = { latitude, longitude }
+      lastDbUpdateAtRef.current = Date.now()
+      const loc = res?.data?.data?.location
+      if (loc?.latitude && loc?.longitude && loc.formattedAddress && loc.city) {
+        return { ...loc, accuracy: accuracy || null }
+      }
+    } catch (_) {}
+    return null
+  }
+
   /* ===================== MAIN LOCATION ===================== */
   const getLocation = async (updateDB = true, forceFresh = false, showLoading = false) => {
     // If not forcing fresh, try DB first (faster)
-    let dbLocation = !forceFresh ? await fetchLocationFromDB() : null
+    // Never shortcut to the DB row in "current location" mode: that row can be an old
+    // saved address in another city (e.g. Bhopal) and would hide the real GPS position.
+    const preferLiveGps = forceFresh || readDeliveryAddressMode() === "current"
+    let dbLocation = !preferLiveGps ? await fetchLocationFromDB() : null
     if (dbLocation && !forceFresh) {
       setLocation(dbLocation)
       if (showLoading) setLoading(false)
@@ -993,6 +1019,18 @@ export function useLocationEngine() {
                 debugWarn("?? Skipping save - location contains placeholder values:", finalLoc)
                 // Don't save placeholder values to localStorage or DB
                 // Just set in state for display but don't persist
+                if (updateDB) {
+                  const serverLoc = await saveRawCoordsToDB(latitude, longitude, accuracy)
+                  if (serverLoc) {
+                    persistUserLocation(serverLoc)
+                    setLocation(serverLoc)
+                    setPermissionGranted(true)
+                    if (showLoading) setLoading(false)
+                    setError(null)
+                    resolve(serverLoc)
+                    return
+                  }
+                }
                 const coordOnlyLoc = {
                   latitude,
                   longitude,
@@ -1098,12 +1136,27 @@ export function useLocationEngine() {
             } else {
               debugError("? Geolocation error:", err.code, err.message)
             }
-            // Try multiple fallback strategies
+            // Explicit "use my current location": never substitute an old stored/DB
+            // location. That is how a deleted address kept coming back.
+            if (forceFresh && showLoading) {
+              const message = err.code === 1
+                ? "Location permission is blocked. Please allow location access for this site in your browser settings."
+                : err.code === 3
+                  ? "Location request timed out. Please check that location services are on and try again."
+                  : "Unable to detect your current location. Please turn on location services and try again."
+              setError(message)
+              setLoading(false)
+              reject(new Error(message))
+              return
+            }
+            // Try multiple fallback strategies (background refresh only)
             try {
-              // Strategy 1: Use DB location if available
-              let fallback = dbLocation
-              if (!fallback) {
-                fallback = await fetchLocationFromDB()
+              // Strategy 1: locally cached location first, DB row only outside "current" mode
+              let fallback = null
+              const storedFirst = readStoredUserLocation()
+              if (storedFirst && typeof storedFirst.latitude === 'number') fallback = storedFirst
+              if (!fallback && readDeliveryAddressMode() !== "current") {
+                fallback = dbLocation || await fetchLocationFromDB()
               }
 
               // Strategy 2: Use cached location from localStorage
@@ -1510,7 +1563,7 @@ export function useLocationEngine() {
     }
 
     // If no cached location, try DB
-    if (!hasInitialLocation) {
+    if (!hasInitialLocation && readDeliveryAddressMode() !== "current") {
       fetchLocationFromDB()
         .then((dbLoc) => {
           if (dbLoc && Number.isFinite(Number(dbLoc.latitude)) && Number.isFinite(Number(dbLoc.longitude))) {
@@ -1689,12 +1742,26 @@ export function useLocationEngine() {
     };
     window.addEventListener("userLocationUpdated", handleLocationUpdateEvent);
 
+    // The active saved address was deleted: forget it and try a fresh GPS fix
+    // (only when permission is already granted, so no surprise prompt).
+    const handleLocationClearedEvent = async () => {
+      lastDbLocationRef.current = null
+      lastDbLocationFetchAtRef.current = 0
+      setLocation(null)
+      try {
+        const perm = await navigator.permissions?.query?.({ name: 'geolocation' })
+        if (perm?.state === 'granted') await getLocation(true, true, false)
+      } catch (_) {}
+    };
+    window.addEventListener("userLocationCleared", handleLocationClearedEvent);
+
     // Cleanup timeout and watcher
     return () => {
       clearTimeout(loadingTimeout)
       debugLog("?? Cleaning up location watcher")
       stopWatchingLocation()
       window.removeEventListener("userLocationUpdated", handleLocationUpdateEvent)
+      window.removeEventListener("userLocationCleared", handleLocationClearedEvent)
     }
   }, [])
 
@@ -1710,6 +1777,8 @@ export function useLocationEngine() {
       if (forceFresh) {
         // Clear cached location to force fresh fetch
         clearStoredUserLocation()
+        lastDbLocationRef.current = null
+        lastDbLocationFetchAtRef.current = 0
         debugLog("??? Cleared cached location from localStorage")
       }
 
