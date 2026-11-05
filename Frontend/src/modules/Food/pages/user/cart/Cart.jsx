@@ -3000,8 +3000,8 @@ export default function Cart() {
                         }}
                         className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all ${
                           isSelected
-                            ? "bg-primary text-white border-primary shadow-sm"
-                            : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-primary/40"
+                            ? "bg-orange-500 text-white border-orange-500 shadow-sm"
+                            : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-orange-300"
                         }`}
                       >
                         {RUPEE_SYMBOL}{amount}
@@ -3217,7 +3217,7 @@ export default function Cart() {
                             )}
                           </div>
                         )}
-                        <div className="flex items-center justify-between text-xs font-bold text-white bg-primary rounded px-2 py-1.5 -mx-3 -mb-3">
+                        <div className="flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 rounded px-2.5 py-1.5 -mx-3 -mb-3">
                           <span>You save approx</span>
                           <span>{RUPEE_SYMBOL}{platformPricingSavings.totalSavings.toFixed(0)} ({platformPricingSavings.savingsPercentage}%)</span>
                         </div>
@@ -3281,7 +3281,7 @@ export default function Cart() {
                 </div>
               </div>
 
-               <div className="flex items-center gap-0.5 text-primary font-bold text-[11px] uppercase tracking-widest bg-[#7e386605] dark:bg-[#7e386610] px-2.5 py-1 rounded-lg">
+               <div className="flex items-center gap-0.5 text-orange-600 dark:text-orange-400 font-bold text-[11px] uppercase tracking-widest bg-orange-50 dark:bg-orange-950/30 px-2.5 py-1 rounded-lg">
                 CHANGE <ChevronRight className="h-3.5 w-3.5" />
               </div>
             </div>
@@ -3655,8 +3655,7 @@ export default function Cart() {
                           name: 'Online Payment',
                           description: 'UPI, Cards, Netbanking',
                           icon: <Zap className="w-5 h-5" />,
-                          color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400',
-                          selectedColor: 'bg-emerald-500 text-white',
+                          color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40',
                           badge: 'SECURE'
                         },
                         {
@@ -3664,8 +3663,7 @@ export default function Cart() {
                           name: 'Quick Wallet',
                           description: 'Pay from your wallet',
                           icon: <Wallet className="w-5 h-5" />,
-                          color: 'bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400',
-                          selectedColor: 'bg-blue-500 text-white',
+                          color: 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40',
                           subInfo: `Bal: ${RUPEE_SYMBOL}${walletBalance.toFixed(0)}`,
                           disabled: walletBalance < total,
                           disabledText: 'Low Balance'
@@ -3675,78 +3673,73 @@ export default function Cart() {
                           name: 'Cash on Delivery',
                           description: 'Pay when order arrives',
                           icon: <Banknote className="w-5 h-5" />,
-                          color: 'bg-orange-50 text-#55254b dark:bg-orange-900/40 dark:text-orange-400',
-                          selectedColor: 'bg-primary text-white',
+                          color: 'bg-orange-50 text-orange-600 dark:bg-orange-950/50 dark:text-orange-400 border border-orange-200/60 dark:border-orange-800/40',
                           hidden: isCodHidden
                         }
-                      ].filter(opt => !opt.hidden).map((option) => (
-                        <button
-                          key={option.id}
-                          onClick={() => {
-                            if (!option.disabled) {
-                              setSelectedPaymentMethod(option.id)
-                              setShowPaymentSheet(false)
-                            }
-                          }}
-                           className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-300 group ${selectedPaymentMethod === option.id
-                               ? 'border-primary bg-primary shadow-lg shadow-primary/30'
-                               : 'border-gray-100 dark:border-gray-800/80 bg-white dark:bg-[#222222] hover:border-primary/30 dark:hover:border-primary/30 shadow-sm'
-                             } ${option.disabled ? 'opacity-40 grayscale-[0.8] cursor-not-allowed' : 'cursor-pointer active:scale-[0.98]'}`}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 ${selectedPaymentMethod === option.id
-                                ? 'bg-white/20 text-white'
-                                : option.color
-                              }`}>
-                              {option.icon}
-                            </div>
-                            <div className="text-left">
-                              <div className="flex items-center gap-2">
-                                <span className={`text-sm font-black tracking-tight leading-none transition-colors ${selectedPaymentMethod === option.id ? 'text-white' : 'text-gray-900 dark:text-gray-100'
-                                  }`}>
-                                  {option.name}
-                                </span>
-                                {option.badge && (
-                                  <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-sm tracking-wider ${selectedPaymentMethod === option.id
-                                      ? 'bg-white/20 text-white'
-                                      : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                    }`}>
-                                    {option.badge}
+                      ].filter(opt => !opt.hidden).map((option) => {
+                        const isSelected = selectedPaymentMethod === option.id;
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => {
+                              if (!option.disabled) {
+                                setSelectedPaymentMethod(option.id)
+                                setShowPaymentSheet(false)
+                              }
+                            }}
+                            className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-200 ${
+                              isSelected
+                                ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 shadow-sm'
+                                : 'border-gray-200/80 dark:border-gray-800 bg-white dark:bg-[#222222] hover:border-gray-300 dark:hover:border-gray-700'
+                            } ${option.disabled ? 'opacity-40 grayscale-[0.8] cursor-not-allowed' : 'cursor-pointer active:scale-[0.99]'}`}
+                          >
+                            <div className="flex items-center gap-3.5">
+                              <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${option.color}`}>
+                                {option.icon}
+                              </div>
+                              <div className="text-left">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                                    {option.name}
                                   </span>
+                                  {option.badge && (
+                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">
+                                      {option.badge}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  <p className="text-xs font-normal text-gray-500 dark:text-gray-400">
+                                    {option.description}
+                                  </p>
+                                  {option.subInfo && !option.disabled && (
+                                    <>
+                                      <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+                                      <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                                        {option.subInfo}
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
+                                {option.disabled && (
+                                  <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wide">
+                                    {option.disabledText}
+                                  </p>
                                 )}
                               </div>
-                              <div className="flex items-center gap-1.5 mt-1">
-                                <p className={`text-[11px] font-bold transition-colors ${selectedPaymentMethod === option.id ? 'text-white/80' : 'text-gray-400'
-                                  }`}>
-                                  {option.description}
-                                </p>
-                                {option.subInfo && !option.disabled && (
-                                  <>
-                                    <span className={`w-1 h-1 rounded-full ${selectedPaymentMethod === option.id ? 'bg-white/40' : 'bg-orange-300 dark:bg-orange-700'
-                                      }`} />
-                                    <p className={`text-[10px] font-black uppercase tracking-tighter transition-colors ${selectedPaymentMethod === option.id ? 'text-white' : 'text-green-600 dark:text-green-500'
-                                      }`}>
-                                      {option.subInfo}
-                                    </p>
-                                  </>
-                                )}
-                              </div>
-                              {option.disabled && (
-                                <p className="text-[9px] font-black text-red-500 mt-1 uppercase tracking-wide">
-                                  {option.disabledText}
-                                </p>
-                              )}
                             </div>
-                          </div>
 
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${selectedPaymentMethod === option.id
-                              ? 'bg-white border-white'
-                              : 'border-gray-200 dark:border-gray-700'
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                              isSelected
+                                ? 'bg-orange-500 border-orange-500 text-white'
+                                : 'border-gray-300 dark:border-gray-600 bg-transparent'
                             }`}>
-                             {selectedPaymentMethod === option.id && <Check className="w-3.5 h-3.5 text-primary" strokeWidth={4} />}
-                           </div>
-                        </button>
-                      ))}
+                              {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3.5} />}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
 
                     <div
@@ -3755,11 +3748,11 @@ export default function Cart() {
                     >
                       <div className="flex-shrink-0">
                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Total Pay</p>
-                         <p className="text-xl font-black text-primary tabular-nums">{RUPEE_SYMBOL}{total.toFixed(0)}</p>
+                         <p className="text-xl font-black text-gray-900 dark:text-white tabular-nums">{RUPEE_SYMBOL}{total.toFixed(0)}</p>
                        </div>
                        <Button
                         onClick={() => setShowPaymentSheet(false)}
-                        className="flex-1 bg-primary hover:bg-secondary text-white h-11 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+                        className="flex-1 bg-orange-500 hover:bg-orange-600 text-white h-12 rounded-xl text-sm font-bold shadow-md shadow-orange-500/25 transition-all active:scale-[0.98]"
                       >
                         Confirm Order
                       </Button>
