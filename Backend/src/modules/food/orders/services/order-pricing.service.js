@@ -9,6 +9,7 @@ import { FoodZone } from '../../admin/models/zone.model.js';
 import { ValidationError } from '../../../../core/auth/errors.js';
 import { haversineKm } from './order.helpers.js';
 import { getDrivingDistances } from '../../../../services/googleMaps.service.js';
+import { applyPaymentModePrices, sumLineTotals } from './order-item-price.service.js';
 
 function isOfferEndDateValid(endDate, now = new Date()) {
   if (!endDate) return true;
@@ -41,19 +42,17 @@ export async function calculateOrderPricing(userId, dto) {
   if (restaurant.status !== "approved")
     throw new ValidationError("Restaurant not available");
 
-  const items = Array.isArray(dto.items) ? dto.items : [];
+  // Resolve COD / prepaid unit prices from the restaurant's catalog.
+  const items = await applyPaymentModePrices(Array.isArray(dto.items) ? dto.items : [], {
+    restaurantId: dto.restaurantId,
+    paymentMethod: dto.paymentMethod,
+  });
   let itemDiscountTotal = 0;
   let subtotal = 0;
   let eligibleSubtotalForCoupon = 0;
 
-  const isCodOrder = String(dto.paymentMethod || '').toLowerCase() === 'cash' || String(dto.paymentMethod || '').toLowerCase() === 'cod';
   items.forEach((it) => {
-    let price = Number(it.price) || 0;
-    if (isCodOrder && it.codPrice != null && Number(it.codPrice) > 0) {
-      price = Number(it.codPrice);
-    } else if (!isCodOrder && it.prepaidPrice != null && Number(it.prepaidPrice) > 0) {
-      price = Number(it.prepaidPrice);
-    }
+    const price = Number(it.price) || 0;
     const qty = Number(it.quantity) || 1;
     let hasItemDiscount = false;
     
@@ -372,6 +371,18 @@ export async function calculateOrderPricing(userId, dto) {
       couponCode: appliedCoupon?.code || codeRaw || null,
       appliedCoupon,
       couponError,
+      // Lets the cart show both prices and the saving for paying online.
+      paymentMethod: dto.paymentMethod || null,
+      prepaidSubtotal: sumLineTotals(items, 'prepaidPrice'),
+      codSubtotal: sumLineTotals(items, 'codPrice'),
+      items: items.map((it) => ({
+        itemId: it.itemId,
+        variantId: it.variantId || null,
+        price: it.price,
+        prepaidPrice: it.prepaidPrice,
+        codPrice: it.codPrice,
+        quantity: Number(it.quantity) || 1,
+      })),
     },
   };
 }

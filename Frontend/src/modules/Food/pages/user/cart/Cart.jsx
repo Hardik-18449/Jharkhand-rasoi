@@ -927,6 +927,7 @@ export default function Cart() {
 
   // Calculate pricing from backend whenever cart, address, or coupon changes
   useEffect(() => {
+    let cancelled = false
     const calculatePricing = async () => {
       if (cart.length === 0 || !hasSavedAddress) {
         setPricing(null)
@@ -942,6 +943,8 @@ export default function Cart() {
           variantId: item.variantId || undefined,
           variantName: item.variantName || undefined,
           variantPrice: item.variantPrice || item.price,
+          codPrice: item.codPrice != null ? Number(item.codPrice) : undefined,
+          prepaidPrice: item.prepaidPrice != null ? Number(item.prepaidPrice) : undefined,
           quantity: item.quantity || 1,
           image: item.image,
           description: item.description,
@@ -960,6 +963,8 @@ export default function Cart() {
           deliveryTip: deliveryTip || 0
         })
 
+        // A newer request (e.g. user switched COD <-> online again) supersedes this one.
+        if (cancelled) return
         if (response?.data?.success && response?.data?.data?.pricing) {
           const newPricing = response.data.data.pricing
           setPricing(newPricing)
@@ -986,14 +991,16 @@ export default function Cart() {
           debugError("Error calculating pricing:", error)
         }
         // Fallback to frontend calculation if backend fails
-        setPricing(null)
+        if (!cancelled) setPricing(null)
       } finally {
-        setLoadingPricing(false)
+        if (!cancelled) setLoadingPricing(false)
       }
     }
 
     calculatePricing()
-  }, [cart, defaultAddress, appliedCoupon, couponCode, restaurantId])
+    return () => { cancelled = true }
+    // COD and prepaid prices differ, so the payment method must trigger a recalculation.
+  }, [cart, defaultAddress, appliedCoupon, couponCode, restaurantId, selectedPaymentMethod, deliveryTip])
 
   // Fetch wallet balance
   useEffect(() => {
@@ -1083,6 +1090,9 @@ export default function Cart() {
   };
 
   const cashlessSavings = useMemo(() => {
+    if (pricing && Number.isFinite(Number(pricing.codSubtotal)) && Number.isFinite(Number(pricing.prepaidSubtotal))) {
+      return Math.max(0, Number(pricing.codSubtotal) - Number(pricing.prepaidSubtotal));
+    }
     return cart.reduce((sum, item) => {
       const codP = (item.codPrice != null && Number(item.codPrice) > 0) ? Number(item.codPrice) : null;
       const preP = (item.prepaidPrice != null && Number(item.prepaidPrice) > 0) ? Number(item.prepaidPrice) : Number(item.price) || 0;
@@ -1091,7 +1101,15 @@ export default function Cart() {
       }
       return sum;
     }, 0);
-  }, [cart]);
+  }, [cart, pricing]);
+
+  // Item total for each payment mode, shown next to the payment options.
+  const modeItemTotals = useMemo(() => {
+    const pre = Number(pricing?.prepaidSubtotal);
+    const cod = Number(pricing?.codSubtotal);
+    if (!Number.isFinite(pre) || !Number.isFinite(cod) || Math.abs(pre - cod) < 0.01) return null;
+    return { prepaid: pre, cod };
+  }, [pricing]);
 
 // Use backend pricing if available, otherwise fallback to database fee settings
   const subtotal = pricing?.subtotal || cart.reduce((sum, item) => sum + getItemEffectivePrice(item) * (item.quantity || 1), 0)
@@ -1435,7 +1453,9 @@ export default function Cart() {
           items,
           restaurantId: restaurantData?.restaurantId || restaurantData?._id || restaurantId || null,
           deliveryAddress: defaultAddress,
-          couponCode: coupon.code
+          couponCode: coupon.code,
+          paymentMethod: selectedPaymentMethod,
+          deliveryTip: deliveryTip || 0
         })
 
         const pricingData = response?.data?.data?.pricing
@@ -1504,7 +1524,9 @@ export default function Cart() {
         items,
         restaurantId: restaurantData?.restaurantId || restaurantData?._id || restaurantId || null,
         deliveryAddress: defaultAddress,
-        couponCode: inputCode
+        couponCode: inputCode,
+        paymentMethod: selectedPaymentMethod,
+        deliveryTip: deliveryTip || 0
       })
 
       const pricingData = response?.data?.data?.pricing
@@ -1570,7 +1592,9 @@ export default function Cart() {
           items,
           restaurantId: restaurantData?.restaurantId || restaurantData?._id || restaurantId || null,
           deliveryAddress: defaultAddress,
-          couponCode: null
+          couponCode: null,
+          paymentMethod: selectedPaymentMethod,
+          deliveryTip: deliveryTip || 0
         })
 
         if (response?.data?.success && response?.data?.data?.pricing) {
@@ -3107,9 +3131,9 @@ export default function Cart() {
                       <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1.5 rounded-lg border border-emerald-200/50">
                         <span className="flex items-center gap-1">
                           <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                          Cashless Online Discount
+                          Online payment price applied
                         </span>
-                        <span>-{RUPEE_SYMBOL}{cashlessSavings.toFixed(2)}</span>
+                        <span>You save {RUPEE_SYMBOL}{cashlessSavings.toFixed(2)}</span>
                       </div>
                     )}
 
@@ -3656,7 +3680,8 @@ export default function Cart() {
                           description: 'UPI, Cards, Netbanking',
                           icon: <Zap className="w-5 h-5" />,
                           color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40',
-                          badge: 'SECURE'
+                          badge: 'SECURE',
+                          priceHint: modeItemTotals ? `Item total ${RUPEE_SYMBOL}${modeItemTotals.prepaid.toFixed(2)}` : null
                         },
                         {
                           id: 'wallet',
@@ -3666,7 +3691,8 @@ export default function Cart() {
                           color: 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40',
                           subInfo: `Bal: ${RUPEE_SYMBOL}${walletBalance.toFixed(0)}`,
                           disabled: walletBalance < total,
-                          disabledText: 'Low Balance'
+                          disabledText: 'Low Balance',
+                          priceHint: modeItemTotals ? `Item total ${RUPEE_SYMBOL}${modeItemTotals.prepaid.toFixed(2)}` : null
                         },
                         {
                           id: 'cash',
@@ -3674,7 +3700,8 @@ export default function Cart() {
                           description: 'Pay when order arrives',
                           icon: <Banknote className="w-5 h-5" />,
                           color: 'bg-orange-50 text-orange-600 dark:bg-orange-950/50 dark:text-orange-400 border border-orange-200/60 dark:border-orange-800/40',
-                          hidden: isCodHidden
+                          hidden: isCodHidden,
+                          priceHint: modeItemTotals ? `Item total ${RUPEE_SYMBOL}${modeItemTotals.cod.toFixed(2)}` : null
                         }
                       ].filter(opt => !opt.hidden).map((option) => {
                         const isSelected = selectedPaymentMethod === option.id;
@@ -3722,6 +3749,11 @@ export default function Cart() {
                                     </>
                                   )}
                                 </div>
+                                {option.priceHint && (
+                                  <p className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 mt-0.5">
+                                    {option.priceHint}
+                                  </p>
+                                )}
                                 {option.disabled && (
                                   <p className="text-[10px] font-bold text-red-500 mt-1 uppercase tracking-wide">
                                     {option.disabledText}

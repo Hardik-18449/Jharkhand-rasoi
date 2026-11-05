@@ -34,6 +34,7 @@ import * as userWalletService from '../../user/services/userWallet.service.js';
 import * as financeService from './finance.service.js';
 import { withTransaction, sessionOpts } from '../../../../utils/dbTransaction.js';
 import { calculateOrderPricing } from './order-pricing.service.js';
+import { applyPaymentModePrices } from './order-item-price.service.js';
 import * as dispatchService from './order-dispatch.service.js';
 import { clearDeliveryOffersForOrder } from './order-dispatch.firebase.js';
 import * as deliveryService from './order-delivery.service.js';
@@ -216,14 +217,13 @@ export async function createOrder(userId, dto) {
     }
   }
 
-    const isCashOrder = String(dto.payment?.method || dto.paymentMethod || '').toLowerCase() === 'cash' || String(dto.payment?.method || dto.paymentMethod || '').toLowerCase() === 'cod';
-  const resolvedItems = (dto.items || []).map((item) => {
-    let price = Number(item?.price);
-    if (isCashOrder && item?.codPrice != null && Number(item.codPrice) > 0) {
-      price = Number(item.codPrice);
-    } else if (!isCashOrder && item?.prepaidPrice != null && Number(item.prepaidPrice) > 0) {
-      price = Number(item.prepaidPrice);
-    }
+  // COD orders are charged the restaurant's COD price, online orders the prepaid price.
+  const modePricedItems = await applyPaymentModePrices(dto.items || [], {
+    restaurantId: dto.restaurantId,
+    paymentMethod: dto.payment?.method || paymentMethod,
+  });
+  const resolvedItems = modePricedItems.map((item) => {
+    const price = Number(item?.price);
     const addons = Array.isArray(item?.addons)
       ? item.addons.map(a => ({ name: String(a?.name || '').trim(), price: Math.max(0, Number(a?.price || 0)) })).filter(a => Boolean(a.name))
       : [];
@@ -275,6 +275,16 @@ export async function createOrder(userId, dto) {
     normalizedPricing.total <= 0
   ) {
     normalizedPricing.total = computedTotal;
+  }
+
+  // The cart may send a subtotal priced for the other payment mode (e.g. user switched
+  // COD <-> online just before placing). Item prices above are authoritative for the
+  // chosen mode, so move the subtotal and total by the difference.
+  if (Number.isFinite(normalizedPricing.subtotal) && Math.abs(normalizedPricing.subtotal - computedSubtotal) >= 0.5) {
+    const diff = computedSubtotal - normalizedPricing.subtotal;
+    logger.warn(`Order pricing: subtotal adjusted for payment mode ${paymentMethod} by ${diff.toFixed(2)}`);
+    normalizedPricing.subtotal = computedSubtotal;
+    normalizedPricing.total = Math.max(0, normalizedPricing.total + diff);
   }
 
   const payment = {
