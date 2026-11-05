@@ -747,6 +747,12 @@ export default function Inventory() {
     }
   })
   const [searchQuery, setSearchQuery] = useState("")
+  // The header search icon drives this page's search box.
+  useEffect(() => {
+    const onHeaderSearch = (e) => setSearchQuery(String(e?.detail?.query ?? ""))
+    window.addEventListener("restaurantInventorySearch", onHeaderSearch)
+    return () => window.removeEventListener("restaurantInventorySearch", onHeaderSearch)
+  }, [])
   const [filterOpen, setFilterOpen] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [isLoading, setIsLoading] = useState(false)

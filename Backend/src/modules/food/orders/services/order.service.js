@@ -1286,6 +1286,21 @@ export async function listOrdersRestaurant(restaurantId, query) {
     ],
   };
   applyRestaurantOrderStatusFilter(filter, query.status);
+
+  // Header search: order ID, dish name, or customer name / phone.
+  const search = String(query.search || '').trim().slice(0, 100);
+  if (search) {
+    const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const matchingUsers = await FoodUser.find({ $or: [{ name: rx }, { phone: rx }] })
+      .select('_id')
+      .limit(200)
+      .lean();
+    const searchOr = [{ order_id: rx }, { orderId: rx }, { 'items.name': rx }];
+    if (/^[0-9a-fA-F]{24}$/.test(search)) searchOr.push({ _id: new mongoose.Types.ObjectId(search) });
+    if (matchingUsers.length) searchOr.push({ userId: { $in: matchingUsers.map((u) => u._id) } });
+    filter.$and = [...(filter.$and || []), { $or: searchOr }];
+  }
+
   const [docs, total] = await Promise.all([
     FoodOrder.find(filter)
       .populate("userId", "name phone email profileImage isSubscribed subscriptionPlanName subscriptionBadge")

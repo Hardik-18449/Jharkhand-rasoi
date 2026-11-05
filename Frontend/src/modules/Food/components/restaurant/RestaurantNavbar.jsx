@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { Search, Menu, ChevronRight, MapPin, X, Bell, HelpCircle } from "lucide-react"
 import { restaurantAPI } from "@food/api"
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
@@ -40,11 +40,22 @@ export default function RestaurantNavbar({
   const { unreadCount } = useNotificationInbox("restaurant", { limit: 20, pollMs: 5 * 60 * 1000 })
   const { newReservation, clearNewReservation } = useRestaurantNotifications();
 
+  const { pathname } = useLocation()
+  // On the Inventory page the header search filters menu items, not orders.
+  const isInventoryPage = /\/inventory\/?$/.test(pathname || "")
+
   // Global search effect
   useEffect(() => {
     // Clear previous timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current)
+    }
+
+    if (isInventoryPage) {
+      window.dispatchEvent(
+        new CustomEvent("restaurantInventorySearch", { detail: { query: searchValue } }),
+      )
+      return
     }
 
     if (searchValue.trim() === "") {
@@ -97,7 +108,13 @@ export default function RestaurantNavbar({
     return () => {
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
     }
-  }, [searchValue])
+  }, [searchValue, isInventoryPage])
+
+  // Leaving a page closes and clears the header search.
+  useEffect(() => {
+    setIsSearchActive(false)
+    setSearchValue("")
+  }, [pathname])
 
   // Load business settings for branding
   useEffect(() => {
@@ -366,7 +383,7 @@ export default function RestaurantNavbar({
               type="text"
               value={searchValue}
               onChange={handleSearchChange}
-              placeholder="Search by order ID or dish name"
+              placeholder={isInventoryPage ? "Search menu items or categories" : "Search by order ID, dish or customer"}
               className="w-full pl-8 pr-4 py-2 text-gray-900 placeholder-gray-500 font-medium focus:outline-none"
               autoFocus
             />
