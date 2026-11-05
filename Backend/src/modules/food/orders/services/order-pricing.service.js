@@ -84,12 +84,17 @@ export async function calculateOrderPricing(userId, dto) {
 
   const freeUpTo = Number(feeSettings.freeDeliveryUpTo || 0);
   let distanceKm = null;
+  const pRCoords = restaurant?.location?.coordinates;
+  const pDCoords = dto?.deliveryAddress?.location?.coordinates ||
+    (Number.isFinite(Number(dto?.deliveryAddress?.longitude)) && Number.isFinite(Number(dto?.deliveryAddress?.latitude))
+      ? [Number(dto.deliveryAddress.longitude), Number(dto.deliveryAddress.latitude)]
+      : null);
   if (
-    restaurant?.location?.coordinates?.length === 2 &&
-    dto?.deliveryAddress?.location?.coordinates?.length === 2
+    pRCoords?.length === 2 &&
+    pDCoords?.length === 2
   ) {
-    const [rLng, rLat] = restaurant.location.coordinates;
-    const [dLng, dLat] = dto.deliveryAddress.location.coordinates;
+    const [rLng, rLat] = pRCoords;
+    const [dLng, dLat] = pDCoords;
     try {
       const origin = { lat: rLat, lng: rLng };
       const dests = [{ id: "delivery", lat: dLat, lng: dLng }];
@@ -107,6 +112,13 @@ export async function calculateOrderPricing(userId, dto) {
       distanceKm = Number.isFinite(d) ? d : null;
     }
   }
+  const MAX_DELIVERY_DISTANCE_KM = 35;
+  if (distanceKm !== null && distanceKm > MAX_DELIVERY_DISTANCE_KM) {
+    throw new ValidationError(
+      `Delivery address is outside the restaurant's delivery zone (${distanceKm.toFixed(1)} km away). Delivery is only available within ${MAX_DELIVERY_DISTANCE_KM} km.`
+    );
+  }
+
   let deliveryFee = 0;
   let deliveryFeeBreakdown = null;
   if (

@@ -144,7 +144,7 @@ export async function calculateOrder(userId, dto) {
 // ----- Create order -----
 export async function createOrder(userId, dto) {
   const restaurant = await FoodRestaurant.findById(dto.restaurantId)
-    .select("status restaurantName zoneId location isAcceptingOrders")
+    .select("status restaurantName zoneId location city isAcceptingOrders")
     .lean();
   if (!restaurant) throw new ValidationError("Restaurant not found");
 
@@ -199,7 +199,9 @@ export async function createOrder(userId, dto) {
     phone: dto.address?.phone || "",
     location: dto.address?.location?.coordinates
       ? { type: "Point", coordinates: dto.address.location.coordinates }
-      : undefined,
+      : (Number.isFinite(Number(dto.address?.longitude)) && Number.isFinite(Number(dto.address?.latitude)))
+        ? { type: "Point", coordinates: [Number(dto.address.longitude), Number(dto.address.latitude)] }
+        : undefined,
   };
 
   const paymentMethod =
@@ -284,12 +286,14 @@ export async function createOrder(userId, dto) {
   };
 
   let distanceKm = null;
+  const rCoords = restaurant.location?.coordinates;
+  const dCoords = deliveryAddress.location?.coordinates || dto.address?.location?.coordinates;
   if (
-    restaurant.location?.coordinates?.length === 2 &&
-    dto.address?.location?.coordinates?.length === 2
+    rCoords?.length === 2 &&
+    dCoords?.length === 2
   ) {
-    const [rLng, rLat] = restaurant.location.coordinates;
-    const [dLng, dLat] = dto.address.location.coordinates;
+    const [rLng, rLat] = rCoords;
+    const [dLng, dLat] = dCoords;
     try {
       const origin = { lat: rLat, lng: rLng };
       const dests = [{ id: "delivery", lat: dLat, lng: dLng }];
@@ -310,6 +314,27 @@ export async function createOrder(userId, dto) {
     console.warn(
       `Food order: distance not available, rider earning set to 0`,
     );
+  }
+
+  // ENFORCE MAXIMUM FOOD DELIVERY DISTANCE
+  const MAX_DELIVERY_DISTANCE_KM = 35;
+  if (distanceKm !== null && distanceKm > MAX_DELIVERY_DISTANCE_KM) {
+    throw new ValidationError(
+      `The selected delivery address is outside this restaurant's delivery zone (${distanceKm.toFixed(1)} km away). Maximum delivery range is ${MAX_DELIVERY_DISTANCE_KM} km.`
+    );
+  }
+
+  // Cross-city validation if distance was not computable via coordinates
+  if (
+    restaurant.city &&
+    deliveryAddress.city &&
+    restaurant.city.trim().toLowerCase() !== deliveryAddress.city.trim().toLowerCase()
+  ) {
+    if (distanceKm === null || distanceKm > MAX_DELIVERY_DISTANCE_KM) {
+      throw new ValidationError(
+        `The selected delivery address in ${deliveryAddress.city} is outside this restaurant's service area (${restaurant.city}). Please select an address in ${restaurant.city}.`
+      );
+    }
   }
 
   let riderEarning = await getRiderEarning(distanceKm, normalizedPricing.deliveryFee);

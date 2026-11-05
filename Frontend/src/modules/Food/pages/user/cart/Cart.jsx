@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, Fragment } from "react"
 import { createPortal } from "react-dom"
 import { Link, useNavigate } from "react-router-dom"
-import { Heart, Plus, Minus, ArrowLeft, ChevronRight, Clock, MapPin, Phone, FileText, Utensils, Tag, Percent, Share2, ChevronUp, ChevronDown, X, Check, Settings, CreditCard, Wallet, Building2, Sparkles, Banknote, Zap, CheckCircle2, MessageCircle, Send, Mail, Copy } from "lucide-react"
+import { AlertTriangle, Heart, Plus, Minus, ArrowLeft, ChevronRight, Clock, MapPin, Phone, FileText, Utensils, Tag, Percent, Share2, ChevronUp, ChevronDown, X, Check, Settings, CreditCard, Wallet, Building2, Sparkles, Banknote, Zap, CheckCircle2, MessageCircle, Send, Mail, Copy } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import confetti from "canvas-confetti"
 
@@ -19,7 +19,7 @@ import { toast } from "sonner"
 import { getCompanyNameAsync } from "@food/utils/businessSettings"
 import { calculateDistance } from "@food/utils/common"
 import { useCompanyName } from "@food/hooks/useCompanyName"
-import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability"
+import { getRestaurantAvailabilityStatus, checkAddressDeliverability, MAX_DELIVERY_RADIUS_KM } from "@food/utils/restaurantAvailability"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import { persistDeliveryAddressMode, readDeliveryAddressMode, readStoredUserLocation } from "@food/utils/locationPersistence"
 import zoopSound from "@food/assets/audio/zomato_sms.mp3"
@@ -414,6 +414,48 @@ export default function Cart() {
   // zoneId comes from centralized LocationProvider (uses GPS or saved address)
   const defaultPayment = getDefaultPaymentMethod()
 
+  // Deliverability map for saved addresses relative to this restaurant
+  const addressDeliverabilityMap = useMemo(() => {
+    const map = new Map()
+    if (!restaurantData || !Array.isArray(addresses)) return map
+    addresses.forEach((addr) => {
+      const id = getAddressId(addr)
+      if (id) {
+        map.set(id, checkAddressDeliverability(addr, restaurantData))
+      }
+    })
+    return map
+  }, [addresses, restaurantData])
+
+  const currentAddressDeliverability = useMemo(() => {
+    return checkAddressDeliverability(defaultAddress, restaurantData)
+  }, [defaultAddress, restaurantData])
+
+  const isCurrentAddressDeliverable = currentAddressDeliverability.isDeliverable
+
+  // Auto-switch to an in-zone address if the current default address is out of delivery zone
+  const hasAutoSwitchedRef = useRef(false)
+  useEffect(() => {
+    if (!restaurantData || !Array.isArray(addresses) || addresses.length === 0) return
+    if (!defaultAddress) return
+
+    const currentStatus = checkAddressDeliverability(defaultAddress, restaurantData)
+    if (!currentStatus.isDeliverable && !hasAutoSwitchedRef.current) {
+      const firstDeliverable = addresses.find((addr) => {
+        return checkAddressDeliverability(addr, restaurantData).isDeliverable
+      })
+
+      if (firstDeliverable) {
+        const id = getAddressId(firstDeliverable)
+        if (id && id !== selectedAddressId) {
+          hasAutoSwitchedRef.current = true
+          handleSelectSavedAddress(firstDeliverable)
+          toast.info(`Switched to ${getDisplayAddressLabel(firstDeliverable.label)} (${firstDeliverable.city || "nearby"}), which is in this restaurant's delivery zone.`)
+        }
+      }
+    }
+  }, [restaurantData, addresses, defaultAddress, selectedAddressId])
+
   useEffect(() => {
     // Sync delivery mode from overlay/localStorage changes.
     // No dependency array: overlay open/close re-renders Cart via provider state update,
@@ -707,6 +749,19 @@ export default function Cart() {
 
     fetchRestaurantData()
   }, [cart.length, cart[0]?.restaurantId, cart[0]?.restaurant])
+
+  // Sync active cart restaurant to sessionStorage for address selectors
+  useEffect(() => {
+    if (restaurantData) {
+      try {
+        sessionStorage.setItem("cart_restaurant", JSON.stringify(restaurantData));
+      } catch {}
+    } else if (cart.length === 0) {
+      try {
+        sessionStorage.removeItem("cart_restaurant");
+      } catch {}
+    }
+  }, [restaurantData, cart.length])
 
   // Fetch approved addons for the restaurant
   useEffect(() => {
@@ -1332,6 +1387,14 @@ export default function Cart() {
         return
       }
 
+      if (restaurantData) {
+        const deliverability = checkAddressDeliverability(address, restaurantData)
+        if (!deliverability.isDeliverable) {
+          toast.error(deliverability.reason || `${label} address is outside the restaurant's delivery area`)
+          return
+        }
+      }
+
       await handleSelectSavedAddress(address)
     } catch (error) {
       debugError(`Error selecting ${label} address:`, error)
@@ -1341,6 +1404,14 @@ export default function Cart() {
 
   const handleSelectSavedAddress = async (address) => {
     try {
+      if (restaurantData) {
+        const deliverability = checkAddressDeliverability(address, restaurantData)
+        if (!deliverability.isDeliverable) {
+          toast.error(deliverability.reason || "Restaurant cannot deliver to this address")
+          return
+        }
+      }
+
       const addressId = getAddressId(address)
       if (addressId) {
         setSelectedAddressId(addressId)
@@ -1577,6 +1648,11 @@ export default function Cart() {
     if (!hasSavedAddress) {
       toast.error("Please choose a delivery location to continue")
       openLocationSelector()
+      return
+    }
+
+    if (!isCurrentAddressDeliverable) {
+      toast.error(currentAddressDeliverability.reason || "The selected delivery address is out of this restaurant's delivery zone. Please choose a nearby address.")
       return
     }
 
@@ -2763,26 +2839,49 @@ export default function Cart() {
                              Select a delivery location to continue
                            </p>
                         )}
+                        {hasSavedAddress && !isCurrentAddressDeliverable && (
+                          <div className="mt-2.5 p-2.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-xl flex items-center gap-2 text-xs text-red-600 dark:text-red-400 font-semibold">
+                            <AlertTriangle className="h-4 w-4 shrink-0 text-red-500" />
+                            <span>This address is out of this restaurant's delivery zone. Please choose a nearby address.</span>
+                          </div>
+                        )}
                         {/* Address Selection Buttons */}
                         <div className="flex flex-wrap gap-2 mt-3">
                           {["Home", "Work", "Other"].map((label) => {
                             const normalizedLabel = normalizeAddressLabel(label)
-                            const addressExists = addresses.some(addr => normalizeAddressLabel(addr.label) === normalizedLabel)
+                            const matchingAddr = addresses.find(addr => normalizeAddressLabel(addr.label) === normalizedLabel)
+                            const addressExists = Boolean(matchingAddr)
+                            const addrDeliverability = matchingAddr && restaurantData
+                              ? (addressDeliverabilityMap.get(getAddressId(matchingAddr)) || checkAddressDeliverability(matchingAddr, restaurantData))
+                              : { isDeliverable: true }
+                            const isDeliverable = addressExists && addrDeliverability.isDeliverable
+
                             return (
                               <button
                                 key={label}
                                 onClick={(e) => {
                                   e.preventDefault()
                                   e.stopPropagation()
+                                  if (!addressExists) {
+                                    toast.error(`No ${label} address found. Please add an address first.`)
+                                    return
+                                  }
+                                  if (!isDeliverable) {
+                                    toast.error(addrDeliverability.reason || `${label} address is outside the restaurant's delivery zone`)
+                                    return
+                                  }
                                   handleSelectAddressByLabel(label)
                                 }}
-                                disabled={!addressExists}
-                                className={`text-xs px-4 py-1.5 rounded-full font-semibold transition-all ${addressExists
-                                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-300'
-                                  : 'bg-gray-50 text-gray-400 border border-gray-100 cursor-not-allowed dark:bg-gray-900'
+                                disabled={!addressExists || !isDeliverable}
+                                className={`text-xs px-3.5 py-1.5 rounded-full font-semibold transition-all ${
+                                  addressExists && isDeliverable
+                                    ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-300'
+                                    : !addressExists
+                                      ? 'bg-gray-50 text-gray-400 border border-gray-100 cursor-not-allowed dark:bg-gray-900'
+                                      : 'bg-red-50 text-red-400 border border-red-100 cursor-not-allowed opacity-60 dark:bg-red-950/20 dark:border-red-900/30'
                                   }`}
                               >
-                                {label}
+                                {label}{addressExists && !isDeliverable ? " (Out of Zone)" : ""}
                               </button>
                             )
                           })}
@@ -2792,36 +2891,60 @@ export default function Cart() {
                             {addresses.map((address) => {
                               const addressId = getAddressId(address)
                               const isSelected = addressId && addressId === selectedAddressId
+                              const deliverability = addressDeliverabilityMap.get(addressId) || checkAddressDeliverability(address, restaurantData)
+                              const isDeliverable = deliverability.isDeliverable
+
                               return (
-                                <button
-                                  key={addressId || `${address.label}-${address.street}-${address.city}`}
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    handleSelectSavedAddress(address)
-                                  }}
-                                   className={`w-full text-left rounded-xl border-2 p-3 transition-colors ${isSelected
-                                     ? "border-primary bg-[#7e386605] dark:bg-primary/5"
-                                     : "border-slate-100 dark:border-gray-800 hover:border-slate-200"
-                                     }`}
-                                >
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                      <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                        {getDisplayAddressLabel(address.label)}
-                                      </p>
-                                      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">
-                                        {formatFullAddress(address) || address.address || "Address details"}
-                                      </p>
+                                <div key={addressId || `${address.label}-${address.street}-${address.city}`} className="relative">
+                                  <button
+                                    type="button"
+                                    disabled={!isDeliverable}
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                      if (!isDeliverable) {
+                                        toast.error(deliverability.reason || "Restaurant cannot deliver to this address")
+                                        return
+                                      }
+                                      handleSelectSavedAddress(address)
+                                    }}
+                                    className={`w-full text-left rounded-xl border-2 p-3 transition-colors ${
+                                      !isDeliverable
+                                        ? "border-red-100 bg-red-50/20 opacity-60 cursor-not-allowed dark:bg-red-950/10 dark:border-red-900/30"
+                                        : isSelected
+                                          ? "border-primary bg-[#7e386605] dark:bg-primary/5 cursor-pointer"
+                                          : "border-slate-100 dark:border-gray-800 hover:border-slate-200 cursor-pointer"
+                                    }`}
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2">
+                                          <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                                            {getDisplayAddressLabel(address.label)}
+                                          </p>
+                                          {!isDeliverable && (
+                                            <span className="text-[10px] bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 px-2 py-0.5 rounded font-bold whitespace-nowrap">
+                                              Out of Zone
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">
+                                          {formatFullAddress(address) || address.address || "Address details"}
+                                        </p>
+                                        {!isDeliverable && (
+                                          <p className="text-[11px] text-red-500 dark:text-red-400 font-medium mt-1.5 flex items-center gap-1">
+                                            <span>⚠️ Restaurant cannot deliver here {deliverability.distanceKm ? `(${deliverability.distanceKm.toFixed(0)} km away)` : "(Out of delivery area)"}</span>
+                                          </p>
+                                        )}
+                                      </div>
+                                      {isSelected && isDeliverable && (
+                                        <span className="text-[10px] bg-primary text-white px-2 py-0.5 rounded uppercase font-bold tracking-wider whitespace-nowrap">
+                                          Selected
+                                        </span>
+                                      )}
                                     </div>
-                                    {isSelected && (
-                                       <span className="text-[10px] bg-primary text-white px-2 py-0.5 rounded uppercase font-bold tracking-wider whitespace-nowrap">
-                                         Selected
-                                       </span>
-                                    )}
-                                  </div>
-                                </button>
+                                  </button>
+                                </div>
                               )
                             })}
                           </div>

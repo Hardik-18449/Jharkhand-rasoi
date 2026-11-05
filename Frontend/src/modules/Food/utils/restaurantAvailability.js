@@ -242,3 +242,113 @@ export const getRestaurantAvailabilityStatus = (restaurant, now = new Date(), op
       : (hasExplicitWindow ? "outside-hours" : "no-timings"),
   }
 }
+
+
+/**
+ * Calculates distance between two coordinates in kilometers using Haversine formula
+ */
+export const haversineDistanceKm = (lat1, lng1, lat2, lng2) => {
+  if (lat1 == null || lng1 == null || lat2 == null || lng2 == null) return null
+  const numLat1 = Number(lat1)
+  const numLng1 = Number(lng1)
+  const numLat2 = Number(lat2)
+  const numLng2 = Number(lng2)
+  if (!Number.isFinite(numLat1) || !Number.isFinite(numLng1) || !Number.isFinite(numLat2) || !Number.isFinite(numLng2)) return null
+  if (numLat1 === 0 && numLng1 === 0) return null
+  if (numLat2 === 0 && numLng2 === 0) return null
+
+  const R = 6371 // Earth's radius in kilometers
+  const dLat = ((numLat2 - numLat1) * Math.PI) / 180
+  const dLng = ((numLng2 - numLng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((numLat1 * Math.PI) / 180) *
+      Math.cos((numLat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
+export const extractAddressCoordinates = (address) => {
+  if (!address) return null
+  if (Array.isArray(address.location?.coordinates) && address.location.coordinates.length === 2) {
+    const lng = Number(address.location.coordinates[0])
+    const lat = Number(address.location.coordinates[1])
+    if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) {
+      return { lat, lng }
+    }
+  }
+  const lat = Number(address.latitude ?? address.lat)
+  const lng = Number(address.longitude ?? address.lng)
+  if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) {
+    return { lat, lng }
+  }
+  return null
+}
+
+export const extractRestaurantCoordinates = (restaurant) => {
+  if (!restaurant) return null
+  if (Array.isArray(restaurant.location?.coordinates) && restaurant.location.coordinates.length === 2) {
+    const lng = Number(restaurant.location.coordinates[0])
+    const lat = Number(restaurant.location.coordinates[1])
+    if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) {
+      return { lat, lng }
+    }
+  }
+  const lat = Number(restaurant.latitude ?? restaurant.lat)
+  const lng = Number(restaurant.longitude ?? restaurant.lng)
+  if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) {
+    return { lat, lng }
+  }
+  return null
+}
+
+/** Standard maximum food delivery radius in kilometers */
+export const MAX_DELIVERY_RADIUS_KM = 30
+
+/**
+ * Checks whether an address is deliverable for a given restaurant.
+ * @param {Object} address
+ * @param {Object} restaurant
+ * @param {number} [maxRadiusKm=MAX_DELIVERY_RADIUS_KM]
+ * @returns {{ isDeliverable: boolean, distanceKm: number | null, reason: string | null }}
+ */
+export const checkAddressDeliverability = (address, restaurant, maxRadiusKm = MAX_DELIVERY_RADIUS_KM) => {
+  if (!restaurant) return { isDeliverable: true, distanceKm: null, reason: null }
+  if (!address) return { isDeliverable: false, distanceKm: null, reason: "No address selected" }
+
+  const addrCoords = extractAddressCoordinates(address)
+  const restCoords = extractRestaurantCoordinates(restaurant)
+
+  if (addrCoords && restCoords) {
+    const distanceKm = haversineDistanceKm(restCoords.lat, restCoords.lng, addrCoords.lat, addrCoords.lng)
+    if (Number.isFinite(distanceKm)) {
+      if (distanceKm > maxRadiusKm) {
+        return {
+          isDeliverable: false,
+          distanceKm,
+          reason: `Out of delivery zone (${distanceKm.toFixed(1)} km away). Restaurant cannot deliver here.`
+        }
+      }
+      return {
+        isDeliverable: true,
+        distanceKm,
+        reason: null
+      }
+    }
+  }
+
+  // Fallback to city check if coordinates are unavailable
+  const restCity = restaurant.city ? String(restaurant.city).trim().toLowerCase() : ""
+  const addrCity = address.city ? String(address.city).trim().toLowerCase() : ""
+  if (restCity && addrCity && restCity !== addrCity) {
+    return {
+      isDeliverable: false,
+      distanceKm: null,
+      reason: `Out of delivery zone (${address.city}). Restaurant is located in ${restaurant.city}.`
+    }
+  }
+
+  return { isDeliverable: true, distanceKm: null, reason: null }
+}

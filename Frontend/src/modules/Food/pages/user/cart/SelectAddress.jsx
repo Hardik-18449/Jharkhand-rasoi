@@ -10,6 +10,7 @@ import { Label } from "@food/components/ui/label"
 import { Badge } from "@food/components/ui/badge"
 import { useProfile } from "@food/context/ProfileContext"
 import { toast } from "sonner"
+import { checkAddressDeliverability } from "@food/utils/restaurantAvailability"
 
 const ORANGE = "#7e3866"
 
@@ -36,6 +37,14 @@ const toBackendLabel = (label) => {
 }
 
 export default function SelectAddress() {
+  const activeRestaurant = useMemo(() => {
+    try {
+      const raw = sessionStorage.getItem("cart_restaurant");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }, []);
   const navigate = useNavigate()
   const location = useLocation()
   const { addresses = [], addAddress, setDefaultAddress, getDefaultAddress, isAuthenticated } = useProfile()
@@ -74,6 +83,13 @@ export default function SelectAddress() {
   const showDropdown = (query.trim().length > 0 || suggestions.length > 0) && (addresses?.length || 0) > 0
 
   const onPickSuggestion = (addr) => {
+    if (activeRestaurant) {
+      const deliverability = checkAddressDeliverability(addr, activeRestaurant);
+      if (!deliverability.isDeliverable) {
+        toast.error(deliverability.reason || "Restaurant cannot deliver to this address");
+        return;
+      }
+    }
     setSelectedSuggestionId(getAddressId(addr))
     setQuery(formatAddressLine(addr))
     setForm({
@@ -246,12 +262,26 @@ export default function SelectAddress() {
                           {suggestions.map((addr) => {
                             const id = getAddressId(addr)
                             const selected = id && selectedSuggestionId === id
+                            const deliverability = activeRestaurant ? checkAddressDeliverability(addr, activeRestaurant) : { isDeliverable: true }
+                            const isDeliverable = deliverability.isDeliverable
+
                             return (
                               <button
                                 key={id || formatAddressLine(addr)}
                                 type="button"
-                                onClick={() => onPickSuggestion(addr)}
-                                className="w-full text-left px-4 py-3 hover:bg-orange-50/60 dark:hover:bg-white/5 transition-colors border-b border-gray-100 dark:border-gray-800 last:border-b-0"
+                                disabled={!isDeliverable}
+                                onClick={() => {
+                                  if (!isDeliverable) {
+                                    toast.error(deliverability.reason || "Restaurant cannot deliver to this address")
+                                    return
+                                  }
+                                  onPickSuggestion(addr)
+                                }}
+                                className={`w-full text-left px-4 py-3 transition-colors border-b border-gray-100 dark:border-gray-800 last:border-b-0 ${
+                                  !isDeliverable
+                                    ? "bg-red-50/20 dark:bg-red-950/10 opacity-60 cursor-not-allowed"
+                                    : "hover:bg-orange-50/60 dark:hover:bg-white/5 cursor-pointer"
+                                }`}
                               >
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="min-w-0">
@@ -259,7 +289,12 @@ export default function SelectAddress() {
                                       <p className="font-semibold text-gray-900 dark:text-white">
                                         {String(addr?.label || "Saved").toLowerCase() === "office" ? "Work" : (addr?.label || "Saved")}
                                       </p>
-                                      {addr?.isDefault && (
+                                      {!isDeliverable && (
+                                        <Badge variant="destructive" className="bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 text-[10px]">
+                                          Out of Zone
+                                        </Badge>
+                                      )}
+                                      {addr?.isDefault && isDeliverable && (
                                         <Badge className="bg-orange-100 text-orange-800 dark:bg-primary/15 dark:text-orange-200">
                                           Default
                                         </Badge>
@@ -268,8 +303,13 @@ export default function SelectAddress() {
                                     <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
                                       {formatAddressLine(addr)}
                                     </p>
+                                    {!isDeliverable && (
+                                      <p className="text-[11px] text-red-500 font-medium mt-1">
+                                        ⚠️ Restaurant cannot deliver here {deliverability.distanceKm ? `(${deliverability.distanceKm.toFixed(0)} km away)` : ""}
+                                      </p>
+                                    )}
                                   </div>
-                                  {selected && (
+                                  {selected && isDeliverable && (
                                     <div className="pt-1">
                                       <Check className="h-5 w-5" style={{ color: ORANGE }} />
                                     </div>
