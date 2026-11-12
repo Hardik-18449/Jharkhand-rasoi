@@ -8,6 +8,18 @@ const orderItemAddonSchema = new mongoose.Schema(
     { _id: false }
 );
 
+// A dish inside a combo line, so the kitchen and the customer can see what the combo contains.
+const orderComboItemSchema = new mongoose.Schema(
+    {
+        foodId: { type: String, trim: true, default: '' },
+        name: { type: String, required: true, trim: true },
+        variantName: { type: String, trim: true, default: '' },
+        quantity: { type: Number, min: 1, default: 1 },
+        foodType: { type: String, trim: true, default: '' }
+    },
+    { _id: false }
+);
+
 const orderItemSchema = new mongoose.Schema(
     {
         itemId: { type: String, required: true, trim: true },
@@ -23,7 +35,10 @@ const orderItemSchema = new mongoose.Schema(
         isVeg: { type: Boolean, default: true },
         image: { type: String, default: '' },
         notes: { type: String, default: '' },
-        addons: { type: [orderItemAddonSchema], default: [] }
+        addons: { type: [orderItemAddonSchema], default: [] },
+        isCombo: { type: Boolean, default: false },
+        comboId: { type: String, trim: true, default: '' },
+        comboItems: { type: [orderComboItemSchema], default: [] }
     },
     { _id: false }
 );

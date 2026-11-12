@@ -46,6 +46,13 @@ import {
 } from '../controllers/restaurantCategory.controller.js';
 import { getMenuController, updateMenuController, getPublicRestaurantMenuController } from '../controllers/restaurantMenu.controller.js';
 import { getPublicRestaurantAddonsController } from '../controllers/publicAddons.controller.js';
+import { getPublicRestaurantCombosController } from '../controllers/publicCombos.controller.js';
+import {
+    listCombosController,
+    createComboController,
+    updateComboController,
+    deleteComboController
+} from '../controllers/restaurantCombo.controller.js';
 import * as feedbackExperienceController from '../../admin/controllers/feedbackExperience.controller.js';
 import {
     getOutletTimingsByRestaurantIdController,
@@ -196,6 +203,8 @@ router.post('/feedback-experience', authMiddleware, requireRestaurant, feedbackE
 
 // Public: restaurant add-ons (user app)
 router.get('/restaurants/:id/addons', cacheResponse(600, 'restaurant_addons'), getPublicRestaurantAddonsController);
+// Public: restaurant combo offers (user app)
+router.get('/restaurants/:id/combos', cacheResponse(300, 'restaurant_combos'), getPublicRestaurantCombosController);
 
 // Foods (restaurant creates/updates items -> stored in food_items collection)
 router.post('/foods', authMiddleware, requireRestaurant, async (req, res, next) => {
@@ -220,6 +229,12 @@ router.get('/addons', authMiddleware, requireRestaurant, listAddonsController);
 router.post('/addons', authMiddleware, requireRestaurant, createAddonController);
 router.patch('/addons/:id', authMiddleware, requireRestaurant, updateAddonController);
 router.delete('/addons/:id', authMiddleware, requireRestaurant, deleteAddonController);
+
+// Combo offers (restaurant dashboard) - approval handled by admin
+router.get('/combos', authMiddleware, requireRestaurant, listCombosController);
+router.post('/combos', authMiddleware, requireRestaurant, createComboController);
+router.patch('/combos/:id', authMiddleware, requireRestaurant, updateComboController);
+router.delete('/combos/:id', authMiddleware, requireRestaurant, deleteComboController);
 
 // Orders (restaurant dashboard)
 router.get('/orders', authMiddleware, requireRestaurant, orderController.listOrdersRestaurantController);

@@ -626,6 +626,9 @@ export default function UserOrderDetails() {
                     <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
                       {item.quantity || item.qty || 1} x {item.name}{item.variantName ? ` (${item.variantName})` : ""}
                     </span>
+                    {item.isCombo && Array.isArray(item.comboItems) && item.comboItems.length > 0 ? (
+                      <span className="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">Combo: {item.comboItems.map((ci) => `${ci.quantity || 1} x ${ci.name}`).join(", ")}</span>
+                    ) : null}
                   </div>
                 </div>
               </div>

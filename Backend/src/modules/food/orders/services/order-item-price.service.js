@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { FoodItem } from '../../admin/models/food.model.js';
+import { FoodCombo } from '../../restaurant/models/foodCombo.model.js';
 
 /**
  * Payment-mode pricing (COD vs prepaid / online).
@@ -85,7 +86,40 @@ export async function applyPaymentModePrices(items, { restaurantId, paymentMetho
     }
     const foodById = new Map(foods.map((f) => [String(f._id), f]));
 
+    // Combo offers have one fixed price for both payment modes. Never let the client
+    // send a higher price than the approved combo price.
+    const comboIds = [
+        ...new Set(
+            list
+                .filter((it) => it?.isCombo || it?.comboId)
+                .map((it) => String(it?.comboId || it?.itemId || ''))
+                .filter((id) => mongoose.Types.ObjectId.isValid(id))
+        ),
+    ];
+    let combos = [];
+    if (comboIds.length > 0) {
+        const comboQuery = { _id: { $in: comboIds }, isDeleted: { $ne: true }, published: { $ne: null } };
+        if (restaurantId && mongoose.Types.ObjectId.isValid(String(restaurantId))) {
+            comboQuery.restaurantId = restaurantId;
+        }
+        combos = await FoodCombo.find(comboQuery).select('published.comboPrice').lean();
+    }
+    const comboById = new Map(combos.map((c) => [String(c._id), c]));
+
     return list.map((item) => {
+        if (item?.isCombo || item?.comboId) {
+            const combo = comboById.get(String(item?.comboId || item?.itemId || ''));
+            const clientPrice = Number(item?.price);
+            let unit;
+            if (combo) {
+                const catalogPrice = Math.max(0, Number(combo.published?.comboPrice) || 0);
+                unit = Number.isFinite(clientPrice) && clientPrice >= 0 ? Math.min(clientPrice, catalogPrice) : catalogPrice;
+            } else {
+                unit = Math.max(0, Number.isFinite(clientPrice) ? clientPrice : 0);
+            }
+            unit = round2(unit);
+            return { ...item, isCombo: true, price: unit, prepaidPrice: unit, codPrice: unit };
+        }
         const food = foodById.get(String(item?.itemId || ''));
         if (!food) return applyClientHints(item, isCod);
 

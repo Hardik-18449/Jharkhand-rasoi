@@ -156,6 +156,7 @@ function RestaurantDetailsContent() {
   const [highlightedDishId, setHighlightedDishId] = useState(null)
   const [loadingMenuItems, setLoadingMenuItems] = useState(true)
   const [menuUnavailable, setMenuUnavailable] = useState(false)
+  const [combos, setCombos] = useState([])
   const [selectedMenuCategory, setSelectedMenuCategory] = useState("all")
   const [visibleItemCount, setVisibleItemCount] = useState(20)
   const dishCardRefs = useRef({})
@@ -1218,6 +1219,99 @@ function RestaurantDetailsContent() {
   }, [selectedItem])
 
   // Helper function to update item quantity in both local state and cart
+  // ---- Combo offers (restaurant-defined bundles approved by admin) ----
+  useEffect(() => {
+    const comboRestaurantId = restaurant?._id || restaurant?.restaurantId || restaurant?.id
+    if (!comboRestaurantId) return undefined
+    let cancelled = false
+    restaurantAPI
+      .getCombosByRestaurantId(String(comboRestaurantId))
+      .then((response) => {
+        if (cancelled) return
+        const list = response?.data?.data?.combos || response?.data?.combos || []
+        setCombos(Array.isArray(list) ? list : [])
+      })
+      .catch(() => {
+        if (!cancelled) setCombos([])
+      })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurant?._id, restaurant?.restaurantId])
+
+  const getComboLineId = (combo) => `combo-${String(combo?.id || combo?._id || "")}`
+  const getComboQuantity = (combo) => Number(getCartItem(getComboLineId(combo))?.quantity || 0)
+
+  const updateComboQuantity = (combo, newQuantity) => {
+    if (!isModuleAuthenticated('user')) {
+      toast.error("Please login to add items to cart")
+      navigate('/user/auth/login', { state: { from: location.pathname } })
+      return
+    }
+    if (isOutOfService) {
+      toast.error(serviceUnavailableMessage || 'Service is currently unavailable.')
+      return
+    }
+    const availability = getRestaurantAvailabilityStatus(restaurant)
+    if (!availability.isOpen) {
+      toast.error("Restaurant is currently offline. Please try again later.")
+      return
+    }
+    const validRestaurantId = restaurant?.restaurantId || restaurant?._id || restaurant?.id
+    if (!restaurant?.name || !validRestaurantId) {
+      toast.error('Restaurant information is missing. Please refresh the page.')
+      return
+    }
+
+    const lineItemId = getComboLineId(combo)
+    const comboId = String(combo?.id || combo?._id || "")
+    const comboPrice = Number(combo?.comboPrice ?? combo?.price) || 0
+    const cartItem = {
+      id: lineItemId,
+      lineItemId,
+      itemId: comboId,
+      isCombo: true,
+      comboId,
+      comboItems: (Array.isArray(combo?.items) ? combo.items : []).map((ci) => ({
+        foodId: String(ci.foodId || ""),
+        name: ci.name,
+        variantName: ci.variantName || "",
+        quantity: Number(ci.quantity) || 1,
+        foodType: ci.foodType || "",
+      })),
+      name: combo.name,
+      price: comboPrice,
+      originalPrice: Number(combo?.originalPrice) || comboPrice,
+      variantId: "",
+      variantName: "",
+      variantPrice: comboPrice,
+      addons: [],
+      image: combo.image || (Array.isArray(combo.images) && combo.images[0]) || "",
+      restaurant: restaurant.name,
+      restaurantId: validRestaurantId,
+      description: combo.description || "",
+      isVeg: combo.isVeg === true || combo.foodType === 'Veg',
+      foodType: combo.foodType || (combo.isVeg ? 'Veg' : 'Non-Veg'),
+    }
+
+    if (newQuantity <= 0) {
+      removeFromCart(lineItemId)
+      return
+    }
+    const existing = getCartItem(lineItemId)
+    if (!existing) {
+      const result = addToCart(cartItem)
+      if (result?.ok === false) {
+        toast.error(result.error || 'Cannot add item from different restaurant. Please clear cart first.')
+        return
+      }
+      if (newQuantity > 1) updateQuantity(lineItemId, newQuantity)
+      return
+    }
+    updateQuantity(lineItemId, newQuantity)
+  }
+
   const updateItemQuantity = (item, newQuantity, event = null, preferredVariant = null, preferredAddons = []) => {
     // Check authentication
     if (!isModuleAuthenticated('user')) {
@@ -2838,6 +2932,108 @@ function RestaurantDetailsContent() {
             {filteredSections.length === 0 && (
               <div className="rounded-3xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
                 No dishes match the current filters.
+              </div>
+            )}
+
+            {/* Combo offers (bundles defined by the restaurant, approved by admin) */}
+            {combos.length > 0 && (
+              <div id="menu-combo-offers" className="space-y-3 scroll-mt-20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Combo offers</h2>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Meal bundles at a special price</p>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    {combos.length} {combos.length === 1 ? "deal" : "deals"}
+                  </span>
+                </div>
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide snap-x">
+                  {combos.map((combo) => {
+                    const qty = getComboQuantity(combo)
+                    const comboPrice = Number(combo.comboPrice ?? combo.price) || 0
+                    const originalPrice = Number(combo.originalPrice) || 0
+                    const savings = Math.max(0, originalPrice - comboPrice)
+                    const isVeg = combo.isVeg === true || combo.foodType === "Veg"
+                    const image = combo.image || (Array.isArray(combo.images) && combo.images[0]) || ""
+                    const contents = (Array.isArray(combo.items) ? combo.items : [])
+                      .map((ci) => `${ci.quantity || 1} x ${ci.name}${ci.variantName ? ` (${ci.variantName})` : ""}`)
+                      .join(" + ")
+                    return (
+                      <div
+                        key={combo.id || combo._id}
+                        className="snap-start flex-shrink-0 w-[260px] md:w-[300px] rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] overflow-hidden shadow-sm"
+                      >
+                        <div className="relative h-32 bg-gray-100 dark:bg-gray-800">
+                          {image ? (
+                            <img
+                              src={image}
+                              alt={combo.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = "none"
+                              }}
+                            />
+                          ) : null}
+                          {savings > 0 ? (
+                            <span className="absolute top-2 left-2 rounded-full bg-green-600 px-2 py-0.5 text-[11px] font-bold text-white shadow">
+                              Save {RUPEE_SYMBOL}{Math.round(savings)}
+                            </span>
+                          ) : null}
+                          <div
+                            className={`absolute top-2 right-2 w-4 h-4 bg-white border-2 ${isVeg ? "border-green-600" : "border-red-600"} flex items-center justify-center rounded-sm`}
+                          >
+                            <div className={`w-2 h-2 rounded-full ${isVeg ? "bg-green-600" : "bg-red-600"}`} />
+                          </div>
+                        </div>
+                        <div className="p-3 space-y-2">
+                          <h3 className="font-bold text-gray-900 dark:text-white leading-tight line-clamp-1">{combo.name}</h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 min-h-[2rem]">{contents}</p>
+                          <div className="flex items-end justify-between gap-2">
+                            <div>
+                              <span className="text-base font-bold text-gray-900 dark:text-white">
+                                {RUPEE_SYMBOL}{Math.round(comboPrice)}
+                              </span>
+                              {originalPrice > comboPrice ? (
+                                <span className="ml-2 text-xs text-gray-400 line-through">
+                                  {RUPEE_SYMBOL}{Math.round(originalPrice)}
+                                </span>
+                              ) : null}
+                            </div>
+                            {qty > 0 ? (
+                              <div className="flex items-center border border-primary/40 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
+                                <button
+                                  type="button"
+                                  onClick={() => updateComboQuantity(combo, qty - 1)}
+                                  className="px-2.5 py-1.5 text-primary hover:bg-primary/5"
+                                  aria-label="Decrease combo quantity"
+                                >
+                                  <Minus className="h-3.5 w-3.5" />
+                                </button>
+                                <span className="min-w-[24px] text-center text-sm font-semibold text-primary">{qty}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => updateComboQuantity(combo, qty + 1)}
+                                  className="px-2.5 py-1.5 text-primary hover:bg-primary/5"
+                                  aria-label="Increase combo quantity"
+                                >
+                                  <Plus className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => updateComboQuantity(combo, 1)}
+                                className="rounded-lg border border-primary bg-white dark:bg-gray-900 px-4 py-1.5 text-sm font-bold text-primary hover:bg-primary/5"
+                              >
+                                ADD
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
 

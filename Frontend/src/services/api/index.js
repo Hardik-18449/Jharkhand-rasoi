@@ -606,6 +606,12 @@ export const adminAPI = {
   approveRestaurantAddon: (id) => adminClient.patch(`/food/admin/addons/${String(id)}/approve`, {}),
   rejectRestaurantAddon: (id, reason = "") => adminClient.patch(`/food/admin/addons/${String(id)}/reject`, { reason }),
 
+  /** Restaurant combo offers */
+  getRestaurantCombos: (params = {}) => adminClient.get("/food/admin/combos", { params }),
+  updateRestaurantCombo: (id, body = {}) => adminClient.patch(`/food/admin/combos/${String(id)}`, body),
+  approveRestaurantCombo: (id) => adminClient.patch(`/food/admin/combos/${String(id)}/approve`, {}),
+  rejectRestaurantCombo: (id, reason = "") => adminClient.patch(`/food/admin/combos/${String(id)}/reject`, { reason }),
+
   /** Offers and coupons */
   getAllOffers: (params = {}) => adminClient.get("/food/admin/offers", { params }),
   createAdminOffer: (body = {}) => adminClient.post("/food/admin/offers", body),
@@ -1091,6 +1097,17 @@ export const restaurantAPI = {
     restaurantClient.patch(`/food/restaurant/addons/${String(id)}`, body ?? {}),
   deleteAddon: (id) =>
     restaurantClient.delete(`/food/restaurant/addons/${String(id)}`),
+  /** Combo offers (restaurant) - approval handled by admin */
+  getCombos: (params = {}) =>
+    restaurantClient.get("/food/restaurant/combos", {
+      params: { limit: 100, page: 1, ...params }
+    }),
+  addCombo: (body) =>
+    restaurantClient.post("/food/restaurant/combos", body ?? {}),
+  updateCombo: (id, body) =>
+    restaurantClient.patch(`/food/restaurant/combos/${String(id)}`, body ?? {}),
+  deleteCombo: (id) =>
+    restaurantClient.delete(`/food/restaurant/combos/${String(id)}`),
   logout: (refreshToken, fcmToken = null, platform = "web") => {
     restaurantCurrentInFlight = null;
     restaurantCurrentCached = null;
@@ -1128,6 +1145,11 @@ export const restaurantAPI = {
   /** Public (user app): approved add-ons by restaurant id/slug */
   getAddonsByRestaurantId: (id, config = {}) =>
     userClient.get(`/food/restaurant/restaurants/${String(id)}/addons`, {
+      ...config,
+    }),
+  /** Public (user app): approved combo offers by restaurant id/slug */
+  getCombosByRestaurantId: (id, config = {}) =>
+    userClient.get(`/food/restaurant/restaurants/${String(id)}/combos`, {
       ...config,
     }),
   getPublicOffers: (params = {}) =>

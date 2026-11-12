@@ -293,6 +293,8 @@ export default function Orders() {
                 itemId: item.itemId || item._id || item.id,
                 name: item.name || item.foodName || 'Item',
                 variantName: item.variantName || '',
+                isCombo: item.isCombo === true,
+                comboItems: Array.isArray(item.comboItems) ? item.comboItems : [],
                 quantity: item.quantity || 1,
                 price: item.price || 0,
                 originalPrice: item.originalPrice ?? item.price ?? 0,
@@ -926,6 +928,9 @@ Order again from this restaurant in the ${companyName} app.`
                                 </span>
                                 {item.variantName ? (
                                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{item.variantName}</p>
+                                ) : null}
+                                {item.isCombo && Array.isArray(item.comboItems) && item.comboItems.length > 0 ? (
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Combo: {item.comboItems.map((ci) => `${ci.quantity || 1} x ${ci.name}`).join(", ")}</p>
                                 ) : null}
                                 {item.description && (
                                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">{item.description}</p>

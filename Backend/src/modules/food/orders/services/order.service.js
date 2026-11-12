@@ -227,10 +227,25 @@ export async function createOrder(userId, dto) {
     const addons = Array.isArray(item?.addons)
       ? item.addons.map(a => ({ name: String(a?.name || '').trim(), price: Math.max(0, Number(a?.price || 0)) })).filter(a => Boolean(a.name))
       : [];
+    const comboItems = Array.isArray(item?.comboItems)
+      ? item.comboItems
+          .map((ci) => ({
+            foodId: String(ci?.foodId || ''),
+            name: String(ci?.name || '').trim(),
+            variantName: String(ci?.variantName || '').trim(),
+            quantity: Math.max(1, Math.floor(Number(ci?.quantity) || 1)),
+            foodType: String(ci?.foodType || '').trim()
+          }))
+          .filter((ci) => Boolean(ci.name))
+      : [];
+    const isCombo = Boolean(item?.isCombo || item?.comboId);
     return {
       ...item,
       price,
-      addons
+      addons,
+      isCombo,
+      comboId: item?.comboId ? String(item.comboId) : (isCombo ? String(item?.itemId || '') : ''),
+      comboItems
     };
   });
 

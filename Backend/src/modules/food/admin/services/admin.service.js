@@ -26,6 +26,7 @@ import { FoodReferralSettings } from '../models/referralSettings.model.js';
 import { FoodReferralLog } from '../models/referralLog.model.js';
 import { FoodSafetyEmergencyReport } from '../models/safetyEmergencyReport.model.js';
 import { FoodAddon } from '../../restaurant/models/foodAddon.model.js';
+import { FoodCombo } from '../../restaurant/models/foodCombo.model.js';
 import { FoodSupportTicket } from '../../user/models/supportTicket.model.js';
 import { FoodRestaurantSupportTicket } from '../../restaurant/models/supportTicket.model.js';
 import { FoodOrder } from '../../orders/models/order.model.js';
@@ -3768,6 +3769,8 @@ export async function deleteRestaurant(id) {
         FoodItem.deleteMany({ restaurantId }),
         // Delete all addons
         FoodAddon.deleteMany({ restaurantId }),
+        // Delete all combo offers
+        FoodCombo.deleteMany({ restaurantId }),
         // Delete restaurant-specific categories
         FoodCategory.deleteMany({ restaurantId }),
         // Delete commissions

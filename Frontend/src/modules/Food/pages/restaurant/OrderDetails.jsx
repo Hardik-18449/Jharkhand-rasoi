@@ -246,6 +246,8 @@ export default function OrderDetails({ idProp, mongoIdProp, onClose }) {
               quantity: item.quantity,
               price: item.price,
               image: item.image,
+              isCombo: item.isCombo === true,
+              comboItems: Array.isArray(item.comboItems) ? item.comboItems : [],
               type: item.isVeg || item.foodType === 'Veg' ? 'Veg' : 'Non-Veg'
             })) || [],
             billing: {
@@ -967,6 +969,12 @@ export default function OrderDetails({ idProp, mongoIdProp, onClose }) {
                     </div>
                     <p className="text-sm font-semibold text-gray-900">{formatMoney(item.price)}</p>
                   </div>
+                  {item.isCombo && Array.isArray(item.comboItems) && item.comboItems.length > 0 && (
+                    <div className="mb-1 rounded-md bg-orange-50 border border-orange-100 px-2 py-1 text-xs text-orange-800">
+                      <span className="font-semibold">Combo includes:</span>{" "}
+                      {item.comboItems.map((ci) => `${ci.quantity || 1} x ${ci.name}${ci.variantName ? ` (${ci.variantName})` : ""}`).join(", ")}
+                    </div>
+                  )}
                   {item.type && (
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                       <span>{item.type}</span>
