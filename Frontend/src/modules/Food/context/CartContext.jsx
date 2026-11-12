@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react"
 import { buildCartLineId } from "@food/utils/foodVariants"
 import { toast } from "sonner"
+import { trackAddToCart } from "@/services/analytics/fbPixel"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -223,6 +224,10 @@ export function CartProvider({ children }) {
         code: 'MISSING_RESTAURANT'
       }
     }
+
+    try {
+      trackAddToCart(item);
+    } catch (_) {}
 
     setCart((prev) => {
       const safePrev = normalizeCartData(prev)

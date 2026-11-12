@@ -10,6 +10,7 @@ import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
 import { useAppLocation } from "@food/hooks/useAppLocation"
 import { searchAPI, adminAPI } from "@/services/api"
+import { trackSearch } from "@/services/analytics/fbPixel"
 import { motion, AnimatePresence } from "framer-motion"
 import { createPortal } from "react-dom"
 import OptimizedImage from "@food/components/OptimizedImage"
@@ -141,6 +142,9 @@ export default function ProfessionalSearch() {
     if (!searchTerm && !catId) {
       setResults({ restaurants: [], dishes: [] })
       return
+    }
+    if (searchTerm && searchTerm.trim()) {
+      try { trackSearch(searchTerm.trim()); } catch (_) {}
     }
     const cacheKey = `${searchTerm}-${catId}-${zoneId}`;
     if (sessionSearchCache.has(cacheKey)) {

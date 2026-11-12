@@ -5,6 +5,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom"
 import { restaurantAPI, diningAPI, orderAPI } from "@food/api"
 import { API_BASE_URL } from "@food/api/config"
 import { toast } from "sonner"
+import { trackViewContent } from "@/services/analytics/fbPixel"
 import { useAppLocation } from "@food/hooks/useAppLocation"
 import {
   ArrowLeft,
@@ -623,6 +624,13 @@ function RestaurantDetailsContent() {
           }
 
           setRestaurant(transformedRestaurant)
+          try {
+            trackViewContent({
+              name: transformedRestaurant.name,
+              id: transformedRestaurant.mongoId || transformedRestaurant.id,
+              category: Array.isArray(transformedRestaurant.cuisines) ? transformedRestaurant.cuisines.join(', ') : 'Restaurant'
+            });
+          } catch (_) {}
           fetchedRestaurantRef.current = true // Mark as fetched
           fetchedSlugRef.current = slug
           fetchedZoneIdRef.current = zoneId

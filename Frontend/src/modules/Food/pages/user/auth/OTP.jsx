@@ -7,6 +7,7 @@ import { Input } from "@food/components/ui/input"
 import { Button } from "@food/components/ui/button"
 import { authAPI } from "@food/api"
 import { setAuthData as setUserAuthData } from "@food/utils/auth"
+import { trackCompleteRegistration } from "@/services/analytics/fbPixel"
 
 export default function OTP() {
   const navigate = useNavigate()
@@ -250,6 +251,7 @@ export default function OTP() {
       sessionStorage.removeItem("userAuthData")
 
       setUserAuthData("user", accessToken, user, refreshToken)
+      try { trackCompleteRegistration(authData?.isSignUp ? "SignUp_OTP" : "Login_OTP"); } catch (_) {}
 
       // Dispatch custom event for same-tab updates
       window.dispatchEvent(new Event("userAuthChanged"))
@@ -338,6 +340,7 @@ export default function OTP() {
       sessionStorage.removeItem("userAuthData")
 
       setUserAuthData("user", accessToken, user, refreshToken)
+      try { trackCompleteRegistration("SignUp_Complete"); } catch (_) {}
 
       window.dispatchEvent(new Event("userAuthChanged"))
 

@@ -2,6 +2,7 @@
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Suspense, lazy, useEffect } from 'react'
 import { AppShellSkeleton } from '@food/components/ui/loading-skeletons'
+import { trackPageView } from '@/services/analytics/fbPixel'
 
 const NATIVE_LAST_ROUTE_KEY = 'native_last_route'
 
@@ -41,7 +42,7 @@ const FoodAppWrapper = () => {
 }
 
 const RedirectToFood = () => {
-  const location = useLocation();
+  const location = useLocation()
   // We safely replace the exact current pathname with a /food prefixed pathname
   // This effectively catches programmatic navigation to absolute paths like '/restaurant/login'
   // and turns them into '/food/restaurant/login'
@@ -53,6 +54,11 @@ const AdminRouter = lazy(() => import('../modules/Food/components/admin/AdminRou
 
 const AppRoutes = () => {
   const location = useLocation()
+
+  // Track Meta (Facebook) Pixel PageView on client-side route changes
+  useEffect(() => {
+    trackPageView(location.pathname)
+  }, [location.pathname, location.search])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
