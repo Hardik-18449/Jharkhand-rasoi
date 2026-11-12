@@ -11,6 +11,7 @@ import { AuthError } from '../../../../core/auth/errors.js';
 import * as adminController from '../controllers/admin.controller.js';
 import * as foodApprovalController from '../controllers/foodApproval.controller.js';
 import * as addonsApprovalController from '../controllers/addonsApproval.controller.js';
+import * as combosApprovalController from '../controllers/combosApproval.controller.js';
 import * as businessSettingsController from '../controllers/businessSettings.controller.js';
 import * as feedbackExperienceController from '../controllers/feedbackExperience.controller.js';
 import * as notificationBroadcastController from '../controllers/notificationBroadcast.controller.js';
@@ -141,6 +142,12 @@ router.get('/addons', addonsApprovalController.getRestaurantAddons);
 router.patch('/addons/:id', addonsApprovalController.updateRestaurantAddon);
 router.patch('/addons/:id/approve', addonsApprovalController.approveRestaurantAddon);
 router.patch('/addons/:id/reject', addonsApprovalController.rejectRestaurantAddon);
+
+// ----- Restaurant combo offers (approval + management) -----
+router.get('/combos', combosApprovalController.getRestaurantCombos);
+router.patch('/combos/:id', combosApprovalController.updateRestaurantCombo);
+router.patch('/combos/:id/approve', combosApprovalController.approveRestaurantCombo);
+router.patch('/combos/:id/reject', combosApprovalController.rejectRestaurantCombo);
 
 // ----- Foods -----
 // Food approval queue (pending items created by restaurants)

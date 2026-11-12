@@ -12,7 +12,23 @@ const orderItemSchema = z.object({
     quantity: z.coerce.number().int().min(1),
     isVeg: z.boolean().optional().default(true),
     image: z.string().optional(),
-    notes: z.string().optional()
+    notes: z.string().optional(),
+    // Combo offer lines: the combo id is also sent as itemId; comboItems is the
+    // snapshot shown to the kitchen (the server re-reads price from the catalog).
+    isCombo: z.boolean().optional(),
+    comboId: z.string().optional(),
+    comboItems: z
+        .array(
+            z.object({
+                foodId: z.string().optional(),
+                name: z.string().min(1),
+                variantName: z.string().optional(),
+                quantity: z.coerce.number().int().min(1).optional(),
+                foodType: z.string().optional()
+            })
+        )
+        .max(20)
+        .optional()
 });
 
 const addressSchema = z.object({

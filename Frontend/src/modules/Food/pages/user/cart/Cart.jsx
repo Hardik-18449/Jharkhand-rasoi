@@ -947,6 +947,9 @@ export default function Cart() {
           codPrice: item.codPrice != null ? Number(item.codPrice) : undefined,
           prepaidPrice: item.prepaidPrice != null ? Number(item.prepaidPrice) : undefined,
           quantity: item.quantity || 1,
+          isCombo: item.isCombo === true ? true : undefined,
+          comboId: item.isCombo === true ? String(item.comboId || item.itemId || item.id) : undefined,
+          comboItems: item.isCombo === true && Array.isArray(item.comboItems) ? item.comboItems : undefined,
           image: item.image,
           description: item.description,
           isVeg: item.isVeg !== false
@@ -1445,6 +1448,9 @@ export default function Cart() {
           variantName: item.variantName || undefined,
           variantPrice: item.variantPrice || item.price,
           quantity: item.quantity || 1,
+          isCombo: item.isCombo === true ? true : undefined,
+          comboId: item.isCombo === true ? String(item.comboId || item.itemId || item.id) : undefined,
+          comboItems: item.isCombo === true && Array.isArray(item.comboItems) ? item.comboItems : undefined,
           image: item.image,
           description: item.description,
           isVeg: item.isVeg !== false
@@ -1516,6 +1522,9 @@ export default function Cart() {
         variantName: item.variantName || undefined,
         variantPrice: item.variantPrice || item.price,
         quantity: item.quantity || 1,
+        isCombo: item.isCombo === true ? true : undefined,
+        comboId: item.isCombo === true ? String(item.comboId || item.itemId || item.id) : undefined,
+        comboItems: item.isCombo === true && Array.isArray(item.comboItems) ? item.comboItems : undefined,
         image: item.image,
         description: item.description,
         isVeg: item.isVeg !== false
@@ -1584,6 +1593,9 @@ export default function Cart() {
           variantName: item.variantName || undefined,
           variantPrice: item.variantPrice || item.price,
           quantity: item.quantity || 1,
+          isCombo: item.isCombo === true ? true : undefined,
+          comboId: item.isCombo === true ? String(item.comboId || item.itemId || item.id) : undefined,
+          comboItems: item.isCombo === true && Array.isArray(item.comboItems) ? item.comboItems : undefined,
           image: item.image,
           description: item.description,
           isVeg: item.isVeg === true || item.foodType === 'Veg'
@@ -1683,6 +1695,9 @@ export default function Cart() {
         variantName: item.variantName || undefined,
         variantPrice: item.variantPrice || item.price,
         quantity: item.quantity || 1,
+        isCombo: item.isCombo === true ? true : undefined,
+        comboId: item.isCombo === true ? String(item.comboId || item.itemId || item.id) : undefined,
+        comboItems: item.isCombo === true && Array.isArray(item.comboItems) ? item.comboItems : undefined,
         image: item.image || "",
         description: item.description || "",
         isVeg: item.isVeg === true || item.foodType === 'Veg',
@@ -2246,7 +2261,7 @@ export default function Cart() {
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">Your cart is empty</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center">Add items from a restaurant to start a new order</p>
           <Link to="/user">
-            <Button className="bg-primary hover:bg-secondary text-white">Browse Restaurants</Button>
+            <Button className="bg-primary hover:bg-secondary text-black">Browse Restaurants</Button>
           </Link>
         </div>
       </AnimatedPage>
@@ -2390,6 +2405,12 @@ export default function Cart() {
                               {item.variantName ? (
                                 <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium bg-gray-50 dark:bg-gray-800/50 w-fit px-2 py-0.5 rounded-full">
                                   {item.variantName}
+                                </p>
+                              ) : null}
+                              {item.isCombo && Array.isArray(item.comboItems) && item.comboItems.length > 0 ? (
+                                <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                                  <span className="font-semibold text-primary">Combo:</span>{" "}
+                                  {item.comboItems.map((ci) => `${ci.quantity || 1} x ${ci.name}${ci.variantName ? ` (${ci.variantName})` : ""}`).join(", ")}
                                 </p>
                               ) : null}
                             </div>

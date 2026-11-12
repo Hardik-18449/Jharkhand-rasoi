@@ -365,6 +365,8 @@ const transformOrderForTracking = (apiOrder, previousOrder = null, explicitResta
     items: apiOrder?.items?.map(item => ({
       name: item.name,
       variantName: item.variantName || '',
+      isCombo: item.isCombo === true,
+      comboItems: Array.isArray(item.comboItems) ? item.comboItems : [],
       quantity: item.quantity,
       price: item.price,
       originalPrice: item.originalPrice ?? item.price
@@ -2275,6 +2277,9 @@ export default function OrderTracking() {
                         <p className="font-semibold text-gray-900 leading-tight">{item.name}</p>
                         {item.variantName ? (
                           <p className="text-sm text-gray-500 mt-0.5">{item.variantName}</p>
+                        ) : null}
+                        {item.isCombo && Array.isArray(item.comboItems) && item.comboItems.length > 0 ? (
+                          <p className="text-xs text-gray-500 mt-0.5">Combo: {item.comboItems.map((ci) => `${ci.quantity || 1} x ${ci.name}`).join(", ")}</p>
                         ) : null}
                         <p className="text-sm text-gray-500 mt-0.5">Quantity: {item.quantity}</p>
                       </div>

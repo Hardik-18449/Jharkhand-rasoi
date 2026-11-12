@@ -55,6 +55,9 @@ const ADDON_FILTER_OPTIONS = [
   { value: "rejected", label: "Rejected" },
 ]
 
+// Combo offers share the same availability / approval filters as add-ons.
+const COMBO_FILTER_OPTIONS = ADDON_FILTER_OPTIONS
+
 const getApprovalDisplayMeta = (approvalStatus) => {
   const normalizedStatus = String(approvalStatus || "approved").toLowerCase()
 
@@ -804,6 +807,7 @@ export default function Inventory() {
 
   const categoryRefs = useRef({})
   const addonImageInputRef = useRef(null)
+  const comboImageInputRef = useRef(null)
 
   // Swipe gesture refs
   const touchStartX = useRef(0)
@@ -1020,6 +1024,19 @@ export default function Inventory() {
   const [addonImageFile, setAddonImageFile] = useState(null)
   const [addonImagePreview, setAddonImagePreview] = useState("")
   const [savingAddon, setSavingAddon] = useState(false)
+  // Combo offers (bundles of 2+ dishes at one price)
+  const [combos, setCombos] = useState([])
+  const [loadingCombos, setLoadingCombos] = useState(false)
+  const [isAddComboOpen, setIsAddComboOpen] = useState(false)
+  const [editingComboId, setEditingComboId] = useState(null)
+  const [comboName, setComboName] = useState("")
+  const [comboDescription, setComboDescription] = useState("")
+  const [comboPrice, setComboPrice] = useState("")
+  const [comboImageFile, setComboImageFile] = useState(null)
+  const [comboImagePreview, setComboImagePreview] = useState("")
+  const [comboRows, setComboRows] = useState([])
+  const [comboPickerSearch, setComboPickerSearch] = useState("")
+  const [savingCombo, setSavingCombo] = useState(false)
   const [recommendedMap, setRecommendedMap] = useState(() => {
     try {
       if (typeof window === "undefined") return {}
@@ -1033,7 +1050,7 @@ export default function Inventory() {
   })
 
   // Inventory tabs
-  const inventoryTabs = ["all-items", "add-ons"]
+  const inventoryTabs = ["all-items", "add-ons", "combos"]
 
   // Tab bar ref for excluding swipe on topbar
   const tabBarRef = useRef(null)
@@ -1420,6 +1437,288 @@ export default function Inventory() {
     }
   }
 
+  // ---- Combo offers (bundles like pizza + burger + cold drink), approved by admin ----
+  const fetchCombos = async (showLoading = true) => {
+    try {
+      if (showLoading) setLoadingCombos(true)
+      const response = await restaurantAPI.getCombos()
+      const data = response?.data?.data?.combos || response?.data?.combos || []
+      setCombos(Array.isArray(data) ? data : [])
+    } catch (error) {
+      debugError("Error fetching combos:", error)
+      setCombos([])
+    } finally {
+      if (showLoading) setLoadingCombos(false)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === "combos") {
+      fetchCombos(true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
+
+  // Flat list of this restaurant's dishes for the combo item picker.
+  const allMenuItems = useMemo(() => {
+    const seen = new Set()
+    const list = []
+    categories.forEach((category) => {
+      ;(category.items || []).forEach((item) => {
+        const id = String(item.id || "")
+        if (!id || seen.has(id)) return
+        seen.add(id)
+        list.push({ ...item, categoryName: category.name || "" })
+      })
+    })
+    return list
+  }, [categories])
+
+  const getMenuItemVariants = (item) =>
+    (Array.isArray(item?.variants) ? item.variants : [])
+      .map((v) => ({ id: String(v?._id || v?.id || ""), name: String(v?.name || ""), price: Number(v?.price) || 0 }))
+      .filter((v) => v.id)
+
+  const getMenuItemStartingPrice = (item) => {
+    const variants = getMenuItemVariants(item)
+    if (variants.length > 0) return Math.min(...variants.map((v) => v.price))
+    return Number(item?.price) || 0
+  }
+
+  const getComboRowUnitPrice = (row) => {
+    const item = allMenuItems.find((it) => String(it.id) === String(row.foodId))
+    if (!item) return Number(row.unitPrice) || 0
+    const variants = getMenuItemVariants(item)
+    if (variants.length > 0) {
+      const chosen =
+        variants.find((v) => v.id === String(row.variantId || "")) ||
+        variants.reduce((min, v) => (v.price < min.price ? v : min), variants[0])
+      return chosen.price
+    }
+    return Number(item.price) || 0
+  }
+
+  const comboItemsTotal = useMemo(
+    () => comboRows.reduce((sum, row) => sum + getComboRowUnitPrice(row) * (Number(row.quantity) || 1), 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [comboRows, allMenuItems]
+  )
+
+  const comboPickerResults = useMemo(() => {
+    const q = comboPickerSearch.trim().toLowerCase()
+    return allMenuItems
+      .filter((item) => item.approvalStatus !== "rejected")
+      .filter(
+        (item) =>
+          !q ||
+          String(item.name || "").toLowerCase().includes(q) ||
+          String(item.categoryName || "").toLowerCase().includes(q)
+      )
+      .slice(0, 30)
+  }, [allMenuItems, comboPickerSearch])
+
+  const addComboRow = (item) => {
+    const variants = getMenuItemVariants(item)
+    const defaultVariant =
+      variants.length > 0 ? variants.reduce((min, v) => (v.price < min.price ? v : min), variants[0]) : null
+    setComboRows((prev) => {
+      const key = `${item.id}::${defaultVariant?.id || ""}`
+      const existing = prev.find((r) => `${r.foodId}::${r.variantId || ""}` === key)
+      if (existing) {
+        return prev.map((r) => (r === existing ? { ...r, quantity: (Number(r.quantity) || 1) + 1 } : r))
+      }
+      return [
+        ...prev,
+        {
+          foodId: String(item.id),
+          name: item.name,
+          image: item.image || "",
+          variantId: defaultVariant?.id || "",
+          variantName: defaultVariant?.name || "",
+          quantity: 1,
+        },
+      ]
+    })
+    setComboPickerSearch("")
+  }
+
+  const updateComboRow = (index, patch) => {
+    setComboRows((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)))
+  }
+
+  const removeComboRow = (index) => {
+    setComboRows((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const resetComboForm = () => {
+    if (comboImagePreview && comboImagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(comboImagePreview)
+    }
+    setComboName("")
+    setComboDescription("")
+    setComboPrice("")
+    setComboImageFile(null)
+    setComboImagePreview("")
+    setComboRows([])
+    setComboPickerSearch("")
+    setEditingComboId(null)
+    if (comboImageInputRef.current) {
+      comboImageInputRef.current.value = ""
+    }
+    setIsAddComboOpen(false)
+  }
+
+  const handleComboImageSelect = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const imageValidationError = getImageValidationError(file)
+    if (imageValidationError) {
+      toast.error(imageValidationError)
+      e.target.value = ""
+      return
+    }
+    if (comboImagePreview && comboImagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(comboImagePreview)
+    }
+    setComboImageFile(file)
+    setComboImagePreview(URL.createObjectURL(file))
+  }
+
+  const handleSaveCombo = async () => {
+    if (!comboName.trim()) {
+      toast.error("Combo name is required")
+      return
+    }
+    const totalUnits = comboRows.reduce((sum, r) => sum + (Number(r.quantity) || 1), 0)
+    if (comboRows.length === 0 || totalUnits < 2) {
+      toast.error("Add at least 2 items to the combo")
+      return
+    }
+    const parsedPrice = parseFloat(comboPrice)
+    if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+      toast.error("Enter a valid combo price")
+      return
+    }
+    if (comboItemsTotal > 0 && parsedPrice > comboItemsTotal) {
+      toast.error(`Combo price cannot exceed the items total (Rs. ${comboItemsTotal.toFixed(2)})`)
+      return
+    }
+
+    setSavingCombo(true)
+    try {
+      let imageUrl = comboImagePreview && !comboImagePreview.startsWith("blob:") ? comboImagePreview : ""
+      if (comboImageFile) {
+        const uploadRes = await uploadAPI.uploadMedia(comboImageFile, { folder: "tuggo/restaurant/combos" })
+        imageUrl = uploadRes?.data?.data?.url || uploadRes?.data?.url || imageUrl
+      }
+      const payload = {
+        name: comboName.trim(),
+        description: comboDescription.trim(),
+        comboPrice: parsedPrice,
+        image: imageUrl,
+        images: imageUrl ? [imageUrl] : [],
+        items: comboRows.map((r) => ({
+          foodId: String(r.foodId),
+          variantId: r.variantId || "",
+          quantity: Math.max(1, Math.floor(Number(r.quantity) || 1)),
+        })),
+      }
+      if (editingComboId) {
+        await restaurantAPI.updateCombo(editingComboId, { draft: payload })
+        toast.success("Combo updated and sent for approval")
+      } else {
+        await restaurantAPI.addCombo(payload)
+        toast.success("Combo submitted for admin approval")
+      }
+      resetComboForm()
+      fetchCombos(true)
+    } catch (error) {
+      debugError("Error saving combo:", error)
+      toast.error(error?.response?.data?.message || getUploadErrorMessage(error) || "Failed to save combo")
+    } finally {
+      setSavingCombo(false)
+    }
+  }
+
+  const handleEditCombo = (combo) => {
+    setComboName(combo.name || "")
+    setComboDescription(combo.description || "")
+    setComboPrice(combo.comboPrice != null ? String(combo.comboPrice) : "")
+    setComboImagePreview((combo.images && combo.images[0]) || combo.image || "")
+    setComboImageFile(null)
+    setComboRows(
+      (Array.isArray(combo.items) ? combo.items : []).map((it) => ({
+        foodId: String(it.foodId || ""),
+        name: it.name || "",
+        image: it.image || "",
+        variantId: it.variantId || "",
+        variantName: it.variantName || "",
+        quantity: Number(it.quantity) || 1,
+        unitPrice: Number(it.unitPrice) || 0,
+      }))
+    )
+    setEditingComboId(combo.id)
+    setIsAddComboOpen(true)
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handleDeleteCombo = async (comboId) => {
+    if (!window.confirm("Delete this combo offer?")) return
+    try {
+      await restaurantAPI.deleteCombo(comboId)
+      setCombos((prev) => prev.filter((c) => c.id !== comboId))
+      toast.success("Combo deleted")
+    } catch (error) {
+      debugError("Error deleting combo:", error)
+      toast.error(error?.response?.data?.message || "Failed to delete combo")
+    }
+  }
+
+  const handleComboToggle = async (comboId, isAvailable) => {
+    try {
+      await restaurantAPI.updateCombo(comboId, { isAvailable })
+      setCombos((prev) => prev.map((c) => (c.id === comboId ? { ...c, isAvailable } : c)))
+      toast.success(`Combo ${isAvailable ? "enabled" : "paused"}`)
+    } catch (error) {
+      debugError("Error toggling combo:", error)
+      toast.error("Failed to update combo availability")
+    }
+  }
+
+  const filterCombosList = (items = [], filterValue = "all") => {
+    if (filterValue === "all") return items
+    if (filterValue === "available") return items.filter((item) => item.isAvailable !== false)
+    if (filterValue === "unavailable") return items.filter((item) => item.isAvailable === false)
+    return items.filter((item) => item.approvalStatus === filterValue)
+  }
+
+  const comboFilterCounts = useMemo(
+    () =>
+      COMBO_FILTER_OPTIONS.reduce((acc, option) => {
+        acc[option.value] = filterCombosList(combos, option.value).length
+        return acc
+      }, {}),
+    [combos]
+  )
+
+  const filteredCombos = useMemo(() => {
+    const byFilter = filterCombosList(combos, selectedFilter)
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return byFilter
+    return byFilter.filter(
+      (combo) =>
+        String(combo?.name || "").toLowerCase().includes(q) ||
+        String(combo?.description || "").toLowerCase().includes(q) ||
+        String(combo?.approvalStatus || "").toLowerCase().includes(q) ||
+        (combo.items || []).some((it) => String(it.name || "").toLowerCase().includes(q))
+    )
+  }, [combos, searchQuery, selectedFilter])
+
+  const describeComboItems = (items = []) =>
+    (Array.isArray(items) ? items : [])
+      .map((it) => `${it.quantity || 1} x ${it.name}${it.variantName ? ` (${it.variantName})` : ""}`)
+      .join(", ")
+
   // Handle swipe gestures
   const handleTouchStart = (e) => {
     const target = e.target
@@ -1584,7 +1883,7 @@ export default function Inventory() {
   )
 
   const activeFilterOptions = useMemo(
-    () => (activeTab === "add-ons" ? ADDON_FILTER_OPTIONS : MENU_FILTER_OPTIONS),
+    () => (activeTab === "add-ons" ? ADDON_FILTER_OPTIONS : activeTab === "combos" ? COMBO_FILTER_OPTIONS : MENU_FILTER_OPTIONS),
     [activeTab]
   )
 
@@ -1697,12 +1996,14 @@ export default function Inventory() {
     })
   }, [addons, searchQuery, selectedFilter])
 
-  // When on Add-ons tab, keep the list empty (no items shown)
-  const listToRender = activeTab === "add-ons" ? [] : filteredCategories
+  // On the Add-ons / Combos tabs, keep the category list empty (no items shown)
+  const listToRender = activeTab !== "all-items" ? [] : filteredCategories
 
   const activeFilterCount = activeTab === "add-ons"
     ? (addonFilterCounts[selectedFilter] || 0)
-    : (menuFilterCounts[selectedFilter] || 0)
+    : activeTab === "combos"
+      ? (comboFilterCounts[selectedFilter] || 0)
+      : (menuFilterCounts[selectedFilter] || 0)
 
   const hasActiveTools = searchQuery.trim().length > 0 || selectedFilter !== "all"
 
@@ -2043,7 +2344,7 @@ export default function Inventory() {
       {/* Navbar */}
       {/* Tabs */}
       <div className="bg-[#f3f5f8] px-4 pt-4 pb-4">
-        <div ref={tabBarRef} className="grid grid-cols-2 gap-3">
+        <div ref={tabBarRef} className="grid grid-cols-3 gap-2 sm:gap-3">
           <motion.button
             onClick={() => setActiveTab("all-items")}
             className={`relative overflow-hidden rounded-[24px] border px-4 py-3 text-sm font-semibold ${
@@ -2108,6 +2409,40 @@ export default function Inventory() {
                 activeTab === "add-ons" ? "bg-white text-primary" : "bg-[#f6ecf3] text-[#6d6470]"
               }`}>
                 {addons.length}
+              </span>
+            </span>
+          </motion.button>
+
+          <motion.button
+            onClick={() => setActiveTab("combos")}
+            className={`relative overflow-hidden rounded-[24px] border px-4 py-3 text-sm font-semibold ${
+              activeTab === "combos"
+                ? "border-primary text-white shadow-[0_18px_32px_-24px_rgba(126,56,102,0.6)]"
+                : "border-[#ead6e3] bg-white/90 text-[#6d6470] shadow-[0_16px_40px_-34px_rgba(109,100,112,0.35)]"
+            }`}
+            animate={{
+              scale: activeTab === "combos" ? 1.02 : 1,
+            }}
+            transition={{ duration: 0.2 }}
+          >
+            {activeTab === "combos" && (
+              <motion.div
+                layoutId="activeTabBackground"
+                className="absolute inset-0 rounded-[24px] bg-primary -z-10"
+                initial={false}
+                transition={{
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 30
+                }}
+              />
+            )}
+            <span className="relative z-10 flex min-h-7 items-center justify-center gap-2 leading-none">
+              <span className="whitespace-nowrap">Combos</span>
+              <span className={`inline-flex min-h-5 min-w-[24px] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                activeTab === "combos" ? "bg-white text-primary" : "bg-[#f6ecf3] text-[#6d6470]"
+              }`}>
+                {combos.length}
               </span>
             </span>
           </motion.button>
@@ -2185,12 +2520,14 @@ export default function Inventory() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-slate-950">
-                  {activeTab === "add-ons" ? "Search and review add-ons" : "Search and manage menu inventory"}
+                  {activeTab === "add-ons" ? "Search and review add-ons" : activeTab === "combos" ? "Search and manage combo offers" : "Search and manage menu inventory"}
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
                   {activeTab === "add-ons"
                     ? `${filteredAddons.length} add-on${filteredAddons.length !== 1 ? "s" : ""} in this view`
-                    : `${listToRender.length} categor${listToRender.length !== 1 ? "ies" : "y"} and ${activeFilterCount} item${activeFilterCount !== 1 ? "s" : ""} in focus`}
+                    : activeTab === "combos"
+                      ? `${filteredCombos.length} combo${filteredCombos.length !== 1 ? "s" : ""} in this view`
+                      : `${listToRender.length} categor${listToRender.length !== 1 ? "ies" : "y"} and ${activeFilterCount} item${activeFilterCount !== 1 ? "s" : ""} in focus`}
                 </p>
               </div>
               {hasActiveTools ? (
@@ -2214,7 +2551,7 @@ export default function Inventory() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={activeTab === "add-ons" ? "Search add-ons by name or status" : "Search categories or menu items"}
+                  placeholder={activeTab === "add-ons" ? "Search add-ons by name or status" : activeTab === "combos" ? "Search combos by name, dish or status" : "Search categories or menu items"}
                   className="h-12 w-full rounded-[20px] border border-[#e7d5e0] bg-[#fcf7fb] pl-11 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#c796b8] focus:bg-white focus:outline-none"
                 />
                 {searchQuery ? (
@@ -2241,7 +2578,7 @@ export default function Inventory() {
                 )}
               </button>
 
-              {activeTab !== "add-ons" && (
+              {activeTab === "all-items" && (
                 <button
                   onClick={() => setIsAddPopupOpen(true)}
                   className="h-12 rounded-[20px] bg-primary px-4 text-sm font-semibold text-white shadow-[0_18px_32px_-24px_rgba(126,56,102,0.7)] transition-colors hover:bg-secondary"
@@ -2259,6 +2596,16 @@ export default function Inventory() {
                   {isAddAddonOpen ? "Close" : "Add Add-on"}
                 </button>
                 )}
+
+              {activeTab === "combos" && (
+                <button
+                  onClick={() => (isAddComboOpen ? resetComboForm() : setIsAddComboOpen(true))}
+                  className="h-12 rounded-[20px] bg-primary px-4 text-sm font-semibold text-white shadow-[0_18px_32px_-24px_rgba(126,56,102,0.7)] transition-colors hover:bg-secondary"
+                  style={{ minWidth: "128px" }}
+                >
+                  {isAddComboOpen ? "Close" : "Add Combo"}
+                </button>
+              )}
               </div>
             </div>
 
@@ -2266,7 +2613,9 @@ export default function Inventory() {
               {activeFilterOptions.map((option) => {
                 const count = activeTab === "add-ons"
                   ? (addonFilterCounts[option.value] || 0)
-                  : (menuFilterCounts[option.value] || 0)
+                  : activeTab === "combos"
+                    ? (comboFilterCounts[option.value] || 0)
+                    : (menuFilterCounts[option.value] || 0)
 
                 const isActive = selectedFilter === option.value
                 return (
@@ -2489,7 +2838,345 @@ export default function Inventory() {
               )}
             </>
           )}
-          {activeTab !== "add-ons" && !loadingInventory && listToRender.length === 0 && (
+          {activeTab === "combos" && (
+            <>
+              {isAddComboOpen && (
+                <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="text-base font-semibold text-slate-900">
+                        {editingComboId ? "Edit combo offer" : "New combo offer"}
+                      </h3>
+                      <span className="text-xs text-slate-500">Bundle 2 or more dishes at one special price</span>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Combo Name *</label>
+                      <input
+                        type="text"
+                        value={comboName}
+                        onChange={(e) => setComboName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
+                        placeholder="e.g., Pizza + Burger + Cold Drink"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                      <textarea
+                        value={comboDescription}
+                        onChange={(e) => setComboDescription(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:outline-none resize-none"
+                        rows={2}
+                        placeholder="Describe the combo..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Items in this combo * (2 or more)</label>
+                      {comboRows.length > 0 && (
+                        <div className="mb-3 space-y-2">
+                          {comboRows.map((row, index) => {
+                            const menuItem = allMenuItems.find((it) => String(it.id) === String(row.foodId))
+                            const variants = menuItem ? getMenuItemVariants(menuItem) : []
+                            const unitPrice = getComboRowUnitPrice(row)
+                            return (
+                              <div
+                                key={`${row.foodId}-${row.variantId}-${index}`}
+                                className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
+                              >
+                                {row.image ? (
+                                  <img
+                                    src={row.image}
+                                    alt={row.name}
+                                    className="h-10 w-10 rounded-lg object-cover"
+                                    onError={(e) => {
+                                      e.target.style.display = "none"
+                                    }}
+                                  />
+                                ) : null}
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-semibold text-slate-900">{row.name}</p>
+                                  <p className="text-xs text-slate-500">
+                                    Rs. {unitPrice} each{menuItem?.inStock === false ? " · Out of stock" : ""}
+                                  </p>
+                                </div>
+                                {variants.length > 0 && (
+                                  <select
+                                    value={row.variantId || ""}
+                                    onChange={(e) => {
+                                      const v = variants.find((x) => x.id === e.target.value)
+                                      updateComboRow(index, { variantId: e.target.value, variantName: v?.name || "" })
+                                    }}
+                                    className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs"
+                                  >
+                                    {variants.map((v) => (
+                                      <option key={v.id} value={v.id}>
+                                        {v.name} - Rs. {v.price}
+                                      </option>
+                                    ))}
+                                  </select>
+                                )}
+                                <div className="flex items-center rounded-full border border-slate-300 bg-white">
+                                  <button
+                                    type="button"
+                                    onClick={() => updateComboRow(index, { quantity: Math.max(1, (Number(row.quantity) || 1) - 1) })}
+                                    className="px-2 py-1 text-slate-600"
+                                    aria-label="Decrease quantity"
+                                  >
+                                    <Minus className="h-3.5 w-3.5" />
+                                  </button>
+                                  <span className="min-w-[20px] text-center text-sm font-semibold">{row.quantity}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateComboRow(index, { quantity: (Number(row.quantity) || 1) + 1 })}
+                                    className="px-2 py-1 text-slate-600"
+                                    aria-label="Increase quantity"
+                                  >
+                                    <Plus className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeComboRow(index)}
+                                  className="rounded-full p-1.5 text-red-500 hover:bg-red-50"
+                                  title="Remove from combo"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={comboPickerSearch}
+                          onChange={(e) => setComboPickerSearch(e.target.value)}
+                          placeholder="Search your menu to add items (pizza, burger, cold drink...)"
+                          className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                        />
+                      </div>
+                      <div className="mt-2 max-h-56 overflow-y-auto rounded-md border border-slate-200 divide-y divide-slate-100">
+                        {comboPickerResults.length === 0 ? (
+                          <p className="px-3 py-4 text-center text-xs text-slate-500">
+                            {allMenuItems.length === 0
+                              ? "Add menu items first, then build a combo from them."
+                              : "No dishes match your search"}
+                          </p>
+                        ) : (
+                          comboPickerResults.map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => addComboRow(item)}
+                              className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-slate-50"
+                            >
+                              <span
+                                className={`inline-flex h-3.5 w-3.5 items-center justify-center rounded-sm border-2 ${item.isVeg ? "border-green-600" : "border-red-600"}`}
+                              >
+                                <span className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? "bg-green-600" : "bg-red-600"}`} />
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-medium text-slate-900">{item.name}</span>
+                                <span className="block text-xs text-slate-500">
+                                  {item.categoryName}
+                                  {item.inStock === false ? " · Out of stock" : ""}
+                                </span>
+                              </span>
+                              <span className="text-sm font-semibold text-slate-800">Rs. {getMenuItemStartingPrice(item)}</span>
+                              <Plus className="h-4 w-4 text-primary" />
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Combo Price (₹) *</label>
+                        <input
+                          type="number"
+                          value={comboPrice}
+                          onChange={(e) => setComboPrice(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-sm">
+                        <p className="text-slate-600">
+                          Items total: <span className="font-semibold text-slate-900">Rs. {comboItemsTotal.toFixed(2)}</span>
+                        </p>
+                        <p className="text-slate-600">
+                          Customer saves:{" "}
+                          <span className="font-semibold text-green-700">
+                            Rs. {Math.max(0, comboItemsTotal - (parseFloat(comboPrice) || 0)).toFixed(2)}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Combo Image (1 only)</label>
+                      {comboImagePreview && (
+                        <div className="mb-2">
+                          <img
+                            key={comboImagePreview}
+                            src={comboImagePreview}
+                            alt="Preview"
+                            className="w-24 h-24 object-cover rounded border"
+                            onError={(e) => (e.target.style.display = "none")}
+                          />
+                        </div>
+                      )}
+                      <input
+                        ref={comboImageInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleComboImageSelect}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => comboImageInputRef.current?.click()}
+                        className="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-3 text-left transition-colors hover:bg-gray-100"
+                      >
+                        <span className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                          <Upload className="h-4 w-4 text-gray-500" />
+                          {comboImageFile?.name || "Upload image"}
+                        </span>
+                        <span className="mt-1 block text-xs text-gray-500">
+                          {comboImageFile ? "Image selected successfully" : "Tap to choose 1 image from your device"}
+                        </span>
+                      </button>
+                      <p className="text-xs text-gray-500 mt-1">PNG, JPG, WEBP, HEIC up to 5MB.</p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={resetComboForm}
+                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveCombo}
+                        disabled={savingCombo}
+                        className="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {savingCombo && <Loader2 className="h-4 w-4 animate-spin" />}
+                        <span>{savingCombo ? "Saving..." : "Submit for approval"}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {loadingCombos ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                </div>
+              ) : filteredCombos.length === 0 ? (
+                <div className="rounded-[28px] border border-dashed border-slate-200 bg-white/70 px-4 py-20 text-center shadow-[0_18px_40px_-34px_rgba(15,23,42,0.35)]">
+                  <p className="text-lg font-semibold text-slate-700">
+                    {hasActiveTools ? "No matching combos found" : "No combo offers yet"}
+                  </p>
+                  <p className="mt-2 text-sm text-slate-500">
+                    {hasActiveTools
+                      ? "Try changing your search or filters"
+                      : "Bundle dishes like pizza + burger + cold drink at a special price. Combos go live after admin approval."}
+                  </p>
+                </div>
+              ) : (
+                <RestaurantBentoGrid variant="inventory">
+                  {filteredCombos.map((combo) => (
+                    <div key={combo.id} className="restaurant-bento-card p-4 h-full">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="mb-2 flex items-center gap-2 flex-wrap">
+                            <h3 className="text-base font-semibold text-slate-950">{combo.name}</h3>
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                combo.isAvailable !== false ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {combo.isAvailable !== false ? "Live" : "Paused"}
+                            </span>
+                            {combo.approvalStatus === "approved" && (
+                              <span className="rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-800">Approved</span>
+                            )}
+                            {combo.approvalStatus === "pending" && (
+                              <span className="rounded-full bg-yellow-100 px-2.5 py-1 text-[11px] font-semibold text-yellow-800">Pending</span>
+                            )}
+                            {combo.approvalStatus === "rejected" && (
+                              <span className="rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-semibold text-red-800">Rejected</span>
+                            )}
+                          </div>
+                          <p className="mb-2 text-sm leading-6 text-slate-600">{describeComboItems(combo.items)}</p>
+                          {combo.description && <p className="mb-2 text-xs leading-5 text-slate-500">{combo.description}</p>}
+                          <div className="flex items-baseline gap-2">
+                            <p className="text-base font-bold text-slate-950">Rs. {combo.comboPrice}</p>
+                            {Number(combo.originalPrice) > Number(combo.comboPrice) && (
+                              <>
+                                <span className="text-xs text-slate-400 line-through">Rs. {combo.originalPrice}</span>
+                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-700">
+                                  Save Rs. {Math.round((Number(combo.originalPrice) - Number(combo.comboPrice)) * 100) / 100}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          {combo.approvalStatus === "rejected" && combo.rejectionReason && (
+                            <p className="mt-2 text-xs font-medium text-red-600">Reason: {combo.rejectionReason}</p>
+                          )}
+                        </div>
+                        <div className="flex items-start gap-3">
+                          {((combo.images && combo.images[0]) || combo.image) && (
+                            <img
+                              src={(combo.images && combo.images[0]) || combo.image}
+                              alt={combo.name}
+                              className="h-20 w-20 rounded-2xl object-cover ring-1 ring-slate-200"
+                              onError={(e) => {
+                                e.target.style.display = "none"
+                              }}
+                            />
+                          )}
+                          <div className="flex flex-col items-end gap-3">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleEditCombo(combo)}
+                                className="p-2 rounded-full text-slate-500 hover:bg-slate-100 transition-colors"
+                                title="Edit combo"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCombo(combo.id)}
+                                className="p-2 rounded-full text-red-500 hover:bg-red-50 transition-colors"
+                                title="Delete combo"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                              <div className="flex items-center rounded-full bg-slate-100 px-2 py-1 ml-1">
+                                <Switch
+                                  checked={combo.isAvailable !== false}
+                                  onCheckedChange={(checked) => handleComboToggle(combo.id, checked)}
+                                  className="data-[state=checked]:bg-green-600"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </RestaurantBentoGrid>
+              )}
+            </>
+          )}
+          {activeTab === "all-items" && !loadingInventory && listToRender.length === 0 && (
             <div className="rounded-[28px] border border-dashed border-slate-200 bg-white/70 px-6 py-16 text-center shadow-[0_18px_40px_-34px_rgba(15,23,42,0.35)]">
               <p className="text-lg font-semibold text-slate-700">
                 {hasActiveTools ? "No matching categories or items found" : "No menu categories available"}
@@ -2762,8 +3449,8 @@ export default function Inventory() {
                   <div>
                     <h2 className="text-lg font-bold text-gray-900">Filters</h2>
                     <p className="text-sm text-gray-500 mt-1">
-                      {activeTab === "add-ons"
-                        ? "Refine the add-ons list by availability or approval status."
+                      {activeTab === "add-ons" || activeTab === "combos"
+                        ? `Refine the ${activeTab === "combos" ? "combo offers" : "add-ons"} list by availability or approval status.`
                         : "Refine your inventory by stock state, recommendation, or food type."}
                     </p>
                   </div>
@@ -2778,7 +3465,9 @@ export default function Inventory() {
                   {activeFilterOptions.map((option) => {
                     const count = activeTab === "add-ons"
                       ? (addonFilterCounts[option.value] || 0)
-                      : (menuFilterCounts[option.value] || 0)
+                      : activeTab === "combos"
+                        ? (comboFilterCounts[option.value] || 0)
+                        : (menuFilterCounts[option.value] || 0)
 
                     return (
                       <label key={option.value} className="flex items-center justify-between gap-3 cursor-pointer rounded-xl border border-gray-200 px-4 py-3">
@@ -3243,7 +3932,7 @@ export default function Inventory() {
 
 
       {/* Floating Menu Button & Popup (hidden on Add-ons tab) */}
-      {activeTab !== "add-ons" && (
+      {activeTab === "all-items" && (
         <div className="fixed right-4 bottom-24 z-30 flex flex-col items-end gap-2">
 
           <motion.button

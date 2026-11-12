@@ -809,6 +809,11 @@ export default function OrdersV2({
                               + {it.addons.map(a => `${a.name} (₹${a.price})`).join(', ')}
                             </p>
                           )}
+                          {it.isCombo && Array.isArray(it.comboItems) && it.comboItems.length > 0 && (
+                            <p className="text-[10px] text-orange-700 font-medium mt-0.5">
+                              Combo: {it.comboItems.map(ci => `${ci.quantity || 1} x ${ci.name}`).join(', ')}
+                            </p>
+                          )}
                         </div>
                         {(it.price || it.itemPrice) && (
                           <span className="text-gray-500 font-mono">

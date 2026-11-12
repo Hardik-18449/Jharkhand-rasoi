@@ -111,6 +111,9 @@ export default function FoodApproval() {
       if (request.entityType === 'addon') {
         await adminAPI.approveRestaurantAddon(id)
         toast.success('Add-on approved successfully')
+      } else if (request.entityType === 'combo') {
+        await adminAPI.approveRestaurantCombo(id)
+        toast.success('Combo approved successfully')
       } else {
         await adminAPI.approveFoodItem(id)
         toast.success('Food item approved successfully')
@@ -145,6 +148,9 @@ export default function FoodApproval() {
       if (selectedRequest.entityType === 'addon') {
         await adminAPI.rejectRestaurantAddon(id, rejectReason)
         toast.success('Add-on rejected')
+      } else if (selectedRequest.entityType === 'combo') {
+        await adminAPI.rejectRestaurantCombo(id, rejectReason)
+        toast.success('Combo rejected')
       } else {
         await adminAPI.rejectFoodItem(id, rejectReason)
         toast.success('Food item rejected')
@@ -169,7 +175,7 @@ export default function FoodApproval() {
     
     // Filter out addons if any (since backend bulkApproveFoodItems currently only handles FoodItems)
     const actionableFoodIds = foodRequests
-      .filter(r => selectedIds.includes(r._id || r.id) && r.entityType !== 'addon' && r.isActionable)
+      .filter(r => selectedIds.includes(r._id || r.id) && !['addon', 'combo'].includes(r.entityType) && r.isActionable)
       .map(r => r._id || r.id);
       
     if (actionableFoodIds.length === 0) {
@@ -200,7 +206,7 @@ export default function FoodApproval() {
   }
 
   const toggleSelectAll = () => {
-    const actionableFood = filteredRequests.filter(r => r.isActionable && r.entityType !== 'addon');
+    const actionableFood = filteredRequests.filter(r => r.isActionable && !['addon', 'combo'].includes(r.entityType));
     if (selectedIds.length === actionableFood.length && actionableFood.length > 0) {
       setSelectedIds([])
     } else {
@@ -298,7 +304,7 @@ export default function FoodApproval() {
                         <input
                           type="checkbox"
                           className="w-4 h-4 rounded border-gray-300 text-[#006fbd] focus:ring-[#006fbd]"
-                          checked={selectedIds.length > 0 && selectedIds.length === filteredRequests.filter(r => r.isActionable && r.entityType !== 'addon').length}
+                          checked={selectedIds.length > 0 && selectedIds.length === filteredRequests.filter(r => r.isActionable && !['addon', 'combo'].includes(r.entityType)).length}
                           onChange={toggleSelectAll}
                         />
                       </th>
@@ -342,7 +348,7 @@ export default function FoodApproval() {
                       filteredRequests.map((request, index) => (
                         <tr key={request._id || request.id} className="hover:bg-gray-50">
                           <td className="px-3 py-3">
-                            {request.isActionable && request.entityType !== 'addon' && (
+                            {request.isActionable && !['addon', 'combo'].includes(request.entityType) && (
                               <input
                                 type="checkbox"
                                 className="w-4 h-4 rounded border-gray-300 text-[#006fbd] focus:ring-[#006fbd]"
@@ -367,7 +373,7 @@ export default function FoodApproval() {
                             {request.itemName || '-'}
                           </td>
                           <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 capitalize text-center">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${request.entityType === 'addon' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${request.entityType === 'addon' ? 'bg-purple-100 text-purple-700' : request.entityType === 'combo' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
                                 {request.entityType || 'food'}
                             </span>
                           </td>
@@ -437,7 +443,7 @@ export default function FoodApproval() {
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0 bg-white shadow-2xl rounded-2xl border-none">
           <DialogHeader className="p-6 pb-4 border-b border-gray-100 bg-slate-50/50">
             <DialogTitle className="text-xl font-bold text-gray-900">
-              {selectedRequest?.entityType === 'addon' ? 'Add-on Details' : 'Food Item Details'}
+              {selectedRequest?.entityType === 'addon' ? 'Add-on Details' : selectedRequest?.entityType === 'combo' ? 'Combo Offer Details' : 'Food Item Details'}
             </DialogTitle>
             <DialogDescription className="text-sm text-gray-500 mt-1">
               Review the submitted details before approval.
@@ -505,6 +511,30 @@ export default function FoodApproval() {
                     <p className="text-sm text-gray-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">{selectedRequest.description}</p>
                   </div>
                 )}
+                {selectedRequest.entityType === 'combo' && Array.isArray(selectedRequest.comboItems) && selectedRequest.comboItems.length > 0 && (
+                  <div className="col-span-full">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                      Combo includes ({selectedRequest.comboItems.length} items)
+                    </label>
+                    <div className="rounded-lg border border-slate-200 divide-y divide-slate-100 bg-white">
+                      {selectedRequest.comboItems.map((ci, idx) => (
+                        <div key={`${ci.foodId || ci.name}-${idx}`} className="flex items-center justify-between px-3 py-2 text-sm">
+                          <span className="text-gray-800">
+                            {ci.quantity || 1} x {ci.name}
+                            {ci.variantName ? <span className="text-gray-500"> ({ci.variantName})</span> : null}
+                          </span>
+                          <span className="text-gray-500">₹{(Number(ci.unitPrice || 0) * Number(ci.quantity || 1)).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-xs text-gray-600">
+                      Items total ₹{Number(selectedRequest.originalPrice || 0).toFixed(2)} · Combo price{' '}
+                      <span className="font-semibold text-green-700">₹{Number(selectedRequest.comboPrice || 0).toFixed(2)}</span> · Customer saves{' '}
+                      ₹{Math.max(0, Number(selectedRequest.originalPrice || 0) - Number(selectedRequest.comboPrice || 0)).toFixed(2)}
+                    </p>
+                  </div>
+                )}
+
 
                 {/* Images */}
                 {(() => {

@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { ValidationError } from '../../../../core/auth/errors.js';
 import { FoodItem } from '../models/food.model.js';
 import { FoodAddon } from '../../restaurant/models/foodAddon.model.js';
+import { FoodCombo } from '../../restaurant/models/foodCombo.model.js';
 import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
 import { syncMenuItemApprovalStatus } from '../../restaurant/services/restaurantMenu.service.js';
 import { getFoodDisplayPrice, serializeFoodVariants } from './foodVariant.service.js';
@@ -42,9 +43,16 @@ export async function listPendingFoodApprovals(query = {}) {
         .select('restaurantId draft isAvailable requestedAt createdAt')
         .lean();
 
+    const comboList = await FoodCombo.find({ approvalStatus: 'pending', isDeleted: { $ne: true } })
+        .sort({ requestedAt: -1, createdAt: -1 })
+        .limit(limit)
+        .select('restaurantId draft isAvailable requestedAt createdAt')
+        .lean();
+
     const restaurantIds = Array.from(new Set([
         ...foodList.map((f) => String(f.restaurantId)),
-        ...addonList.map((a) => String(a.restaurantId))
+        ...addonList.map((a) => String(a.restaurantId)),
+        ...comboList.map((c) => String(c.restaurantId))
     ].filter(Boolean)));
 
     const restaurants = restaurantIds.length
@@ -96,7 +104,31 @@ export async function listPendingFoodApprovals(query = {}) {
         description: a.draft?.description || ''
     }));
 
-    const allRequests = [...foodRequests, ...addonRequests].sort((a, b) => 
+    const comboRequests = comboList.map((c) => ({
+        _id: c._id,
+        id: c._id,
+        entityType: 'combo',
+        type: 'combo',
+        restaurantName: restaurantMap.get(String(c.restaurantId)) || 'Unknown Restaurant',
+        restaurantId: toRestaurantDisplayId(c.restaurantId),
+        category: 'Combo offer',
+        itemName: c.draft?.name || 'Unnamed Combo',
+        foodType: c.draft?.foodType || 'Non-Veg',
+        sectionName: 'Combo offer',
+        subsectionName: '',
+        approvalStatus: 'pending',
+        price: c.draft?.comboPrice ?? 0,
+        comboPrice: c.draft?.comboPrice ?? 0,
+        originalPrice: c.draft?.originalPrice ?? 0,
+        comboItems: Array.isArray(c.draft?.items) ? c.draft.items : [],
+        image: c.draft?.image || (c.draft?.images && c.draft.images[0]) || '',
+        images: c.draft?.images || (c.draft?.image ? [c.draft.image] : []),
+        requestedAt: c.requestedAt || c.createdAt,
+        isActionable: true,
+        description: c.draft?.description || ''
+    }));
+
+    const allRequests = [...foodRequests, ...addonRequests, ...comboRequests].sort((a, b) => 
         new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime()
     );
 
