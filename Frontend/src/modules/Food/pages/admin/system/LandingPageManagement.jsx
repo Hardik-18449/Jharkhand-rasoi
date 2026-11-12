@@ -64,6 +64,8 @@ export default function LandingPageManagement() {
     exploreMoreHeading: "Explore More",
     recommendedRestaurantIds: [],
     under250PriceLimit: 250,
+    showUnder250: true,
+    showDining: true,
     festBannerImages: [],
     stats: { restaurants: '3,00,000+', cities: '800+', orders: '3 billion+' },
     appLinks: { playStore: 'https://play.google.com/store/apps/details?id=com.indian.Tuggo.user', appStore: '' },
@@ -1098,6 +1100,8 @@ export default function LandingPageManagement() {
           exploreMoreHeading: nextSettings.exploreMoreHeading || "Explore More",
           recommendedRestaurantIds: Array.isArray(nextSettings.recommendedRestaurantIds) ? nextSettings.recommendedRestaurantIds : [],
           under250PriceLimit: Number(nextSettings.under250PriceLimit) || 250,
+          showUnder250: nextSettings.showUnder250 !== false,
+          showDining: nextSettings.showDining !== false,
           festBannerImages: Array.isArray(nextSettings.festBannerImages) ? nextSettings.festBannerImages : [],
           stats: nextSettings.stats || { restaurants: '3,00,000+', cities: '800+', orders: '3 billion+' },
           appLinks: nextSettings.appLinks || { playStore: 'https://play.google.com/store/apps/details?id=com.indian.Tuggo.user', appStore: '' },
@@ -1149,6 +1153,8 @@ export default function LandingPageManagement() {
         exploreMoreHeading: settings.exploreMoreHeading,
         recommendedRestaurantIds: Array.isArray(settings.recommendedRestaurantIds) ? settings.recommendedRestaurantIds : [],
         under250PriceLimit: Number(settings.under250PriceLimit) || 250,
+        showUnder250: settings.showUnder250 !== false,
+        showDining: settings.showDining !== false,
         festBannerImages: settings.festBannerImages || [],
         stats: settings.stats,
         appLinks: settings.appLinks,
@@ -1166,6 +1172,8 @@ export default function LandingPageManagement() {
             ? savedSettings.recommendedRestaurantIds
             : prev.recommendedRestaurantIds,
           under250PriceLimit: Number(savedSettings.under250PriceLimit) || prev.under250PriceLimit,
+          showUnder250: savedSettings.showUnder250 !== false,
+          showDining: savedSettings.showDining !== false,
           festBannerImages: Array.isArray(savedSettings.festBannerImages)
             ? savedSettings.festBannerImages
             : prev.festBannerImages,
@@ -1880,6 +1888,30 @@ export default function LandingPageManagement() {
                       placeholder="250"
                     />
                     <p className="text-xs text-slate-500 mt-1">Button will show "Under ₹{settings.under250PriceLimit || 250}" on user home page</p>
+                  </div>
+
+                  <div>
+                    <Label>Navigation Tabs</Label>
+                    <p className="text-xs text-slate-500 mt-1 mb-3">
+                      Show or hide the optional tabs in the user navigation bar. Delivery and Profile are always visible.
+                    </p>
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-3 text-sm font-medium text-slate-700 cursor-pointer">
+                        <Checkbox
+                          checked={settings.showUnder250 !== false}
+                          onCheckedChange={(checked) => setSettings((prev) => ({ ...prev, showUnder250: checked === true }))}
+                        />
+                        Show &quot;Under ₹{settings.under250PriceLimit || 250}&quot; tab
+                      </label>
+                      <label className="flex items-center gap-3 text-sm font-medium text-slate-700 cursor-pointer">
+                        <Checkbox
+                          checked={settings.showDining !== false}
+                          onCheckedChange={(checked) => setSettings((prev) => ({ ...prev, showDining: checked === true }))}
+                        />
+                        Show &quot;Dining&quot; tab
+                      </label>
+                      <p className="text-xs text-slate-400">The Dining toggle is shared with Dining Management.</p>
+                    </div>
                   </div>
 
                   <div>

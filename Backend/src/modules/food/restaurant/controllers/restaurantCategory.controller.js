@@ -7,6 +7,10 @@ import {
 } from '../services/restaurantCategory.service.js';
 import { sendResponse, sendError } from '../../../../utils/response.js';
 import { FoodRestaurant } from '../models/restaurant.model.js';
+import { invalidateCache } from '../../../../middleware/cache.js';
+
+const bustCategoryCaches = () =>
+    Promise.allSettled([invalidateCache('categories:*'), invalidateCache('cache:categories:*')]);
 
 export const listCategoriesController = async (req, res, next) => {
     try {
@@ -37,6 +41,7 @@ export const createCategoryController = async (req, res, next) => {
     try {
         const restaurantId = req.user?.userId;
         const category = await createRestaurantCategory(restaurantId, req.body || {});
+        await bustCategoryCaches();
         return sendResponse(res, 201, 'Category created successfully', { category });
     } catch (error) {
         next(error);
@@ -48,6 +53,7 @@ export const updateCategoryController = async (req, res, next) => {
         const restaurantId = req.user?.userId;
         const category = await updateRestaurantCategory(restaurantId, req.params.id, req.body || {});
         if (!category) return sendError(res, 404, 'Category not found');
+        await bustCategoryCaches();
         return sendResponse(res, 200, 'Category updated successfully', { category });
     } catch (error) {
         next(error);
@@ -59,6 +65,7 @@ export const deleteCategoryController = async (req, res, next) => {
         const restaurantId = req.user?.userId;
         const result = await deleteRestaurantCategory(restaurantId, req.params.id);
         if (!result) return sendError(res, 404, 'Category not found');
+        await bustCategoryCaches();
         return sendResponse(res, 200, 'Category deleted successfully', result);
     } catch (error) {
         next(error);

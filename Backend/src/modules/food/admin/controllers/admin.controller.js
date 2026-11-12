@@ -19,6 +19,14 @@ import {
 import { sendRestaurantOnboardingEmail } from '../../../../utils/email.js';
 import { upsertOutletTimingsForRestaurant } from '../../restaurant/services/outletTimings.service.js';
 
+/**
+ * Public category lists are served from Redis (restaurant `categories:*` prefix and the
+ * search module `cache:categories:*` prefix). Bust both whenever an admin mutates a
+ * category so the user home rail reflects changes immediately instead of after TTL.
+ */
+const bustCategoryCaches = () =>
+    Promise.allSettled([invalidateCache('categories:*'), invalidateCache('cache:categories:*')]);
+
 export async function getDeliveryMultiOrderSettingsController(req, res, next) {
     try {
         const data = await getDeliveryMultiOrderSettings();
@@ -623,6 +631,7 @@ export async function createCategory(req, res, next) {
     try {
         const body = validateCategoryUpsertDto(req.body || {});
         const created = await adminService.createCategory(body);
+        await bustCategoryCaches();
         res.status(201).json({ success: true, message: 'Category created successfully', data: { category: created } });
     } catch (error) {
         next(error);
@@ -640,6 +649,7 @@ export async function updateCategory(req, res, next) {
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Category not found' });
         }
+        await bustCategoryCaches();
         res.status(200).json({ success: true, message: 'Category updated successfully', data: { category: updated } });
     } catch (error) {
         next(error);
@@ -656,6 +666,7 @@ export async function deleteCategory(req, res, next) {
         if (!result) {
             return res.status(404).json({ success: false, message: 'Category not found' });
         }
+        await bustCategoryCaches();
         res.status(200).json({ success: true, message: 'Category deleted successfully', data: result });
     } catch (error) {
         next(error);
@@ -672,6 +683,7 @@ export async function toggleCategoryStatus(req, res, next) {
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Category not found' });
         }
+        await bustCategoryCaches();
         res.status(200).json({ success: true, message: 'Category status updated successfully', data: { category: updated } });
     } catch (error) {
         next(error);
@@ -688,6 +700,7 @@ export async function approveCategory(req, res, next) {
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Category not found or already approved' });
         }
+        await bustCategoryCaches();
         res.status(200).json({ success: true, message: 'Category approved successfully', data: { category: updated } });
     } catch (error) {
         next(error);
@@ -705,6 +718,7 @@ export async function rejectCategory(req, res, next) {
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Category not found' });
         }
+        await bustCategoryCaches();
         res.status(200).json({ success: true, message: 'Category rejected successfully', data: { category: updated } });
     } catch (error) {
         next(error);
@@ -721,6 +735,7 @@ export async function makeCategoryGlobal(req, res, next) {
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Category not found' });
         }
+        await bustCategoryCaches();
         res.status(200).json({ success: true, message: 'Category is now global', data: { category: updated } });
     } catch (error) {
         next(error);

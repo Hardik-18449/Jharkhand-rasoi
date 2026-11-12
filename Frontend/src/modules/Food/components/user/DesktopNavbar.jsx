@@ -34,6 +34,7 @@ export default function DesktopNavbar({ showLogo = true }) {
     const [hasScrolledPastBanner, setHasScrolledPastBanner] = useState(false)
     const [under250PriceLimit, setUnder250PriceLimit] = useState(250)
     const [showDining, setShowDining] = useState(true)
+    const [showUnder250, setShowUnder250] = useState(true)
     const navRef = useRef(null)
     const cartCount = getCartCount()
     
@@ -131,11 +132,15 @@ export default function DesktopNavbar({ showLogo = true }) {
                 if (typeof settings.showDining === 'boolean') {
                     setShowDining(settings.showDining)
                 }
+                if (typeof settings.showUnder250 === 'boolean') {
+                    setShowUnder250(settings.showUnder250)
+                }
             })
             .catch(() => {
                 if (!cancelled) {
                     setUnder250PriceLimit(250)
                     setShowDining(true)
+                    setShowUnder250(true)
                 }
             })
         return () => { cancelled = true }
@@ -326,6 +331,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                             </Link>
 
                             {/* Under 250 Tab */}
+                            {showUnder250 && (
                             <Link
                                 to="/food/user/under-250"
                                 className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isUnder250
@@ -344,6 +350,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                                     />
                                 )}
                             </Link>
+                            )}
 
                             {/* Dining Tab */}
                             {showDining && (

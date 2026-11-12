@@ -30,6 +30,7 @@ const defaultFormData = {
   type: "",
   zoneId: "global",
   foodTypeScope: "Both",
+  sortOrder: 0,
 }
 
 const approvalBadgeClass = (status) => {
@@ -181,6 +182,7 @@ export default function Category() {
       type: category?.type || "",
       zoneId: zoneIdValue || "global",
       foodTypeScope: category?.foodTypeScope || "Both",
+      sortOrder: Number(category?.sortOrder) || 0,
     })
     setSelectedImageFile(null)
     setImagePreview(category?.image || null)
@@ -340,6 +342,7 @@ export default function Category() {
         image: imageUrl || undefined,
         zoneId: formData.zoneId || "global",
         foodTypeScope: formData.foodTypeScope,
+        sortOrder: Number(formData.sortOrder) || 0,
       }
 
       if (editingCategory) {
@@ -487,6 +490,8 @@ export default function Category() {
                                 </>
                               )}
                               <span>Items linked: {category?.itemCount || 0}</span>
+                              <span className="text-slate-300">•</span>
+                              <span>Order: {Number(category?.sortOrder) || 0}</span>
                             </div>
                           </div>
                         </div>
@@ -728,6 +733,21 @@ export default function Category() {
                             className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
                             placeholder="Enter category name"
                           />
+                        </div>
+
+                        <div>
+                          <label className="mb-2 block text-sm font-medium text-slate-700">Display Order</label>
+                          <input
+                            type="number"
+                            step="1"
+                            value={formData.sortOrder}
+                            onChange={(event) => setFormData((prev) => ({ ...prev, sortOrder: event.target.value }))}
+                            className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
+                            placeholder="0"
+                          />
+                          <p className="mt-1 text-xs text-slate-500">
+                            Controls the position in the user home &quot;What&apos;s on your mind today?&quot; rail. Lower numbers appear first.
+                          </p>
                         </div>
 
                         <div>

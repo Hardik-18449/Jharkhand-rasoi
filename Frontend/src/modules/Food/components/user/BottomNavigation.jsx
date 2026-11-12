@@ -10,6 +10,7 @@ export default function BottomNavigation() {
   const { zoneId } = useAppLocation()
   const [under250PriceLimit, setUnder250PriceLimit] = useState(250)
   const [showDining, setShowDining] = useState(true)
+  const [showUnder250, setShowUnder250] = useState(true)
 
   // Fetch landing settings to get dynamic price limit and features
   useEffect(() => {
@@ -23,11 +24,15 @@ export default function BottomNavigation() {
         if (typeof settings.showDining === 'boolean') {
           setShowDining(settings.showDining)
         }
+        if (typeof settings.showUnder250 === 'boolean') {
+          setShowUnder250(settings.showUnder250)
+        }
       })
       .catch(() => {
         if (!cancelled) {
           setUnder250PriceLimit(250)
           setShowDining(true)
+          setShowUnder250(true)
         }
       })
     return () => { cancelled = true }
@@ -69,6 +74,7 @@ export default function BottomNavigation() {
         </Link>
 
         {/* Under 250 Tab */}
+        {showUnder250 && (
         <Link
           to="/food/user/under-250"
           className={`flex flex-col items-center justify-center gap-1 w-[22%] py-2 rounded-[1.5rem] transition-all duration-300 ${isUnder250
@@ -81,6 +87,7 @@ export default function BottomNavigation() {
             Under ₹{under250PriceLimit}
           </span>
         </Link>
+        )}
 
         {/* Orders Tab */}
         <Link
