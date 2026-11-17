@@ -4,3 +4,6 @@ temp_interactive_push.bat
 backups/
 *.dump
 
+
+# Firebase admin private keys
+*firebase-adminsdk*.json
