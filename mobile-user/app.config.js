@@ -66,7 +66,12 @@ module.exports = {
       [
         "expo-build-properties",
         {
-          android: { usesCleartextTraffic: false },
+          android: {
+            usesCleartextTraffic: false,
+            // R8 shrinking (on by default in SDK 58) stripped androidx.work's WorkDatabase → instant crash on launch.
+            enableMinifyInReleaseBuilds: false,
+            enableShrinkResourcesInReleaseBuilds: false,
+          },
         },
       ],
       "expo-font",
