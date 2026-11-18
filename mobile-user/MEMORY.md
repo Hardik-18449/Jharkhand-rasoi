@@ -89,7 +89,7 @@ eas build --platform android --profile production --non-interactive   # APK
 ### Local APK build (no Expo cloud) — Windows
 - Tools: JDK 17 `D:\Android\jdk-17`, SDK `D:\Android\Sdk` (platform 37.0, build-tools 37.0.0, NDK 27.1.12297006, CMake 3.31.6). Windows `LongPathsEnabled=1` is required.
 - Build from the short mirror `D:\jr` (C++ object paths exceed 260 chars from the repo path). `D:\jr\android\local.properties` = `sdk.dir=D:/Android/Sdk` + `cmake.dir=D:/Android/Sdk/cmake/3.31.6` (CMake 3.22.1's ninja is not long-path aware).
-- Sync: `robocopy "D:\Projects\Jharkhand-rasoi\mobile-user" "D:\jr" /MIR /XD "<repo>\mobile-user\android" "D:\jr\android" .expo dist .cxx /XF *.apk`
+- Sync: `robocopy "D:\Projects\Jharkhand-rasoi\mobile-user" "D:\jr" /MIR /XD "<repo>\mobile-user\android" "D:\jr\android" "<repo>\mobile-user\.expo" "<repo>\mobile-user\dist" /XF *.apk` — use full paths in /XD; a bare `dist` also skips `node_modules/**/dist` on a fresh mirror and autolinking fails.
 - Build: `cd D:\jr\android; .\gradlew.bat assembleRelease -Pandroid.enableMinifyInReleaseBuilds=false -Pandroid.enableShrinkResourcesInReleaseBuilds=false` → `app\build\outputs\apk\release\app-release.apk`. **Minify must stay off** (R8 strips androidx.work WorkDatabase → crash on launch); also set in app.config.js via expo-build-properties.
 - Install/run: `adb install -r <apk>`; `adb shell monkey -p com.jharkhandrasoi.user -c android.intent.category.LAUNCHER 1`; logs `adb logcat`.
 - Shell gotcha: this environment sets `NoDefaultCurrentDirectoryInExePath=1` → use `.\gradlew.bat` / `./gradlew.bat`, not bare `gradlew.bat`.
