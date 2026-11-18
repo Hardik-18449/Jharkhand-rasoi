@@ -20,6 +20,10 @@
         "EXPO_PUBLIC_API_BASE_URL": "https://jharkhandrasoi.com/api/v1",
         "EXPO_PUBLIC_SOCKET_BASE_URL": "https://jharkhandrasoi.com"
       }
+    },
+    "playstore": {
+      "extends": "production",
+      "android": { "buildType": "app-bundle" }
     }
   },
   "submit": {

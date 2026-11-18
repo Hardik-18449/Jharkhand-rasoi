@@ -119,7 +119,22 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
   const { openLocationSelector } = useLocationSelector();
   const { vegMode, setVegMode: setVegModeContext, vegModeOption, setVegModeOption, addFavorite, removeFavorite, isFavorite, getFavorites, getDefaultAddress } = useProfile();
-  const { location, loading: effectiveZoneLoading, zoneId: effectiveZoneId, isOutOfService, isOutOfZone, isOutOfRadius, serviceUnavailableMessage } = useAppLocation();
+  const { location, loading: effectiveZoneLoading, zoneId: effectiveZoneId, isOutOfService, isOutOfZone, isOutOfRadius, serviceUnavailableMessage, requestLocation } = useAppLocation();
+  // No usable coordinates once location resolution has finished → ask for a location instead of showing a stale zone's data.
+  const hasLocation = Number.isFinite(Number(location?.latitude)) && Number.isFinite(Number(location?.longitude));
+  const needsLocation = !effectiveZoneLoading && !hasLocation;
+  const [locating, setLocating] = useState(false);
+  const useCurrentLocation = async () => {
+    if (locating) return;
+    setLocating(true);
+    try {
+      await requestLocation?.(true, true);
+    } catch (e) {
+      toast.error(e?.message || "Unable to detect your location");
+    } finally {
+      setLocating(false);
+    }
+  };
 
   const [introFinished, setIntroFinished] = useState(false);
   const [prevVegMode, setPrevVegMode] = useState(vegMode);
@@ -697,6 +712,29 @@ export default function HomeScreen() {
       return next;
     });
 
+  /* ================= NO LOCATION SCREEN ================= */
+  if (needsLocation) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#1e1332" }}>
+        <Image source={localImages.outOfZoneBg} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        <LinearGradient colors={["rgba(27,21,45,0)", "rgba(0,0,0,0.6)", "#1b152d"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "70%" }} />
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24, paddingBottom: 80 }}>
+          <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: palette.yellow, alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+            <MapPin size={30} color={palette.black} strokeWidth={2.5} />
+          </View>
+          <Txt weight={900} maxFontSizeMultiplier={1.2} style={{ fontSize: 28, color: palette.white, textAlign: "center", marginBottom: 12, letterSpacing: -0.5 }}>
+            Select your location
+          </Txt>
+          <Txt weight={400} maxFontSizeMultiplier={1.2} style={{ fontSize: 15, color: palette.gray200, textAlign: "center", marginBottom: 36, maxWidth: 380 }}>
+            We need your delivery location to show restaurants that deliver to you.
+          </Txt>
+          <Button title="Use current location" onPress={useCurrentLocation} loading={locating} icon={<MapPin size={18} color={palette.black} />} size="xl" rounded="2xl" weight={800} style={{ width: "100%", maxWidth: 300 }} textStyle={{ fontSize: 17 }} />
+          <Button title="Change Location" variant="outline" onPress={() => router.push("/address-selector")} size="xl" rounded="2xl" weight={800} style={{ width: "100%", maxWidth: 300, marginTop: 12, borderColor: palette.white }} textStyle={{ fontSize: 17, color: palette.white }} />
+        </View>
+      </View>
+    );
+  }
+
   /* ================= OUT OF ZONE SCREEN ================= */
   if (shouldShowOutOfZoneHome) {
     return (
@@ -976,8 +1014,9 @@ export default function HomeScreen() {
             <HomeRestaurantCard restaurant={item} index={index} isOutOfService={isOutOfService} isFavorite={isFavorite} onToggleFavorite={handleRestaurantFavoriteToggle} />
           </View>
         )}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={renderFooter}
+        // Pass elements, not functions: a new function each render is a new component type → FlatList remounted the whole header on every render (render loop / hang).
+        ListHeaderComponent={renderHeader()}
+        ListFooterComponent={renderFooter()}
         showsVerticalScrollIndicator={false}
         initialNumToRender={4}
         maxToRenderPerBatch={4}
