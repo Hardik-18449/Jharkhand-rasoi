@@ -75,6 +75,7 @@ module.exports = {
         },
       ],
       "expo-font",
+      "./plugins/withNoForceDark",
       [
         "expo-speech-recognition",
         {

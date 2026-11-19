@@ -13,8 +13,9 @@ export default class ErrorBoundary extends React.Component {
   static getDerivedStateFromError() {
     return { hasError: true };
   }
-  componentDidCatch() {
-    // no PII logging
+  componentDidCatch(error) {
+    // Code locations only (function names / bytecode offsets) — no user data — so release crashes can be traced via logcat.
+    console.error("[ErrorBoundary]", String(error?.message || error), String(error?.stack || "").slice(0, 1500));
   }
   render() {
     if (this.state.hasError) {

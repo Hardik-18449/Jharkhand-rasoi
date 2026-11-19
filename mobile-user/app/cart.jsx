@@ -31,6 +31,11 @@ import { dispatchAppEvent } from "../src/utils/events";
 import { palette, fonts } from "../src/theme";
 
 const R = "₹";
+/** number or 0 (API amounts may be strings / null) */
+const num = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
 const CART_RECIPIENT_DETAILS_STORAGE_KEY = "food-cart-recipient-details-v1";
 const CART_ORDER_NOTE_STORAGE_KEY = "food-cart-order-note-v1";
 const PRIMARY = palette.yellow;
@@ -487,7 +492,8 @@ function CartScreen() {
       .catch(() => setWalletBalance(0));
   useEffect(() => {
     refreshWallet();
-    userAPI
+    // getOrders lives on orderAPI (userAPI.getOrders is undefined → crashed the cart on open)
+    orderAPI
       .getOrders({ page: 1, limit: 1 })
       .then((r) => r?.data?.success && setUserOrderCount(r?.data?.data?.pagination?.total || 0))
       .catch(() => setUserOrderCount(0));
@@ -543,7 +549,8 @@ function CartScreen() {
     return { prepaid: pre, cod };
   }, [pricing]);
 
-  const subtotal = pricing?.subtotal || cart.reduce((s, i) => s + getItemEffectivePrice(i) * (i.quantity || 1), 0);
+  // Amounts can arrive as strings from the API / fee settings; Hermes throws "undefined is not a function" on "10".toFixed() → crash. Always coerce.
+  const subtotal = num(pricing?.subtotal) || cart.reduce((s, i) => s + num(getItemEffectivePrice(i)) * (num(i.quantity) || 1), 0);
   const orderDistanceKm = useMemo(() => {
     const rc = restaurantData?.location?.coordinates;
     const dc = defaultAddress?.location?.coordinates;
@@ -566,21 +573,21 @@ function CartScreen() {
     }
     return Number(feeSettings.deliveryFee || 0);
   })();
-  const deliveryFee = pricing != null ? pricing.deliveryFee ?? 0 : fallbackDeliveryFee;
+  const deliveryFee = num(pricing != null ? pricing.deliveryFee : fallbackDeliveryFee);
   const dfb = pricing?.deliveryFeeBreakdown || null;
   const deliveryFeeBreakdownText = dfb?.source === "distance" && Number.isFinite(Number(dfb?.distanceKm)) ? `Distance ${Number(dfb.distanceKm).toFixed(1)} km` : null;
-  const platformFee = pricing != null ? pricing.platformFee ?? 0 : feeSettings.platformFee ?? 0;
-  const packagingFee = pricing != null ? pricing.packagingFee ?? 0 : feeSettings.packagingFee ?? 0;
-  const gstOnItemTotal = pricing?.taxBreakdown?.itemTax ?? subtotal * ((feeSettings.gstRate ?? 0) / 100);
-  const gstOnDeliveryFee = pricing?.taxBreakdown?.deliveryTax ?? fallbackDeliveryFee * ((feeSettings.gstOnDeliveryFee ?? 0) / 100);
-  const gstOnPlatformFee = pricing?.taxBreakdown?.platformTax ?? (feeSettings.platformFee ?? 0) * ((feeSettings.gstOnPlatformFee ?? 0) / 100);
-  const gstOnPackagingFee = pricing?.taxBreakdown?.packagingTax ?? (feeSettings.packagingFee ?? 0) * ((feeSettings.gstOnPackagingFee ?? 0) / 100);
-  const gstCharges = pricing != null ? pricing.tax ?? 0 : Math.round(gstOnItemTotal + gstOnDeliveryFee + gstOnPlatformFee + gstOnPackagingFee);
-  const couponDiscount = pricing?.couponDiscount || (appliedCoupon ? Math.min(appliedCoupon.discount, subtotal * 0.5) : 0);
-  const discount = pricing?.discount || couponDiscount;
+  const platformFee = num(pricing != null ? pricing.platformFee : feeSettings.platformFee);
+  const packagingFee = num(pricing != null ? pricing.packagingFee : feeSettings.packagingFee);
+  const gstOnItemTotal = num(pricing?.taxBreakdown?.itemTax ?? subtotal * (num(feeSettings.gstRate) / 100));
+  const gstOnDeliveryFee = num(pricing?.taxBreakdown?.deliveryTax ?? num(fallbackDeliveryFee) * (num(feeSettings.gstOnDeliveryFee) / 100));
+  const gstOnPlatformFee = num(pricing?.taxBreakdown?.platformTax ?? num(feeSettings.platformFee) * (num(feeSettings.gstOnPlatformFee) / 100));
+  const gstOnPackagingFee = num(pricing?.taxBreakdown?.packagingTax ?? num(feeSettings.packagingFee) * (num(feeSettings.gstOnPackagingFee) / 100));
+  const gstCharges = num(pricing != null ? pricing.tax : Math.round(gstOnItemTotal + gstOnDeliveryFee + gstOnPlatformFee + gstOnPackagingFee));
+  const couponDiscount = num(pricing?.couponDiscount) || (appliedCoupon ? Math.min(num(appliedCoupon.discount), subtotal * 0.5) : 0);
+  const discount = num(pricing?.discount) || couponDiscount;
   const totalBeforeDiscount = subtotal + deliveryFee + platformFee + packagingFee + gstCharges + (Number(deliveryTip) || 0);
-  const total = pricing?.total != null ? pricing.total + (pricing.deliveryTip != null ? 0 : Number(deliveryTip) || 0) : Math.max(0, totalBeforeDiscount - discount);
-  const savings = pricing?.savings ?? Math.max(0, totalBeforeDiscount - total);
+  const total = pricing?.total != null ? num(pricing.total) + (pricing.deliveryTip != null ? 0 : Number(deliveryTip) || 0) : Math.max(0, totalBeforeDiscount - discount);
+  const savings = num(pricing?.savings ?? Math.max(0, totalBeforeDiscount - total));
   const isCodHidden = onlinePaymentOnly || (maxCodAmount > 0 && total > maxCodAmount) || userProfile?.codEnabled === false;
   useEffect(() => {
     if (isCodHidden && selectedPaymentMethod === "cash") setSelectedPaymentMethod("razorpay");

@@ -27,6 +27,7 @@ import { UserNotificationProvider } from "../src/context/UserNotificationContext
 import { SearchOverlayProvider } from "../src/context/SearchOverlayContext";
 import ErrorBoundary from "../src/components/ErrorBoundary";
 import { toastConfig } from "../src/components/ToastConfig";
+import AppSplash from "../src/components/AppSplash";
 import { attachNotificationListeners, attachTokenRefreshListener, registerPushDevice } from "../src/push/notifications";
 import { loadBusinessSettings } from "../src/utils/businessSettings";
 import { applyDynamicTheme } from "../src/utils/themeSettings";
@@ -119,6 +120,7 @@ export default function RootLayout() {
     Inter_700Bold,
   });
   const [booted, setBooted] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -133,14 +135,17 @@ export default function RootLayout() {
     })();
   }, []);
 
+  // Native splash (logo) → animated "ordering food" splash as soon as fonts are ready; app boots underneath.
   const onLayoutRootView = useCallback(() => {
-    if (fontsLoaded && booted) SplashScreen.hideAsync().catch(() => {});
-  }, [fontsLoaded, booted]);
+    if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
+  }, [fontsLoaded]);
+  const onSplashDone = useCallback(() => setSplashDone(true), []);
 
-  if (!fontsLoaded || !booted) return null;
+  if (!fontsLoaded) return null;
 
   return (
     <GestureHandlerRootView style={styles.fill} onLayout={onLayoutRootView}>
+      {booted ? (
       <SafeAreaProvider>
         <ThemeProvider>
           <ErrorBoundary>
@@ -175,7 +180,9 @@ export default function RootLayout() {
           </ErrorBoundary>
         </ThemeProvider>
       </SafeAreaProvider>
+      ) : null}
       <ToastLib config={toastConfig} />
+      {!splashDone ? <AppSplash ready={booted} onDone={onSplashDone} /> : null}
     </GestureHandlerRootView>
   );
 }
