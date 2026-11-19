@@ -346,7 +346,12 @@ export default function HomeScreen() {
       setLocationError("");
       setShowSelfie(true);
     } catch (e) {
-      toast.error(e?.message?.includes("off") ? e.message : "Please enable your GPS for current location");
+      if (e?.code === "PERMISSION") {
+        toast.error("Location permission is required to go online", { description: e.blocked ? "Allow location for Jharkhand Rasoi Delivery in Settings" : "Tap Online again and choose Allow", duration: 6000 });
+        if (e.blocked) Linking.openSettings().catch(() => {});
+      } else {
+        toast.error(e?.message || "Please enable your GPS for current location");
+      }
     } finally {
       setGoingOnline(false);
     }
@@ -358,8 +363,8 @@ export default function HomeScreen() {
       setShowSelfie(false);
       if (selfieCoords) deliveryAPI.updateLocation(selfieCoords.lat, selfieCoords.lng, true).catch(() => {});
       toast.success("Shift started successfully!");
-    } catch {
-      toast.error("Failed to start shift. Please try again.");
+    } catch (e) {
+      toast.error(e?.response?.data?.message || "Failed to start shift. Please try again.");
     }
   };
 
@@ -436,7 +441,7 @@ export default function HomeScreen() {
             <Pressable onPress={() => router.navigate("/(tabs)/profile")} style={styles.avatarRing}>
               <Image source={profileImage ? { uri: profileImage } : avatar} style={{ width: "100%", height: "100%", borderRadius: 20 }} />
             </Pressable>
-            <Pressable onPress={toggleOnline} style={[styles.toggle, { backgroundColor: isOnline ? "#22c55e" : "#4ade80" }]}>
+            <Pressable onPress={toggleOnline} style={[styles.toggle, { backgroundColor: isOnline ? "#22c55e" : "#ef4444" }]}>
               <Txt weight={900} style={[styles.toggleText, { left: isOnline ? 10 : undefined, right: isOnline ? undefined : 8 }]}>{goingOnline ? "..." : isOnline ? "ONLINE" : "OFFLINE"}</Txt>
               <View style={[styles.knob, { left: isOnline ? 62 : 4 }]} />
             </Pressable>

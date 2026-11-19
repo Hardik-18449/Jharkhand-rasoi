@@ -8,7 +8,7 @@ import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, use
 import { StyleSheet, View } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import { Bike, Store, MapPin } from "lucide-react-native";
-import { GOOGLE_MAPS_API_KEY } from "../config";
+import { ANDROID_CERT_SHA1, ANDROID_PACKAGE, GOOGLE_MAPS_API_KEY } from "../config";
 import { useDeliveryStore } from "./store";
 import { getHaversineDistance, parseLatLng } from "./orderUtils";
 import { palette } from "../theme";
@@ -92,11 +92,26 @@ const LiveMap = forwardRef(function LiveMap({ onPolylineReceived, onMapPress }, 
       return;
     }
     let cancelled = false;
-    fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${riderLocation.lat},${riderLocation.lng}&destination=${target.lat},${target.lng}&mode=driving&key=${GOOGLE_MAPS_API_KEY}`)
+    // Routes API (enabled on the key; legacy Directions API is not). X-Android-* headers let an Android-app-restricted key work.
+    fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY,
+        "X-Goog-FieldMask": "routes.polyline.encodedPolyline",
+        "X-Android-Package": ANDROID_PACKAGE,
+        ...(ANDROID_CERT_SHA1 ? { "X-Android-Cert": ANDROID_CERT_SHA1 } : {}),
+      },
+      body: JSON.stringify({
+        origin: { location: { latLng: { latitude: riderLocation.lat, longitude: riderLocation.lng } } },
+        destination: { location: { latLng: { latitude: target.lat, longitude: target.lng } } },
+        travelMode: "DRIVE",
+      }),
+    })
       .then((r) => r.json())
       .then((j) => {
         if (cancelled) return;
-        const enc = j?.routes?.[0]?.overview_polyline?.points;
+        const enc = j?.routes?.[0]?.polyline?.encodedPolyline;
         if (enc) {
           setRoute(decodePolyline(enc));
           onPolylineReceived?.(enc);
@@ -114,6 +129,7 @@ const LiveMap = forwardRef(function LiveMap({ onPolylineReceived, onMapPress }, 
       <MapView
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
+        userInterfaceStyle="light"
         style={StyleSheet.absoluteFill}
         initialRegion={{ latitude: initial.lat, longitude: initial.lng, latitudeDelta: 0.02, longitudeDelta: 0.02 }}
         showsCompass={false}

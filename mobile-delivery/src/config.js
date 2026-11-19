@@ -17,3 +17,7 @@ export const RAZORPAY_KEY_ID = String(process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID ||
 export const COMPANY_NAME_DEFAULT = "Jharkhand Rasoi";
 
 export const REQUEST_TIMEOUT_MS = 30000;
+/** Sent as X-Android-Package / X-Android-Cert to Google web APIs (Routes) so an Android-app-restricted key is accepted.
+ *  SHA-1 of the signing certificate, no colons. Default = current test (debug) signing cert; set EXPO_PUBLIC_ANDROID_CERT_SHA1 for the release key. */
+export const ANDROID_PACKAGE = "com.jharkhandrasoi.delivery";
+export const ANDROID_CERT_SHA1 = String(process.env.EXPO_PUBLIC_ANDROID_CERT_SHA1 || "5E8F16062EA3CD2C4A0D547876BAA6F38CABF625").trim();
