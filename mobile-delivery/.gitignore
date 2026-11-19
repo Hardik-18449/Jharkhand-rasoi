@@ -1,0 +1,23 @@
+.env
+.env.*
+!.env.example
+node_modules/
+.expo/
+dist/
+*.apk
+*.aab
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+expo-env.d.ts
+android/
+ios/
+
+# signing secrets (never commit)
+credentials.json
+*.keystore
+keystore.properties

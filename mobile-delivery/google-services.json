@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "929199755645",
+    "firebase_url": "https://jharkhandrasoi12-default-rtdb.firebaseio.com",
+    "project_id": "jharkhandrasoi12",
+    "storage_bucket": "jharkhandrasoi12.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:929199755645:android:77c30b755488d6113ebc14",
+        "android_client_info": {
+          "package_name": "com.jharkhandrasoi.delivery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJdIRDdV3kLv7_kz4_VTZXDAAkulxhnkk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:929199755645:android:fc9a1bf31b35dfa43ebc14",
+        "android_client_info": {
+          "package_name": "com.jharkhandrasoi.restaurant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJdIRDdV3kLv7_kz4_VTZXDAAkulxhnkk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:929199755645:android:71e22fb9864887133ebc14",
+        "android_client_info": {
+          "package_name": "com.jharkhandrasoi.user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJdIRDdV3kLv7_kz4_VTZXDAAkulxhnkk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
