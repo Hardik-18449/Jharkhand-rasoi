@@ -54,10 +54,28 @@ export async function ensureForegroundPermission({ ask = true } = {}) {
 
 export async function getCurrentFix() {
   const enabled = await Location.hasServicesEnabledAsync().catch(() => true);
-  if (!enabled) throw new Error("Location is off. Turn on GPS to go online.");
-  const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }).catch(() =>
-    Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
-  );
+  if (!enabled) {
+    // Android shows the system "Turn on location" dialog; throws if the rider declines.
+    await Location.enableNetworkProviderAsync().catch(() => {
+      throw new Error("Location is off. Turn on GPS to go online.");
+    });
+  }
+  let perm = await Location.getForegroundPermissionsAsync();
+  if (!perm.granted && perm.canAskAgain !== false) perm = await Location.requestForegroundPermissionsAsync();
+  if (!perm.granted) {
+    const err = new Error("Location permission is required to go online.");
+    err.code = "PERMISSION";
+    err.blocked = perm.canAskAgain === false;
+    throw err;
+  }
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+  const pos = await withTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }), 15000)
+    .catch(() => withTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }), 10000))
+    .catch(() => Location.getLastKnownPositionAsync({ maxAge: 5 * 60 * 1000 }))
+    .then((p) => {
+      if (!p?.coords) throw new Error("Could not get your location. Move to an open area and try again.");
+      return p;
+    });
   handleFix(pos.coords);
   return { lat: pos.coords.latitude, lng: pos.coords.longitude, heading: pos.coords.heading || 0 };
 }

@@ -723,7 +723,8 @@ export function ShiftSelfieModal({ visible, onClose, onUpload, coords }) {
     if (!perm.granted) return toast.error("Camera permission is required for the shift selfie");
     const res = await ImagePicker.launchCameraAsync({ cameraType: ImagePicker.CameraType.front, quality: 0.5, base64: true, allowsEditing: false });
     if (res.canceled || !res.assets?.[0]?.base64) return;
-    setPhoto({ uri: res.assets[0].uri, base64: `data:image/jpeg;base64,${res.assets[0].base64}` });
+    // Backend does Buffer.from(shiftStartPicBase64, "base64") — send raw base64 without the data: prefix (same as web PhotoUploadModal).
+    setPhoto({ uri: res.assets[0].uri, base64: res.assets[0].base64 });
   };
   const submit = async () => {
     if (!photo) return;
