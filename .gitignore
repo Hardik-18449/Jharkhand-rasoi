@@ -7,3 +7,5 @@ backups/
 
 # Firebase admin private keys
 *firebase-adminsdk*.json
+config.bat
+node_modules
